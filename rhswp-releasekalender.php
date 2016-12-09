@@ -6,7 +6,7 @@
  * @package           rijksreleasekalender
  *
  * @wordpress-plugin
- * Plugin Name:       Rijksreleasekalender
+ * Plugin Name:       ICTU / WP Rijksreleasekalender plugin
  * Plugin URI:        http://nostromo.nl
  * Description:       Synchroniseert met Rijksrelease REST API en zorgt voor weergave
  * Version:           1.0.0
