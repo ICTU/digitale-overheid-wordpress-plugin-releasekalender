@@ -2,15 +2,15 @@
 
 /**
  * @link              http://nostromo.nl
- * @since             1.0.0
+ * @since             1.0.1
  * @package           rijksreleasekalender
  *
  * @wordpress-plugin
  * Plugin Name:       ICTU / WP Rijksreleasekalender plugin
  * Plugin URI:        http://nostromo.nl
  * Description:       Synchroniseert met Rijksrelease REST API en zorgt voor weergave
- * Version:           1.0.0
- * Author:            Marcel Bootsman
+ * Version:           1.0.1
+ * Author:            Marcel Bootsman / Paul van Buuren
  * Author URI:        http://nostromo.nl/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
