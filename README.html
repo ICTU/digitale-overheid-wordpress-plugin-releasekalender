@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"/>
+</head>
+<body>
+<h1 id="ictu---digitale-overheid-plugin-releasekalender">ICTU&#8212;Digitale-Overheid-Plugin-Releasekalender</h1>
+
+<p>Plugin voor het importeren en tonen van releasekalenderinformatie op digitaleoverheid.nl.
+Deze plugin wordt gebruikt op <a href="https://digitaleoverheid.nl">digitaleoverheid.nl</a>. Opdrachtgever is ICTU (ICT Uitvoeringsorganisatie). </p>
+
+<p>Ontwikkelaars zijn:</p>
+
+<ul>
+<li>Paul van Buuren (<a href="https://wbvb.nl">WBVB Rotterdam</a>)</li>
+<li>Marcel Bootsman (<a href="https://nostromo.nl">nostromo.nl</a>)</li>
+</ul>
+
+<h2 id="rubberducking">Rubber ducking</h2>
+
+<p>De releasekalender toont gegevens uit de releasekalender database van [invoegen].
+Deze gegevens worden via CRON-jobs opgehaald. Er is een knop om deze import handmatig te starten. De gegevens worden in aparte tabellen weggeschreven.</p>
+
+<h2 id="front-end">Front-end</h2>
+
+<h3 id="pagina-templates">Pagina-templates</h3>
+
+<p>Twee verschillende pagina templates zijn nodig:</p>
+
+<h4 id="1.releasekalender-corepaginatemplate">1. Releasekalender-core pagina template</h4>
+
+<p><em>rhswp-rk-coretemplate.php</em><br/>
+Core functionaliteit: een pagina-template opzetten; deze pagina template regelt de core van alle functionaliteit.<br/>
+Het content-veld op deze pagina wordt gebruikt voor de inleiding</p>
+
+<p>Extra benodigde velden bij het invoeren van de content op deze pagina:</p>
+
+<ul>
+<li>inleidingstekst in de download van de totale tabel</li>
+<li>linktekst voor de download van de totale tabel</li>
+</ul>
+
+<p>Deze pagina is verantwoordelijk voor de verdere afhandeling van de releasekalender door rewriterules:</p>
+
+<p><code>&lt;pagina-url&gt;/voorziening/&lt;voorziening-slug&gt;</code> </p>
+
+<p>zo ongeveer ook als de huidige situatie: </p>
+
+<p><code>digitaleoverheid.nl/onderwerpen/voortgang-en-planning/releasekalender/bouwsteen/basisregistratie-grootschalige-topografie-bgt</code></p>
+
+<h4 id="2.dossierreleasekalender-paginatemplate">2. Dossier releasekalender-pagina template</h4>
+
+<p><em>rhswp-rk-dossiertemplate.php</em><br/>
+gebruikt door de pagina in een dossier die een onderdeel van de planning kan tonen. Eventuele onderdelen hierin kun je kiezen via de lijst met bouwstenen.</p>
+
+<p>Eventuele links in de kalenderfunctionaliteit zelf verwijzen naar de bovenstaande core-pagina. In de dossier-context blijven lijkt me geen goed idee, want reuze-ingewikkeld</p>
+
+<h2 id="back-end">Back-end</h2>
+
+<p>API instellingen
+- er moet een knop zijn voor het handmatig starten van de import (&#8216;ververs data&#8217;)</p>
+
+<p>Groepering
+- voorzieningen kunnen groeperen. Er kunnen subgroepen worden aangemaakt. De bestaande groepering is:</p>
+
+<ul>
+<li>gegevens
+
+<ul>
+<li>basisregistraties (subgroep van gegevens)</li>
+</ul></li>
+<li>dienstverlening</li>
+<li>identificatie</li>
+<li>interconnectiviteit</li>
+</ul>
+
+<p>Van deze groepen moet de naam gewijzigd kunnen worden; moet een hoofd-/subgroep zijn</p>
+
+<p>Per bouwsteen (nehee: voorzieningen) moet de groep aangewezen kunnen worden</p>
+
+<h2 id="conventiesfoldersfiles">Conventies, folders &amp; files</h2>
+
+<p>bestandsnamen allemaal in onderkast en dashes.
+dus niet zo:<br/>
+<code>Ikben_een_bestandsnaam.php</code><br/>
+maar zo:<br/>
+<code>ik-ben-een-bestandsnaam.php</code> </p>
+
+<p><em>prefix:</em> <code>rijksreleasekalender_</code> (rijkshuisstijl releasekalender)</p>
+
+<h3 id="structuur">Structuur</h3>
+
+<pre><code class="shell">plugins/rhswp-releasekalender/                      # → Folder met alle plugin-bestanden
+├── admin/                                          # → alle benodigdheden voor admin
+│   ├── css/                                        # → CSS-bestanden
+│   ├── js/                                         # → JavaScript voor admin
+│   └── partials/                                   # 
+├────── class-rijksreleasekalender-admin.php        # → admin core
+├── includes/                                       # → evt. includes
+│   ├── class-rijksreleasekalender-activator.php    #
+│   ├── class-rijksreleasekalender-deactivator.php  #
+│   ├── class-rijksreleasekalender-i18n.php         #
+│   ├── class-rijksreleasekalender-loader.php       #
+│   └── class-rijksreleasekalender.php              #
+├── languages/                                      # → Voor vertalingen (POT, PO, MO)
+├── public/                                         # → CSS / images / JS
+│   ├── css/                                        # → CSS-bestanden (resultante van LESS)
+│   ├── images/                                     # → Plaatjes (jpg, gif, png, svg)
+│   ├── less/                                       # → LESS source files (compileren naar ../css)
+│   ├── js/                                         # → JavaScript bronbestanden
+│   │  └── min/                                     # → Minified JavaScript
+│   ├── partials/                                   #
+│   └── class-rijksreleasekalender-public.php       #
+├── index.php                                       #
+└── rhswp-releasekalender.php                       # → Plugin core
+
+</code></pre>
+
+<h2 id="overigeopmerkingen">Overige opmerkingen</h2>
+
+<p>Bouwstenen mogen geen bouwstenen heten maar voorzieningen.</p>
+
+</body>
+</html>
