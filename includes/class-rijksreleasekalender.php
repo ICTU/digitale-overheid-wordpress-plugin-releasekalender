@@ -155,7 +155,7 @@ class rijksreleasekalender {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
 		// Options page
-		$this->loader->add_action( 'admin_menu', $plugin_admin, 'rijksreleasekalender_register_options_page' );
+		$this->loader->add_action( 'admin_menu', $plugin_admin, 'rijksreleasekalender_register_menu_pages' );
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'rijksreleasekalender_register_settings' );
 	}
 

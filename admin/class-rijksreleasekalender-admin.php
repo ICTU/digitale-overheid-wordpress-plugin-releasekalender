@@ -166,26 +166,26 @@ class rijksreleasekalender_Admin {
 			array( 'label_for' => $this->option_name . '_rss_size' )
 		);
 
-	  add_settings_field(
-		  $this->option_name . '_update_key',
-		  __( 'Update key', 'rijksreleasekalender' ),
-		  array( $this, $this->option_name . '_update_key_cb' ),
-		  $this->plugin_name,
-		  $this->option_name . '_general',
-		  array( 'label_for' => $this->option_name . '_update_key' )
-	  );
+		add_settings_field(
+			$this->option_name . '_update_key',
+			__( 'Update key', 'rijksreleasekalender' ),
+			array( $this, $this->option_name . '_update_key_cb' ),
+			$this->plugin_name,
+			$this->option_name . '_general',
+			array( 'label_for' => $this->option_name . '_update_key' )
+		);
 
 
-	  add_settings_field(
-		  $this->option_name . '_recent_max_age',
-		  __( 'Maximum leeftijd van item om als recent gewijzigd gezien te worden', 'rijksreleasekalender' ),
-		  array( $this, $this->option_name . '_recent_max_age_cb' ),
-		  $this->plugin_name,
-		  $this->option_name . '_general',
-		  array( 'label_for' => $this->option_name . '_recent_max_age' )
-	  );
+		add_settings_field(
+			$this->option_name . '_recent_max_age',
+			__( 'Maximum leeftijd van item om als recent gewijzigd gezien te worden', 'rijksreleasekalender' ),
+			array( $this, $this->option_name . '_recent_max_age_cb' ),
+			$this->plugin_name,
+			$this->option_name . '_general',
+			array( 'label_for' => $this->option_name . '_recent_max_age' )
+		);
 
-	  // Register the general options
+		// Register the general options
 
 		register_setting( $this->plugin_name, $this->option_name . '_restapi_url' );
 		register_setting( $this->plugin_name, $this->option_name . '_restapi_key' );
@@ -351,12 +351,33 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function rijksreleasekalender_register_options_page() {
-		add_options_page(
-			__( 'Rijksreleasekalender instellingen', 'rijksreleasekalender' ),
-			__( 'Rijksreleasekalender', 'rijksreleasekalender' ),
+	public function rijksreleasekalender_register_menu_pages() {
+
+
+		add_menu_page(
+			__( 'Releasekalender', 'rijksreleasekalender' ),
+			__( 'Releasekalender', 'rijksreleasekalender' ),
 			'manage_options',
 			$this->plugin_name,
+			array( $this, 'rijksreleasekalender_main_page' ),
+			'dashicons-calendar'
+		);
+
+	  add_submenu_page(
+		  $this->plugin_name,
+		  __( 'Releasekalender', 'rijksreleasekalender' ),
+		  __( 'Releasekalender', 'rijksreleasekalender' ),
+		  'manage_options',
+		  $this->plugin_name,
+		  array( $this, 'rijksreleasekalender_main_page' )
+	  );
+
+		add_submenu_page(
+			$this->plugin_name,
+			__( 'Releasekalender instellingen', 'rijksreleasekalender' ),
+			__( 'Instellingen', 'rijksreleasekalender' ),
+			'manage_options',
+			$this->plugin_name . '-instellingen',
 			array( $this, 'rijksreleasekalender_options_page' )
 		);
 	}
@@ -380,12 +401,21 @@ class rijksreleasekalender_Admin {
 	}
 
 	/**
+	 * Render the main page
+	 *
+	 * @since    1.0.0
+	 */
+	public function rijksreleasekalender_main_page() {
+		include_once 'partials/rijksreleasekalender-admin-main-display.php';
+	}
+
+	/**
 	 * Render the options page
 	 *
 	 * @since    1.0.0
 	 */
 	public function rijksreleasekalender_options_page() {
-		include_once 'partials/rijksreleasekalender-admin-display.php';
+		include_once 'partials/rijksreleasekalender-admin-options-display.php';
 	}
 
 
