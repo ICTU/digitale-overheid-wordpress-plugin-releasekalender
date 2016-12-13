@@ -363,14 +363,14 @@ class rijksreleasekalender_Admin {
 			'dashicons-calendar'
 		);
 
-	  add_submenu_page(
-		  $this->plugin_name,
-		  __( 'Releasekalender', 'rijksreleasekalender' ),
-		  __( 'Releasekalender', 'rijksreleasekalender' ),
-		  'manage_options',
-		  $this->plugin_name,
-		  array( $this, 'rijksreleasekalender_main_page' )
-	  );
+		add_submenu_page(
+			$this->plugin_name,
+			__( 'Releasekalender', 'rijksreleasekalender' ),
+			__( 'Releasekalender', 'rijksreleasekalender' ),
+			'manage_options',
+			$this->plugin_name,
+			array( $this, 'rijksreleasekalender_main_page' )
+		);
 
 		add_submenu_page(
 			$this->plugin_name,
@@ -545,6 +545,41 @@ class rijksreleasekalender_Admin {
 		);
 
 		register_post_type( 'product', $args );
+	}
+
+	/**
+	 * Do the synchronisation with remote API
+	 *
+	 * @since    1.0.0
+	 */
+	public function rijksreleasekalender_do_sync() {
+		$api_url  = get_option( $this->option_name . '_restapi_url' );
+		$username = get_option( $this->option_name . '_restapi_user' );
+		$password = get_option( $this->option_name . '_restapi_pwd' );
+		$apikey   = get_option( $this->option_name . '_restapi_key' );
+
+		$url = $api_url . 'bouwstenen?api-key=' . $apikey;
+		echo $url;
+		// if username is empty, use API key
+		if ( ! $username ) {
+			// send request to server
+			$ch = curl_init( $url );
+			// save response in a variable from server, set headers;
+			curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+			// get response
+			$response = curl_exec( $ch );
+
+			// decode
+			$result = $response;
+		}
+
+		//TODO ask for JSON content, retrieve and store voorzieningen, producten, releases, set start and end of sync
+
+
+		return $result;
+
+
 	}
 
 

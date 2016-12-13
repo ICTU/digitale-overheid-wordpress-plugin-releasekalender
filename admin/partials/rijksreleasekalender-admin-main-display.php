@@ -15,5 +15,13 @@
 <div class="wrap">
 	<h2><?php echo esc_html( get_admin_page_title() ); ?></h2>
 	<h3><?php _e('Synchroniseren', 'rijksreleasekalender');?></h3>
-	<p>Hier komt dus de sync knop :)</p>
+
+	<?php
+
+	$response = rijksreleasekalender_Admin::rijksreleasekalender_do_sync();
+
+	echo $response;
+
+?>
+
 </div>
