@@ -100,6 +100,11 @@ plugins/rhswp-releasekalender/                      # → Folder met alle plugin
 
 ```
   
+## Versies
+
+* 1.0.1 - added some functionality for public pages
+* 1.0.0 - File and folder structure
+
 ## Overige opmerkingen
 Bouwstenen mogen geen bouwstenen heten maar voorzieningen.
 
