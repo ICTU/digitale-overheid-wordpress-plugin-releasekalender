@@ -117,7 +117,6 @@ class rijksreleasekalender_Loader {
 	public function run() {
 
 		foreach ( $this->filters as $hook ) {
-			echo "TREST";
 			add_filter( $hook['hook'], array( $hook['component'], $hook['callback'] ), $hook['priority'], $hook['accepted_args'] );
 		}
 

@@ -157,6 +157,12 @@ class rijksreleasekalender {
 		// Options page
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'rijksreleasekalender_register_menu_pages' );
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'rijksreleasekalender_register_settings' );
+
+		// Add CPTs and taxonomies
+		$this->loader->add_action( 'init', $plugin_admin, 'rijksreleasekalender_register_cpt_voorziening' );
+		$this->loader->add_action( 'init', $plugin_admin, 'rijksreleasekalender_register_voorziening_groep' );
+		$this->loader->add_action( 'init', $plugin_admin, 'rijksreleasekalender_register_cpt_product' );
+
 	}
 
 	/**
