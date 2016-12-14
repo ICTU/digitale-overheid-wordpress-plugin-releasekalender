@@ -76,6 +76,7 @@ class rijksreleasekalender_Public {
 	 * @var      string    $version    page template slug
 	 */
 	private $TEMP_releasekalender_testarray;
+	private $TEMP_listarray;
 
 
 	/**
@@ -85,7 +86,8 @@ class rijksreleasekalender_Public {
 	 * @access   private
 	 * @var      string    $version    page title
 	 */
-	private $TEMP_original_page_title;
+	private $TEMP_pagename_for_voorziening;
+	private $TEMP_pagename_for_product;
 
 	/**
 	 * Variable containing the voorziening key, if available
@@ -120,8 +122,8 @@ class rijksreleasekalender_Public {
 		$this->releasekalender_template_dossier   		= 'releasekalender-dossier-template.php';
 		$this->releasekalender_template_hoofdpagina   = 'releasekalender-main-page-template.php';
 		
-		$this->releasekalender_queryvar_voorziening   = 'voorziening7';
-		$this->releasekalender_queryvar_product   		= 'productje2';
+		$this->releasekalender_queryvar_voorziening   = 'voorziening';
+		$this->releasekalender_queryvar_product   		= 'product';
 
 		
 		$this->releasekalender_voorziening						= '';
@@ -222,7 +224,73 @@ class rijksreleasekalender_Public {
 				),
 			),
 		);  
+
+
+    $this->TEMP_listarray = [];
+
+
+
+		foreach ( $this->TEMP_releasekalender_testarray as $key => $value ) {
+
+			$newarray = $value['bouwstenen'];							
+
+			if ( is_array( $newarray ) ) {
+
+				foreach ( $newarray as $key1 => $value1 ) {
+  				$this->TEMP_listarray[$key1] = $value1['display_name'];
+				}
+			}
+		}
 	
+
+    if( function_exists('acf_add_local_field_group') ):
+    
+    acf_add_local_field_group(array (
+    	'key' => 'group_58500d27b83da',
+    	'title' => 'Kies bijbehorende voorzieningen (releasekalender)',
+    	'fields' => array (
+    		array (
+    			'layout' => 'vertical',
+    			'choices' => $this->TEMP_listarray,
+    			'default_value' => '',
+    			'other_choice' => 0,
+    			'save_other_choice' => 0,
+    			'allow_null' => 1,
+    			'return_format' => 'value',
+    			'key' => 'field_58500d3f113fe',
+    			'label' => 'Voorzieningen',
+    			'name' => 'releasekalender_voorziening',
+    			'type' => 'radio',
+    			'instructions' => '',
+    			'required' => 0,
+    			'conditional_logic' => 0,
+    			'wrapper' => array (
+    				'width' => '',
+    				'class' => '',
+    				'id' => '',
+    			),
+    		),
+    	),
+    	'location' => array (
+    		array (
+    			array (
+    				'param' => 'page_template',
+    				'operator' => '==',
+    				'value' => 'releasekalender-dossier-template.php',
+    			),
+    		),
+    	),
+    	'menu_order' => 0,
+    	'position' => 'acf_after_title',
+    	'style' => 'default',
+    	'label_placement' => 'top',
+    	'instruction_placement' => 'label',
+    	'hide_on_screen' => '',
+    	'active' => 1,
+    	'description' => '',
+    ));
+    
+    endif;
 
 	}
 
@@ -294,7 +362,7 @@ class rijksreleasekalender_Public {
 
 			wp_enqueue_script( $this->rijksreleasekalender, plugin_dir_url( __FILE__ ) . 'js/min/releasekalender-min.js?v1', array( 'jquery' ), $this->version, false );
 
-			$this->TEMP_original_page_title = $this->rijksreleasekalender_get_original_page_title();
+      $this->rijksreleasekalender_get_original_page_title();
   		
   		if ( ( $this->releasekalender_template_dossier == $page_template ) || ( $this->releasekalender_template_hoofdpagina == $page_template ) ) {
 
@@ -302,13 +370,12 @@ class rijksreleasekalender_Public {
   			add_filter( 'the_content', array( $this, 'rijksreleasekalender_template_hoofdpagina_content_filter' ) );
   			
   			// change the page title
-//  			add_filter( 'the_title', array( $this, 'rijksreleasekalender_template_hoofdpagina_title_filter' ), 10, 2 );
+        add_filter( 'genesis_post_title_output', array( $this, 'rijksreleasekalender_template_hoofdpagina_title_filter' ), 15, 2 );
 
 				// check the breadcrumb
 				add_filter( 'genesis_single_crumb', array( $this, 'rijksreleasekalender_breadcrumb_modify' ), 10, 2 );
 				add_filter( 'genesis_page_crumb', array( $this, 'rijksreleasekalender_breadcrumb_modify' ), 10, 2 );
-				add_filter( 'genesis_archive_crumb', array( $this, 'rijksreleasekalender_breadcrumb_modify' ), 10, 2 );
-				
+				add_filter( 'genesis_archive_crumb', array( $this, 'rijksreleasekalender_breadcrumb_modify' ), 10, 2 ); 				
 
     		wp_enqueue_style( $this->rijksreleasekalender, plugin_dir_url( __FILE__ ) . 'css/releasekalender-main-page-template.css', array(), $this->version, 'all' );
 
@@ -323,25 +390,31 @@ public function rijksreleasekalender_get_original_page_title( ) {
 	global $post;
 
 	$nieuwetitle = get_the_title( get_the_id() );
+  
 
-	if ( get_query_var( $this->releasekalender_queryvar_voorziening ) ) {
+	if ( get_query_var( $this->releasekalender_queryvar_voorziening ) ||  get_query_var( $this->releasekalender_queryvar_product ) ) {
 
-		$thekey  = get_query_var( $this->releasekalender_queryvar_voorziening );
+    $this->TEMP_pagename_for_voorziening  = get_query_var( $this->releasekalender_queryvar_voorziening );
+    $this->TEMP_pagename_for_product      = get_query_var( $this->releasekalender_queryvar_product );
+
+
+		$thekeyvoorziening  = get_query_var( $this->releasekalender_queryvar_voorziening );
+		$thekeyproduct      = get_query_var( $this->releasekalender_queryvar_product );
 
 		foreach ( $this->TEMP_releasekalender_testarray as $key => $value ) {
 
 			$newarray = $value['bouwstenen'];							
 
 			if ( is_array( $newarray ) ) {
-				if ( isset( $newarray[$thekey] ) ) {
-					$nieuwetitle = $newarray[$thekey]['display_name'];
-					$nieuwetitle = strip_tags($nieuwetitle);
+				if ( isset( $newarray[$thekeyvoorziening] ) ) {
+					$this->TEMP_pagename_for_voorziening = strip_tags($newarray[$thekeyvoorziening]['display_name']);
+				}
+				if ( isset( $newarray[$thekeyproduct] ) ) {
+					$this->TEMP_pagename_for_product = strip_tags($newarray[$thekeyvoorziening]['display_name']);
 				}
 			}
 		}
 	}
-
-	return $nieuwetitle;
 
 }
 
@@ -350,25 +423,46 @@ public function rijksreleasekalender_breadcrumb_modify( $crumb, $args ) {
 
 	global $post;
 
-	$page_template = get_post_meta( get_the_ID(), '_wp_page_template', true );
+	$page_template  = get_post_meta( get_the_ID(), '_wp_page_template', true );
+  $thelink        = get_permalink( get_the_id() ) . $this->releasekalender_queryvar_voorziening . '/' . get_query_var( $this->releasekalender_queryvar_voorziening ) . '/';
+	$nieuwetitle    = get_the_title( get_the_id() );
 
 	if ( ( $this->releasekalender_template_dossier == $page_template ) || ( $this->releasekalender_template_hoofdpagina == $page_template ) ) {
-//	if ( $this->releasekalender_template_hoofdpagina == $page_template ) {
 
 	  $span_before_start  = '<span class="breadcrumb-link-wrap" itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">';  
 	  $span_between_start = '<span itemprop="name">';  
 	  $span_before_end    = '</span>';  
-	
-		if ( get_query_var( $this->releasekalender_queryvar_voorziening ) ) {
 
-			$nieuwetitle = get_the_title( get_the_id() );
-	
-			$replacer = '<a href="' . get_permalink( get_the_id() ) . '">' . $nieuwetitle .'</a>';
-	    $crumb = str_replace( $nieuwetitle, $replacer, $crumb);
+    if ( $this->releasekalender_template_dossier == $page_template ) {
 
-			$crumb .= $args['sep'] . $this->TEMP_original_page_title;
-			
-		}
+  		if ( get_query_var( $this->releasekalender_queryvar_product ) ) {
+  			$replacer = '<a href="' . get_permalink( get_the_id() ) . '">' . $nieuwetitle .'</a>';
+  	    $crumb = str_replace( $nieuwetitle, $replacer, $crumb);
+  			$crumb .= $args['sep'] . $this->TEMP_pagename_for_product;
+      }
+
+    }	
+    else {
+  	
+  		if ( get_query_var( $this->releasekalender_queryvar_product ) && get_query_var( $this->releasekalender_queryvar_voorziening ) ) {
+  
+  	
+  			$replacer = '<a href="' . get_permalink( get_the_id() ) . '">' . $nieuwetitle .'</a>';
+  	    $crumb = str_replace( $nieuwetitle, $replacer, $crumb);
+
+  			$crumb .= $args['sep'] . '<a href="' . $thelink . '">' . $this->TEMP_pagename_for_voorziening .'</a>';
+  			$crumb .= $args['sep'] . $this->TEMP_pagename_for_product;
+  			
+  		}
+  		elseif ( get_query_var( $this->releasekalender_queryvar_voorziening ) ) {
+  
+  			$replacer = '<a href="' . get_permalink( get_the_id() ) . '">' . $nieuwetitle .'</a>';
+  	    $crumb = str_replace( $nieuwetitle, $replacer, $crumb);
+  
+  			$crumb .= $args['sep'] . $this->TEMP_pagename_for_voorziening;
+  			
+  		}
+    }
 	}
 	
 	return $crumb;
@@ -382,22 +476,17 @@ public function rijksreleasekalender_template_hoofdpagina_title_filter( $thetitl
 
   $nieuwetitle		= '';
 
-//	if ( ! is_admin() && is_main_query() ) {
 	if ( ! is_admin() ) {
-		if ( $id == get_the_id() && is_singular( 'page' ) ) {
-			if ( get_query_var( $this->releasekalender_queryvar_voorziening ) ) {
-				if ( $this->TEMP_original_page_title == $thetitle ) {
-					$nieuwetitle		= 'd ' . $this->TEMP_original_page_title;
-				}
-				else {
-					$nieuwetitle		= 'e ' . $this->TEMP_original_page_title . ' / ' . $thetitle;
-				}
-			}
+		if ( get_query_var( $this->releasekalender_queryvar_product ) ) {
+			$nieuwetitle		= $this->TEMP_pagename_for_product;
+		}
+		elseif ( get_query_var( $this->releasekalender_queryvar_voorziening ) ) {
+			$nieuwetitle		= $this->TEMP_pagename_for_voorziening;
 		}
 	}
 
 	if ( $nieuwetitle ) {
-  	$thetitle =  $nieuwetitle;
+  	$thetitle =  '<h1 class="entry-title" itemprop="headline">' . $nieuwetitle . '</h1>';
 	}
 
 	return $thetitle;
@@ -414,21 +503,32 @@ public function rijksreleasekalender_template_hoofdpagina_title_filter( $thetitl
   	 */
   	public function rijksreleasekalender_template_hoofdpagina_content_filter( $content ) {
 
+
   		$page_template = get_post_meta( get_the_ID(), '_wp_page_template', true );
 
       // TODO: toon de juist informatie voor deze voorziening
 
 		  $thispage 		= '';
 	    $thelink    	= get_permalink( get_the_ID() );
-
-			$this->releasekalender_voorziening = get_query_var( $this->releasekalender_queryvar_voorziening );
+	    
+      
+      if( get_field('releasekalender_voorziening') ) {
+  			$this->releasekalender_voorziening = get_field('releasekalender_voorziening');
+      }
+      else {
+  			$this->releasekalender_voorziening = get_query_var( $this->releasekalender_queryvar_voorziening );
+      }
 
 			$content 			= '';
 			$strnu 				= date(get_option('date_format'));
 	    $folder 			= dirname(__FILE__) . '/partials/do-downloads/';
-			$currentURL		= get_permalink( get_the_id( ) ) . '/' . $this->releasekalender_queryvar_voorziening . '/';
+			$currentURL		= get_permalink( get_the_id( ) ) . $this->releasekalender_queryvar_voorziening . '/';
 
 			if ( $this->releasekalender_voorziening ) {
+
+        //* Force full-width-content layout
+        add_filter( 'genesis_pre_get_option_site_layout', '__genesis_return_full_width_content' );
+        
 
 				if ( get_query_var( $this->releasekalender_queryvar_product ) ) {
 				  $filelocation = $folder . $this->releasekalender_voorziening . '-' . get_query_var( $this->releasekalender_queryvar_product ) . '.php';
