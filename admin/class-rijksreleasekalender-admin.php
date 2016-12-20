@@ -175,6 +175,15 @@ class rijksreleasekalender_Admin {
 			array( 'label_for' => $this->option_name . '_update_key' )
 		);
 
+		add_settings_field(
+			$this->option_name . '_author_id',
+			__( 'Gebruiker', 'rijksreleasekalender' ),
+			array( $this, $this->option_name . '_author_id_cb' ),
+			$this->plugin_name,
+			$this->option_name . '_general',
+			array( 'label_for' => $this->option_name . '_author_id' )
+		);
+
 
 		add_settings_field(
 			$this->option_name . '_recent_max_age',
@@ -193,6 +202,7 @@ class rijksreleasekalender_Admin {
 		register_setting( $this->plugin_name, $this->option_name . '_restapi_pwd' );
 		register_setting( $this->plugin_name, $this->option_name . '_rss_size' );
 		register_setting( $this->plugin_name, $this->option_name . '_update_key' );
+		register_setting( $this->plugin_name, $this->option_name . '_author_id' );
 		register_setting( $this->plugin_name, $this->option_name . '_recent_max_age' );
 
 		// Connection options
@@ -280,6 +290,26 @@ class rijksreleasekalender_Admin {
 	public function rijksreleasekalender_update_key_cb() {
 		$update_key = get_option( $this->option_name . '_update_key' );
 		echo '<input class="regular-text code" type="text" name="' . $this->option_name . '_update_key' . '" id="' . $this->option_name . '_update_key' . '" value="' . $update_key . '"> ';
+	}
+
+	/**
+	 * Render the author dropdown
+	 *
+	 * @since  1.0.0
+	 */
+	public function rijksreleasekalender_author_id_cb() {
+		$author_id = get_option( $this->option_name . '_author_id' );
+		$users     = get_users( 'orderby=display_name&order=ASC' );
+		$selected  = selected( $author_id, '', false );
+
+		echo '<select name="' . $this->option_name . '_author_id' . '">';
+		echo '<option value="" ' . $selected . '></option>';
+		foreach ( $users as $user ) {
+
+			$selected = selected( $author_id, $user->ID );
+			echo '<option value="' . $user->ID . '" id="' . $user->ID . '" ' . $selected . '>' . $user->display_name . '</option>';
+		}
+		echo '</select>';
 	}
 
 	/**
@@ -553,34 +583,173 @@ class rijksreleasekalender_Admin {
 	 * @since    1.0.0
 	 */
 	public function rijksreleasekalender_do_sync() {
+		//TODO retrieve and store voorzieningen, producten, releases, set start and end of sync
+		$post_type = 'voorziening';
+		$_step     = array_key_exists( 'step', $_POST ) ? intval( $_POST[ 'step' ] ) : 0;
+
+		switch ( $_step ) {
+			case 0:
+				$voorzieningen       = $this->rijksreleasekalender_api_get( 'bouwstenen' );
+				$voorzieningen_count = $this->rijksreleasekalender_count_api_objects( $voorzieningen );
+				$messages[]          = __( 'Aantal voorzieningen: ', 'rijksreleasekalender' ) . $voorzieningen_count;
+				$author_id           = get_option( $this->option_name . '_author_id' );
+				if ( 0 < $voorzieningen_count ) {
+
+					$num = 0;
+					foreach ( $voorzieningen->records as $voorziening ) {
+						$num ++;
+						$messages[] = $num . '. ' . $voorziening->naam;
+
+						$post_args = array(
+							'post_author'    => $author_id,
+							'post_content'   => $voorziening->beschrijving,
+							'post_title'     => $voorziening->naam,
+							'post_status'    => 'publish',
+							'post_type'      => 'voorziening',
+							'comment_status' => 'closed',
+							'ping_status'    => 'closed'
+						);
+						// check if post already exists
+							$voorziening_exists = get_page_by_title( $voorziening->naam, OBJECT, $post_type );
+						if ( ! $voorziening_exists ) {
+							$voorziening_post_id = wp_insert_post( $post_args );
+							$messages[]      = 'Voorziening aangemaakt: ' . $voorziening->naam . '(post_id: ' . $voorziening_post_id . ')';
+						}
+						else {
+							$voorziening_post_id = $voorziening_exists->ID;
+
+							// Add post ID to args
+							$post_args['ID'] = $voorziening_post_id;
+							wp_update_post($post_args);
+
+							$messages[]      = 'Voorziening aangepast: ' . $voorziening->naam . '(post_id: ' . $voorziening_post_id . ')';
+						}
+
+
+						if ( $voorziening_post_id > 0 ) {
+							update_post_meta( $voorziening_post_id, 'voorziening_id', $voorziening->id );
+							update_post_meta( $voorziening_post_id, 'voorziening_website', $voorziening->website );
+							update_post_meta( $voorziening_post_id, 'voorziening_aantekeningen', $voorziening->aantekeningen );
+							update_post_meta( $voorziening_post_id, 'voorziening_updated', $voorziening->updated );
+
+							$eigenaar_organisatie = array(
+								'id'      => $voorziening->eigenaarOrganisatie->id,
+								'naam'    => $voorziening->eigenaarOrganisatie->naam,
+								'website' => $voorziening->eigenaarOrganisatie->website,
+								'updated' => $voorziening->eigenaarOrganisatie->updated
+							);
+							update_post_meta( $voorziening_post_id, 'voorziening_eigenaarOrganisatie', $eigenaar_organisatie );
+
+							$eigenaar_contact = array(
+								'id'          => $voorziening->eigenaarContact->id,
+								'naam'        => $voorziening->eigenaarContact->naam,
+								'organisatie' => array(
+									'id'      => $voorziening->eigenaarContact->organisatie->id,
+									'naam'    => $voorziening->eigenaarContact->organisatie->naam,
+									'website' => $voorziening->eigenaarContact->organisatie->website,
+									'updated' => $voorziening->eigenaarContact->organisatie->updated,
+								)
+							);
+							update_post_meta( $voorziening_post_id, 'voorziening_eigenaarContact', $eigenaar_contact );
+						}
+						$messages[] = 'Voorziening meta opgeslagen: ' . $voorziening->naam . '(post_id: ' . $voorziening_post_id . ')';
+
+					}
+				} else {
+					$messages[] = __( 'Geen voorzieningen gevonden...', 'rijksreleasekalender' );
+				}
+
+				//$messages[] = print_r($voorzieningen, true);
+				// store_voorzieningen_temp()
+				// if no errors -> store_voorzieningen()
+
+				// todo have step automatically increase
+				$_step = 3; // stop after this step
+				// $_step ++; // next step
+				break;
+			case
+			1:
+				$producten       = $this->rijksreleasekalender_api_get( 'producten' );
+				$producten_count = $this->rijksreleasekalender_count_api_objects( $producten );
+
+				$messages[] = 'Aantal producten: ' . $producten_count;
+
+				$_step ++; // next step
+				break;
+			case 2:
+				$releases       = $this->rijksreleasekalender_api_get( 'releases' );
+				$releases_count = $this->rijksreleasekalender_count_api_objects( $releases );
+
+				$messages[] = 'Aantal releases: ' . $releases_count;
+
+				$_step ++;
+				break;
+		}
+
+		// todo bij fout stoppen en foutmelding
+		if ( 3 == $_step ) {
+			$_result    = 'done';
+			$messages[] = 'Sync klaar.';
+		} else {
+			$_result = $_step;
+		}
+		wp_send_json( array(
+			'result'   => $_result,
+			'step'     => $_step,
+			'messages' => $messages
+		) );
+		exit();
+
+
+	}
+
+	/**
+	 * Do the API call
+	 *
+	 * @param      string $api_parameters is a string containing the api parameters
+	 *
+	 * @since    1.0.0
+	 */
+	public
+	function rijksreleasekalender_api_get(
+		$api_parameters
+	) {
 		$api_url  = get_option( $this->option_name . '_restapi_url' );
 		$username = get_option( $this->option_name . '_restapi_user' );
 		$password = get_option( $this->option_name . '_restapi_pwd' );
 		$apikey   = get_option( $this->option_name . '_restapi_key' );
+		$format   = '.json'; // format to retrieve
+		$url      = $api_url . $api_parameters . $format . '?api-key=' . $apikey;
 
-		$url = $api_url . 'bouwstenen?api-key=' . $apikey;
-		echo $url;
 		// if username is empty, use API key
 		if ( ! $username ) {
 			// send request to server
 			$ch = curl_init( $url );
 			// save response in a variable from server, set headers;
 			curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 );
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
 			// get response
 			$response = curl_exec( $ch );
 
 			// decode
-			$result = $response;
+			return ( json_decode( $response ) );
+
 		}
-
-		//TODO ask for JSON content, retrieve and store voorzieningen, producten, releases, set start and end of sync
-
-
-		return $result;
-
-
 	}
 
+	/**
+	 * Count number of records in API call
+	 * @var    object $json_object is a JSON ojbject containing the API call response
+	 * @return  string  $totalcount The total count of objects in the api response
+	 *
+	 * @since    1.0.0
+	 */
+	public
+	function rijksreleasekalender_count_api_objects(
+		$json_object
+	) {
+		$totalcount = $json_object->totalCount;
 
+		return $totalcount;
+	}
 } // end of class

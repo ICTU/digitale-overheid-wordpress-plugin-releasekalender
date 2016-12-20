@@ -14,14 +14,77 @@
 <!-- This file should primarily consist of HTML with a little bit of PHP. -->
 <div class="wrap">
 	<h2><?php echo esc_html( get_admin_page_title() ); ?></h2>
-	<h3><?php _e('Synchroniseren', 'rijksreleasekalender');?></h3>
+	<h3><?php _e( 'Synchroniseren', 'rijksreleasekalender' ); ?></h3>
 
-	<?php
+	<table class="form-table" id="progress">
+		<tr>
+			<td>
+				<input id="startsync" type="button" class="button button-primary" value="<?php _e( 'Start synchronisatie', 'rijksreleasekalender' ); ?>" />
+				<input id="clearlog" type="button" class="button button-secondary" value="<?php _e( 'Log leegmaken', 'rijksreleasekalender' ); ?>" />
+			</td>
+		</tr>
+	</table>
+	<div style="width: 100%; padding-top: 16px; font-style: italic;" id="log"></div>
 
-	$response = rijksreleasekalender_Admin::rijksreleasekalender_do_sync();
+		<?php //todo this needs to be moved to an external script. ?>
 
-	echo $response;
+	<script type="text/javascript">
 
-?>
+		var _button = jQuery('input#startsync');
+		var _clearbutton = jQuery('input#clearlog');
+		var _lastrow = jQuery('#progress tr:last');
 
+		var setProgress = function (_message) {
+			_lastrow.append(_message);
+		}
+
+		jQuery(document).ready(function () {
+
+			_button.click(function (e) {
+
+				e.preventDefault();
+
+				jQuery(this).val('<?php _e( 'Sync gestart...', 'rijksreleasekalender' );?>').prop('disabled', true);
+
+				_requestJob(0);
+
+			});
+
+			// clear log div
+			_clearbutton.click(function() {
+				jQuery( '#log' ).empty();
+			})
+
+		})
+
+		var _requestJob = function (_start) {
+			jQuery.post(ajaxurl, {'action': 'rrk_do_sync', 'step': _start}, _jobResult);
+		}
+
+		var _jobResult = function (response) {
+			if (response.messages.length > 0) {
+				for (var i = 0; i < response.messages.length; i++) {
+					// console.log( response.messages[ i ] );
+					// new messages appear on top. .append() can be used to have new entries at the bottom
+					jQuery('#log').prepend(response.messages[i] + '<br />');
+
+				}
+			}
+
+			switch (response.result) {
+				case 0:
+				case 1:
+				case 2:
+					//console.log(response.step);
+					_requestJob(response.step);
+					break;
+				case 'done':
+					_button.val('<?php _e( 'Start Synchronisatie', 'rijksreleasekalender' );?>').prop('disabled', false);
+					break;
+				default:
+					_button.val('<?php _e( 'Sync fout', 'rijksreleasekalender' );?>');
+			}
+		}
+
+	</script>
 </div>

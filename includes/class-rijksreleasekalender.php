@@ -163,6 +163,8 @@ class rijksreleasekalender {
 		$this->loader->add_action( 'init', $plugin_admin, 'rijksreleasekalender_register_voorziening_groep' );
 		$this->loader->add_action( 'init', $plugin_admin, 'rijksreleasekalender_register_cpt_product' );
 
+		$this->loader->add_action( 'wp_ajax_rrk_do_sync', $plugin_admin, 'rijksreleasekalender_do_sync' );
+		$this->loader->add_action( 'wp_ajax_rrk_get_vz', $plugin_admin, 'rijksreleasekalender_retrieve_voorzieningen' );
 	}
 
 	/**
