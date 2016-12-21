@@ -36,18 +36,8 @@ since it is built for the Rijkshuisstijl theme */
   .size12 {
     width: 50%;
   }
-  #main .rk-changes ul, #main .rk-overview .moduletable-rk-links ul {
-    list-style: none;
-    margin-left: 0;
-    padding-left: 0;
-  }
-  #main .rk-changes ul.list, #main .rk-overview .moduletable-rk-links ul.list {
-    border-bottom: 3px solid #cccccc;
-    border-top: 3px solid #cccccc;
-    margin: 0.4em 20px 0.4em 0;
-    padding: 0 0 0.625em 0;
-  }
-  #main .rk-changes ul.list li,  .rk-overview .moduletable-rk-links ul.list li {
+
+  .rk-overview .moduletable-rk-links ul.list li {
     background: none;
     font-size: 1em;
     padding-left: 0;
@@ -61,20 +51,8 @@ since it is built for the Rijkshuisstijl theme */
   .rk-overview .moduletable-rk-links h2 {
     padding: 0;
   }
-  #main .rk-changes #kolom12 h2, #main .rk-overview .moduletable-rk-links h3 {
-    line-height: 1.5;
-    margin-top: 1.25em;
-  }
-  #main .rk-overview .moduletable-rk-links h3 {
-    padding: 0;
-  }
-  #main .rk-changes p, #main .rk-overview .moduletable-rk-links p {
-    padding-bottom: 0;
-  }
-  #main .rk-overview .moduletable-rk-links p {
-    margin: 0;
-    padding: 0;
-  }
+
+
   .rk-changes .details, .rk-overview .details {
     color: #535353;
   }
@@ -174,14 +152,7 @@ since it is built for the Rijkshuisstijl theme */
     font-size: 0.625em;
     line-height: 0.95em;
   }
-  /* Overrides for product detail page */
-  #main .rk-product .releasedatum {
-    font-style: italic;
-  }
-  #main .rk-product h3 {
-    font-size: 0.75em;
-    margin-bottom: 0.4343em;
-  }
+
   .rk-product ul li p {
     font-size: 1em;
   }
@@ -189,10 +160,15 @@ since it is built for the Rijkshuisstijl theme */
     margin-left: 0;
   }
   /* Overrides for kalender page */
-  #main .rk-kalender h3 {
-    font-size: 0.75em;
+  .rk-kalender {
+    p,
+    li,
+    h3,
+    h4 {
+      font-size: 0.75rem;
+    }
   }
-  #main .rk-kalender h3.sticky {
+  .rk-kalender h3.sticky {
     background: #ffffff;
     position: fixed;
     top: 0;
