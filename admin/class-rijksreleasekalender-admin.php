@@ -512,9 +512,9 @@ class rijksreleasekalender_Admin {
 			'voorziening',
 			array(
 				'labels'        => array(
-					'name'          => 'Groep',
-					'add_new_item'  => 'Nieuwe groep toevoegen',
-					'new_item_name' => "Nieuwe groep"
+					'name'          => __( 'Groep', 'rijksreleasekalender' ),
+					'add_new_item'  => __( 'Groep toevoegen', 'rijksreleasekalender' ),
+					'new_item_name' => __( 'Nieuwe groep', 'rijksreleasekalender' )
 				),
 				'show_ui'       => true,
 				'show_tagcloud' => false,
@@ -586,8 +586,6 @@ class rijksreleasekalender_Admin {
 		//TODO retrieve and store voorzieningen, producten, releases, set start and end of sync
 
 		$_step = array_key_exists( 'step', $_POST ) ? intval( $_POST[ 'step' ] ) : 0;
-		// for measuring script time
-		$start = microtime( true );
 
 		switch ( $_step ) {
 			case 0:
@@ -607,7 +605,7 @@ class rijksreleasekalender_Admin {
 							'post_author'    => $author_id,
 							'post_content'   => $voorziening->beschrijving,
 							'post_title'     => $voorziening->naam,
-							'post_status'    => 'publish',
+							'post_status'    => 'draft',
 							'post_type'      => 'voorziening',
 							'comment_status' => 'closed',
 							'ping_status'    => 'closed'
@@ -626,7 +624,11 @@ class rijksreleasekalender_Admin {
 							$voorz_query->the_post();
 							// store ID for future use
 							$voorziening_post_id = get_the_ID();
-							$messages[]          = 'Voorziening gevonden met id:' . $voorziening->id . ' (post_id: ' . $voorziening_post_id . ') en titel: ' . get_the_title();
+							$messages[]          = __( 'Voorziening gevonden met id: ', 'rijksreleasekalender' ) .
+							                       $voorziening->id .
+							                       ' (post_id: ' . $voorziening_post_id . ') ' .
+							                       __( 'en titel: ', 'rijksreleasekalender' ) .
+							                       get_the_title();
 							$voorziening_exists  = true;
 						} else {
 							$voorziening_exists = false;
@@ -635,8 +637,48 @@ class rijksreleasekalender_Admin {
 						if ( ! $voorziening_exists ) {
 
 							// post does not exist - so let's create it.
-							$voorziening_post_id = wp_insert_post( $post_args );
-							$messages[]          = 'Voorziening aangemaakt: ' . $voorziening->naam . '(post_id: ' . $voorziening_post_id . ')';
+							$voorziening_post_id = wp_insert_post( $post_args, true );
+							if ( $voorziening_post_id > 0 ) {
+								$messages[] = __( 'Voorziening aangemaakt: ', 'rijksreleasekalender' ) . $voorziening->naam . '(post_id: ' . $voorziening_post_id . ')';
+
+								// add custom fields
+								// todo make a function for this
+								$eigenaar_organisatie = array(
+									'id'      => $voorziening->eigenaarOrganisatie->id,
+									'naam'    => $voorziening->eigenaarOrganisatie->naam,
+									'website' => $voorziening->eigenaarOrganisatie->website,
+									'updated' => $voorziening->eigenaarOrganisatie->updated
+								);
+
+								$eigenaar_contact = array(
+									'id'          => $voorziening->eigenaarContact->id,
+									'naam'        => $voorziening->eigenaarContact->naam,
+									'organisatie' => array(
+										'id'      => $voorziening->eigenaarContact->organisatie->id,
+										'naam'    => $voorziening->eigenaarContact->organisatie->naam,
+										'website' => $voorziening->eigenaarContact->organisatie->website,
+										'updated' => $voorziening->eigenaarContact->organisatie->updated,
+									)
+								);
+
+								// add all fields to array
+
+								$custom_field_array = array(
+									'voorziening_id'                  => $voorziening->id,
+									'voorziening_website'             => $voorziening->website,
+									'voorziening_aantekeningen'       => $voorziening->aantekeningen,
+									'voorziening_updated'             => $voorziening->updated,
+									'voorziening_eigenaarOrganisatie' => $eigenaar_organisatie,
+									'voorziening_eigenaarContact'     => $eigenaar_contact
+								);
+
+								foreach ( $custom_field_array as $key => $value ) {
+									update_post_meta( $voorziening_post_id, $key, $value );
+								}
+							} else {
+								$messages[] = __( 'Fout bij aanmaken voorziening: ', 'rijksreleasekalender' ) . $voorziening->naam . '(WP_Error: ' . $voorziening_post_id->get_error_message() . ')';
+							}
+
 
 						} else {
 							// post exists - store all values in a temp custom field
@@ -683,19 +725,17 @@ class rijksreleasekalender_Admin {
 							// store new values in temp meta field.
 							$meta_result = update_post_meta( $voorziening_post_id, 'temp_post_array', $post_array );
 							if ( $meta_result ) {
-								$messages[] = 'Voorziening tijdelijk opgeslagen, post_id: ' . $voorziening_post_id;
+								$messages[] = __( 'Voorziening tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $voorziening_post_id;
 							} else {
-								$messages[] = 'FOUT - Voorziening niet tijdelijk opgeslagen, post_id: ' . $voorziening_post_id;
-								//$continue   = false;
+								$messages[] = __( 'FOUT - Voorziening niet tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $voorziening_post_id;
+								$continue   = false;
 							}
 						}
 						if ( $continue ) {
 							// we may save the new data.
-//							$messages[] = 'post_array: <br />'. print_r($post_array['args'], true) . '<br />';
-//							$messages[] = 'auteur: ' . $post_array['args']['post_author'] . '<br />';
 							$result = $this->rijksreleasekalender_update_post( $voorziening_post_id, $post_type, $post_array );
 							if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
-								$messages[] = 'Voorziening bijgewerkt, post_id: ' . $result;
+								$messages[] = __( 'Voorziening bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
 								// remove temp meta fields
 								$messages[] = $this->rijksreleasekalender_delete_post_meta( $voorziening_post_id, 'temp_post_array' );
 
@@ -714,9 +754,7 @@ class rijksreleasekalender_Admin {
 				// store_voorzieningen_temp()
 				// if no errors -> store_voorzieningen()
 
-				// todo have step automatically increase
-				$_step = 3; // stop after this step
-				// $_step ++; // next step
+				$_step ++; // next step
 				break;
 
 			case
@@ -725,7 +763,7 @@ class rijksreleasekalender_Admin {
 				$producten       = $this->rijksreleasekalender_api_get( 'producten' );
 				$producten_count = $this->rijksreleasekalender_count_api_objects( $producten );
 
-				$messages[] = __( 'Aantal producten: ', 'rijksreleasekalender' ) . $producten_count;
+				$messages[] = __( 'Aantal producten (nog niet geimporteerd): ', 'rijksreleasekalender' ) . $producten_count;
 
 				$author_id = get_option( $this->option_name . '_author_id' );
 				if ( 0 < $producten_count ) {
@@ -738,7 +776,7 @@ class rijksreleasekalender_Admin {
 				$releases       = $this->rijksreleasekalender_api_get( 'releases' );
 				$releases_count = $this->rijksreleasekalender_count_api_objects( $releases );
 
-				$messages[] = 'Aantal releases: ' . $releases_count;
+				$messages[] = __( 'Aantal releases (nog niet geimporteerd): ', 'rijksreleasekalender' ) . $releases_count;
 
 				$_step ++;
 				break;
@@ -747,7 +785,7 @@ class rijksreleasekalender_Admin {
 		// todo bij fout stoppen en foutmelding
 		if ( 3 == $_step ) {
 			$_result    = 'done';
-			$messages[] = 'Sync klaar.';
+			$messages[] = __( 'Sync klaar.', 'rijksreleasekalender' );
 		} else {
 			$_result = $_step;
 		}
@@ -818,7 +856,7 @@ class rijksreleasekalender_Admin {
 	 * Store temp meta field as post and meta fields
 	 * @var    int    $post_id  post ID of post to update
 	 * @var    string $post_type
-	 * @var    array  $all_args holdins all post args and meta key/values
+	 * @var    array  $all_args holding all post args and meta key/values
 	 *
 	 * @return int post_id of changed post
 	 * @return array $messages holding the WP_Error
@@ -827,12 +865,12 @@ class rijksreleasekalender_Admin {
 	 * @since    1.0.0
 	 */
 	public function rijksreleasekalender_update_post( $post_id, $post_type, $all_args ) {
-
 		$post_args = array(
+			'ID'             => $all_args[ 'args' ][ 'ID' ],
 			'post_author'    => $all_args[ 'args' ][ 'post_author' ],
-			'post_content'   => $all_args[ 'args][ ->post_content' ],
+			'post_content'   => $all_args[ 'args' ][ 'post_content' ],
 			'post_title'     => $all_args[ 'args' ][ 'post_title' ],
-			'post_status'    => 'publish',
+			'post_status'    => get_post_status(),
 			'post_type'      => $post_type,
 			'comment_status' => 'closed',
 			'ping_status'    => 'closed'
@@ -846,6 +884,7 @@ class rijksreleasekalender_Admin {
 			}
 
 			return $messages;
+
 		} else {
 			// post is updated now do the meta fields
 			$meta_fields = array(
@@ -867,7 +906,7 @@ class rijksreleasekalender_Admin {
 	}
 
 	/**
-	 * REmove temp values and return message
+	 * Remove temp values and return message
 	 * @var    int    $post_id post ID of post to update
 	 * @var    string $meta_key
 	 *
