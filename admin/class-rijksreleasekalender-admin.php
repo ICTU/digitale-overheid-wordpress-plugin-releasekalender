@@ -141,7 +141,7 @@ class rijksreleasekalender_Admin {
 
 		add_settings_field(
 			$this->option_name . '_restapi_user',
-			__( 'REST-API gebruiker', 'rijksreleasekalender' ),
+			__( 'REST-API gebruikersnaam', 'rijksreleasekalender' ),
 			array( $this, $this->option_name . '_restapi_user_cb' ),
 			$this->plugin_name,
 			$this->option_name . '_general',
@@ -584,11 +584,14 @@ class rijksreleasekalender_Admin {
 	 */
 	public function rijksreleasekalender_do_sync() {
 		//TODO retrieve and store voorzieningen, producten, releases, set start and end of sync
-		$post_type = 'voorziening';
-		$_step     = array_key_exists( 'step', $_POST ) ? intval( $_POST[ 'step' ] ) : 0;
+
+		$_step = array_key_exists( 'step', $_POST ) ? intval( $_POST[ 'step' ] ) : 0;
+		// for measuring script time
+		$start = microtime( true );
 
 		switch ( $_step ) {
 			case 0:
+				$post_type           = 'voorziening';
 				$voorzieningen       = $this->rijksreleasekalender_api_get( 'bouwstenen' );
 				$voorzieningen_count = $this->rijksreleasekalender_count_api_objects( $voorzieningen );
 				$messages[]          = __( 'Aantal voorzieningen: ', 'rijksreleasekalender' ) . $voorzieningen_count;
@@ -610,27 +613,40 @@ class rijksreleasekalender_Admin {
 							'ping_status'    => 'closed'
 						);
 						// check if post already exists
-							$voorziening_exists = get_page_by_title( $voorziening->naam, OBJECT, $post_type );
+						// check for voorziening ID, since this is (or should be) fixed.
+						$voorz_query_args = array(
+							'post_type'  => $post_type,
+							'meta_key'   => 'voorziening_id',
+							'meta_value' => $voorziening->id
+						);
+						$voorz_query      = new WP_Query( $voorz_query_args );
+
+						if ( $voorz_query->have_posts() ) {
+							// post exists
+							$voorz_query->the_post();
+							// store ID for future use
+							$voorziening_post_id = get_the_ID();
+							$messages[]          = 'Voorziening gevonden met id:' . $voorziening->id . ' (post_id: ' . $voorziening_post_id . ') en titel: ' . get_the_title();
+							$voorziening_exists  = true;
+						} else {
+							$voorziening_exists = false;
+						}
+
 						if ( ! $voorziening_exists ) {
+
+							// post does not exist - so let's create it.
 							$voorziening_post_id = wp_insert_post( $post_args );
-							$messages[]      = 'Voorziening aangemaakt: ' . $voorziening->naam . '(post_id: ' . $voorziening_post_id . ')';
-						}
-						else {
-							$voorziening_post_id = $voorziening_exists->ID;
+							$messages[]          = 'Voorziening aangemaakt: ' . $voorziening->naam . '(post_id: ' . $voorziening_post_id . ')';
 
-							// Add post ID to args
-							$post_args['ID'] = $voorziening_post_id;
-							wp_update_post($post_args);
+						} else {
+							// var to check of we need to continue with the sync after temp storing new data.
+							$continue = true;
 
-							$messages[]      = 'Voorziening aangepast: ' . $voorziening->naam . '(post_id: ' . $voorziening_post_id . ')';
-						}
+							// post exists - store all values in a temp custom field
+							// add post ID to args
+							$post_args[ 'ID' ] = $voorziening_post_id;
 
-
-						if ( $voorziening_post_id > 0 ) {
-							update_post_meta( $voorziening_post_id, 'voorziening_id', $voorziening->id );
-							update_post_meta( $voorziening_post_id, 'voorziening_website', $voorziening->website );
-							update_post_meta( $voorziening_post_id, 'voorziening_aantekeningen', $voorziening->aantekeningen );
-							update_post_meta( $voorziening_post_id, 'voorziening_updated', $voorziening->updated );
+							// store custom fields
 
 							$eigenaar_organisatie = array(
 								'id'      => $voorziening->eigenaarOrganisatie->id,
@@ -638,7 +654,6 @@ class rijksreleasekalender_Admin {
 								'website' => $voorziening->eigenaarOrganisatie->website,
 								'updated' => $voorziening->eigenaarOrganisatie->updated
 							);
-							update_post_meta( $voorziening_post_id, 'voorziening_eigenaarOrganisatie', $eigenaar_organisatie );
 
 							$eigenaar_contact = array(
 								'id'          => $voorziening->eigenaarContact->id,
@@ -650,10 +665,73 @@ class rijksreleasekalender_Admin {
 									'updated' => $voorziening->eigenaarContact->organisatie->updated,
 								)
 							);
-							update_post_meta( $voorziening_post_id, 'voorziening_eigenaarContact', $eigenaar_contact );
-						}
-						$messages[] = 'Voorziening meta opgeslagen: ' . $voorziening->naam . '(post_id: ' . $voorziening_post_id . ')';
 
+							// add all fields to array
+
+							$custom_field_array = array(
+								'voorziening_id'                  => $voorziening->id,
+								'voorziening_website'             => $voorziening->website,
+								'voorziening_aantekeningen'       => $voorziening->aantekeningen,
+								'voorziening_updated'             => $voorziening->updated,
+								'voorziening_eigenaarOrganisatie' => $eigenaar_organisatie,
+								'voorziening_eigenaarContact'     => $eigenaar_contact
+							);
+
+							$post_array[ 'args' ]          = $post_args;
+							$post_array[ 'custom_fields' ] = $custom_field_array;
+
+							// now store post_array in a custom field
+
+							$current_meta_value = get_post_meta( $voorziening_post_id, 'temp_post_array', true );
+
+							if ( maybe_serialize( $current_meta_value ) == maybe_serialize( $post_array ) ) {
+								// old and new values are the same - do not update.
+								$messages[] = 'Geen verandering nodig voor post_id: ' . $voorziening_post_id;
+								$continue   = false;
+
+								// todo make a function for this
+								$delete_result = delete_post_meta( $voorziening_post_id, 'temp_post_array' );
+								if ( $delete_result ) {
+									$messages[] = 'Tijdelijke data verwijderd van post_id: ' . $voorziening_post_id;
+								} else {
+									$messages[] = 'FOUT - Bij verwijderen van tijdelijke data van post_id: ' . $voorziening_post_id;
+								}
+							} else {
+								// store new values in temp meta field.
+								$meta_result = update_post_meta( $voorziening_post_id, 'temp_post_array', $post_array );
+								if ( $meta_result ) {
+									$messages[] = 'Voorziening tijdelijk opgeslagen, post_id: ' . $voorziening_post_id;
+								} else {
+									$messages[] = 'FOUT - Voorziening niet tijdelijk opgeslagen, post_id: ' . $voorziening_post_id;
+									$continue   = false;
+								}
+							}
+							if ( $continue ) {
+								// we may save the new data.
+								$result = $this->rijksreleasekalender_update_post( $voorziening_post_id, $post_type, $post_array );
+								if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
+									$messages[] = 'Voorziening bijgewerkt, post_id: ' . $voorziening_post_id;
+									// remove temp meta fields
+									// todo make a function for this
+									$delete_result = delete_post_meta( $voorziening_post_id, 'temp_post_array' );
+									if ( $delete_result ) {
+										$messages[] = 'Tijdelijke data verwijderd van post_id: ' . $voorziening_post_id;
+									} else {
+										$messages[] = 'FOUT - Bij verwijderen van tijdelijke data van post_id: ' . $voorziening_post_id;
+									}
+								}
+
+							} else {
+								// only remove the temp meta fields
+								// todo make a function for this
+								$delete_result = delete_post_meta( $voorziening_post_id, 'temp_post_array' );
+								if ( $delete_result ) {
+									$messages[] = 'Tijdelijke data verwijderd van post_id: ' . $voorziening_post_id;
+								} else {
+									$messages[] = 'FOUT - Bij verwijderen van tijdelijke data van post_id: ' . $voorziening_post_id;
+								}
+							}
+						}
 					}
 				} else {
 					$messages[] = __( 'Geen voorzieningen gevonden...', 'rijksreleasekalender' );
@@ -667,16 +745,22 @@ class rijksreleasekalender_Admin {
 				$_step = 3; // stop after this step
 				// $_step ++; // next step
 				break;
-			case
-			1:
+
+			case 1:
+				$post_type       = 'producten';
 				$producten       = $this->rijksreleasekalender_api_get( 'producten' );
 				$producten_count = $this->rijksreleasekalender_count_api_objects( $producten );
 
-				$messages[] = 'Aantal producten: ' . $producten_count;
+				$messages[] = __( 'Aantal producten: ', 'rijksreleasekalender' ) . $producten_count;
 
+				$author_id = get_option( $this->option_name . '_author_id' );
+				if ( 0 < $producten_count ) {
+				}
 				$_step ++; // next step
 				break;
-			case 2:
+
+			case
+			2:
 				$releases       = $this->rijksreleasekalender_api_get( 'releases' );
 				$releases_count = $this->rijksreleasekalender_count_api_objects( $releases );
 
@@ -710,16 +794,14 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public
-	function rijksreleasekalender_api_get(
-		$api_parameters
-	) {
+	public function rijksreleasekalender_api_get( $api_parameters ) {
 		$api_url  = get_option( $this->option_name . '_restapi_url' );
 		$username = get_option( $this->option_name . '_restapi_user' );
 		$password = get_option( $this->option_name . '_restapi_pwd' );
 		$apikey   = get_option( $this->option_name . '_restapi_key' );
 		$format   = '.json'; // format to retrieve
 		$url      = $api_url . $api_parameters . $format . '?api-key=' . $apikey;
+		// todo connect through proxy
 
 		// if username is empty, use API key
 		if ( ! $username ) {
@@ -744,12 +826,48 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public
-	function rijksreleasekalender_count_api_objects(
-		$json_object
-	) {
+	public function rijksreleasekalender_count_api_objects( $json_object ) {
 		$totalcount = $json_object->totalCount;
 
 		return $totalcount;
 	}
+
+	/**
+	 * Store temp meta field as post and meta fields
+	 * @var    int    $post_id  post ID of post to update
+	 * @var    string $post_type
+	 * @var    array  $all_args holdins all post args and meta key/values
+	 *
+	 * @return int post_id of changed post
+	 * @return array $messages holding the WP_Error
+	 *
+	 *
+	 * @since    1.0.0
+	 */
+	public function rijksreleasekalender_update_post( $post_id, $post_type, $all_args ) {
+		$post_args = array(
+			'post_author'    => $all_args->args->post_author,
+			'post_content'   => $all_args->args->post_content,
+			'post_title'     => $all_args->args->post_title,
+			'post_status'    => 'publish',
+			'post_type'      => $post_type,
+			'comment_status' => 'closed',
+			'ping_status'    => 'closed'
+		);
+
+		$post_id = wp_update_post( $post_args, true );
+		if ( is_wp_error( $post_id ) ) {
+			$errors = $post_id->get_error_messages();
+			foreach ( $errors as $error ) {
+				$messages[] = $error;
+			}
+
+			return $messages;
+		} else {
+			return $post_id;
+		}
+
+
+	}
+
 } // end of class
