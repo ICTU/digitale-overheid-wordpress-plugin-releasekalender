@@ -3405,6 +3405,13 @@ public function rijksreleasekalender_template_hoofdpagina_title_filter( $thetitl
     					$content			= '<div id="releasekalenderoutput">' . $filecontents . '</div>';
     				}
     				else {
+
+$mailcontent = 'php bestand mist op de releasekalender: ' . $this->releasekalender_voorziening . '-' . get_query_var( $this->releasekalender_queryvar_product );
+
+mail("vanbuuren@gmail.com", "[digitaleoverheid.nl] Releasekalender missend bestand: " . $this->releasekalender_voorziening . '-' . get_query_var( $this->releasekalender_queryvar_product ), $mailcontent, "From: paul@wbvb.nl");
+
+      				
+      				echo '<!-- error(51203a) ' . $this->releasekalender_voorziening . '-' . get_query_var( $this->releasekalender_queryvar_product ) . '-->';
     				}
     					
     			}
