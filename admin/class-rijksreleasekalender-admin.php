@@ -639,11 +639,11 @@ class rijksreleasekalender_Admin {
 							$messages[]          = 'Voorziening aangemaakt: ' . $voorziening->naam . '(post_id: ' . $voorziening_post_id . ')';
 
 						} else {
+							// post exists - store all values in a temp custom field
 							// var to check of we need to continue with the sync after temp storing new data.
 							$continue = true;
 
-							// post exists - store all values in a temp custom field
-							// add post ID to args
+							// add post ID to post_args
 							$post_args[ 'ID' ] = $voorziening_post_id;
 
 							// store custom fields
@@ -680,57 +680,30 @@ class rijksreleasekalender_Admin {
 							$post_array[ 'args' ]          = $post_args;
 							$post_array[ 'custom_fields' ] = $custom_field_array;
 
-							// now store post_array in a custom field
-
-							$current_meta_value = get_post_meta( $voorziening_post_id, 'temp_post_array', true );
-
-							if ( maybe_serialize( $current_meta_value ) == maybe_serialize( $post_array ) ) {
-								// old and new values are the same - do not update.
-								$messages[] = 'Geen verandering nodig voor post_id: ' . $voorziening_post_id;
-								$continue   = false;
-
-								// todo make a function for this
-								$delete_result = delete_post_meta( $voorziening_post_id, 'temp_post_array' );
-								if ( $delete_result ) {
-									$messages[] = 'Tijdelijke data verwijderd van post_id: ' . $voorziening_post_id;
-								} else {
-									$messages[] = 'FOUT - Bij verwijderen van tijdelijke data van post_id: ' . $voorziening_post_id;
-								}
+							// store new values in temp meta field.
+							$meta_result = update_post_meta( $voorziening_post_id, 'temp_post_array', $post_array );
+							if ( $meta_result ) {
+								$messages[] = 'Voorziening tijdelijk opgeslagen, post_id: ' . $voorziening_post_id;
 							} else {
-								// store new values in temp meta field.
-								$meta_result = update_post_meta( $voorziening_post_id, 'temp_post_array', $post_array );
-								if ( $meta_result ) {
-									$messages[] = 'Voorziening tijdelijk opgeslagen, post_id: ' . $voorziening_post_id;
-								} else {
-									$messages[] = 'FOUT - Voorziening niet tijdelijk opgeslagen, post_id: ' . $voorziening_post_id;
-									$continue   = false;
-								}
+								$messages[] = 'FOUT - Voorziening niet tijdelijk opgeslagen, post_id: ' . $voorziening_post_id;
+								//$continue   = false;
 							}
-							if ( $continue ) {
-								// we may save the new data.
-								$result = $this->rijksreleasekalender_update_post( $voorziening_post_id, $post_type, $post_array );
-								if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
-									$messages[] = 'Voorziening bijgewerkt, post_id: ' . $voorziening_post_id;
-									// remove temp meta fields
-									// todo make a function for this
-									$delete_result = delete_post_meta( $voorziening_post_id, 'temp_post_array' );
-									if ( $delete_result ) {
-										$messages[] = 'Tijdelijke data verwijderd van post_id: ' . $voorziening_post_id;
-									} else {
-										$messages[] = 'FOUT - Bij verwijderen van tijdelijke data van post_id: ' . $voorziening_post_id;
-									}
-								}
+						}
+						if ( $continue ) {
+							// we may save the new data.
+//							$messages[] = 'post_array: <br />'. print_r($post_array['args'], true) . '<br />';
+//							$messages[] = 'auteur: ' . $post_array['args']['post_author'] . '<br />';
+							$result = $this->rijksreleasekalender_update_post( $voorziening_post_id, $post_type, $post_array );
+							if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
+								$messages[] = 'Voorziening bijgewerkt, post_id: ' . $result;
+								// remove temp meta fields
+								$messages[] = $this->rijksreleasekalender_delete_post_meta( $voorziening_post_id, 'temp_post_array' );
 
-							} else {
-								// only remove the temp meta fields
-								// todo make a function for this
-								$delete_result = delete_post_meta( $voorziening_post_id, 'temp_post_array' );
-								if ( $delete_result ) {
-									$messages[] = 'Tijdelijke data verwijderd van post_id: ' . $voorziening_post_id;
-								} else {
-									$messages[] = 'FOUT - Bij verwijderen van tijdelijke data van post_id: ' . $voorziening_post_id;
-								}
 							}
+
+						} else {
+							// only remove the temp meta fields
+							$messages[] = $this->rijksreleasekalender_delete_post_meta( $voorziening_post_id, 'temp_post_array' );
 						}
 					}
 				} else {
@@ -746,7 +719,8 @@ class rijksreleasekalender_Admin {
 				// $_step ++; // next step
 				break;
 
-			case 1:
+			case
+			1:
 				$post_type       = 'producten';
 				$producten       = $this->rijksreleasekalender_api_get( 'producten' );
 				$producten_count = $this->rijksreleasekalender_count_api_objects( $producten );
@@ -777,6 +751,8 @@ class rijksreleasekalender_Admin {
 		} else {
 			$_result = $_step;
 		}
+
+		// todo if we are doing a cron, do not do this :)
 		wp_send_json( array(
 			'result'   => $_result,
 			'step'     => $_step,
@@ -794,7 +770,10 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function rijksreleasekalender_api_get( $api_parameters ) {
+	public
+	function rijksreleasekalender_api_get(
+		$api_parameters
+	) {
 		$api_url  = get_option( $this->option_name . '_restapi_url' );
 		$username = get_option( $this->option_name . '_restapi_user' );
 		$password = get_option( $this->option_name . '_restapi_pwd' );
@@ -826,7 +805,10 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function rijksreleasekalender_count_api_objects( $json_object ) {
+	public
+	function rijksreleasekalender_count_api_objects(
+		$json_object
+	) {
 		$totalcount = $json_object->totalCount;
 
 		return $totalcount;
@@ -845,10 +827,11 @@ class rijksreleasekalender_Admin {
 	 * @since    1.0.0
 	 */
 	public function rijksreleasekalender_update_post( $post_id, $post_type, $all_args ) {
+
 		$post_args = array(
-			'post_author'    => $all_args->args->post_author,
-			'post_content'   => $all_args->args->post_content,
-			'post_title'     => $all_args->args->post_title,
+			'post_author'    => $all_args[ 'args' ][ 'post_author' ],
+			'post_content'   => $all_args[ 'args][ ->post_content' ],
+			'post_title'     => $all_args[ 'args' ][ 'post_title' ],
 			'post_status'    => 'publish',
 			'post_type'      => $post_type,
 			'comment_status' => 'closed',
@@ -864,10 +847,45 @@ class rijksreleasekalender_Admin {
 
 			return $messages;
 		} else {
+			// post is updated now do the meta fields
+			$meta_fields = array(
+				'voorziening_id'                  => $all_args[ 'custom_fields' ][ 'voorziening_id' ],
+				'voorziening_website'             => $all_args[ 'custom_fields' ][ 'voorziening_website' ],
+				'voorziening_aantekeningen'       => $all_args[ 'custom_fields' ][ 'voorziening_aantekeningen' ],
+				'voorziening_updated'             => $all_args[ 'custom_fields' ][ 'voorziening_updated' ],
+				'voorziening_eigenaarOrganisatie' => maybe_unserialize( $all_args[ 'custom_fields' ][ 'voorziening_eigenaarOrganisatie' ] ),
+				'voorziening_eigenaarContact'     => maybe_unserialize( $all_args[ 'custom_fields' ][ 'voorziening_eigenaar_Ccontact' ] )
+			);
+
+			foreach ( $meta_fields as $meta_key => $meta_value ) {
+
+				update_post_meta( $post_id, $meta_key, $meta_value );
+			}
+
 			return $post_id;
 		}
+	}
 
+	/**
+	 * REmove temp values and return message
+	 * @var    int    $post_id post ID of post to update
+	 * @var    string $meta_key
+	 *
+	 * @return array $messages holding the WP_Error
+	 *
+	 *
+	 * @since    1.0.0
+	 */
+	public function rijksreleasekalender_delete_post_meta( $post_id, $meta_key ) {
+		$delete_result = delete_post_meta( $post_id, $meta_key );
 
+		if ( $delete_result ) {
+			$messages[] = 'Tijdelijke data verwijderd van post_id: ' . $post_id;
+		} else {
+			$messages[] = 'FOUT - Bij verwijderen van tijdelijke data van post_id: ' . $post_id;
+		}
+
+		return $messages;
 	}
 
 } // end of class
