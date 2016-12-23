@@ -537,9 +537,9 @@ class rijksreleasekalender_Admin {
 			'add_new'            => _x( 'Nieuwe toevoegen', 'rijksreleasekalender' ),
 			'add_new_item'       => _x( 'Nieuw product toevoegen', 'rijksreleasekalender' ),
 			'edit_item'          => _x( 'Bewerk product', 'rijksreleasekalender' ),
-			'new_item'           => _x( 'Nieuw productm', 'rijksreleasekalender' ),
+			'new_item'           => _x( 'Nieuw product', 'rijksreleasekalender' ),
 			'view_item'          => _x( 'Bekijk product', 'rijksreleasekalender' ),
-			'search_items'       => _x( 'Zoek voorziening items', 'rijksreleasekalender' ),
+			'search_items'       => _x( 'Zoek producten', 'rijksreleasekalender' ),
 			'not_found'          => _x( 'Geen producten gevonden', 'rijksreleasekalender' ),
 			'not_found_in_trash' => _x( 'Geen producten gevonden in prullenbak', 'rijksreleasekalender' ),
 			'parent_item_colon'  => _x( 'Hoofd product:', 'rijksreleasekalender' ),
@@ -575,6 +575,59 @@ class rijksreleasekalender_Admin {
 		);
 
 		register_post_type( 'product', $args );
+	}
+
+	/**
+	 * Register Product CPT
+	 *
+	 * @since    1.0.0
+	 */
+	public function rijksreleasekalender_register_cpt_release() {
+
+		$labels = array(
+			'name'               => _x( 'Releases', 'rijksreleasekalender' ),
+			'singular_name'      => _x( 'Release', 'rijksreleasekalender' ),
+			'add_new'            => _x( 'Nieuwe toevoegen', 'rijksreleasekalender' ),
+			'add_new_item'       => _x( 'Nieuwe release toevoegen', 'rijksreleasekalender' ),
+			'edit_item'          => _x( 'Bewerk release', 'rijksreleasekalender' ),
+			'new_item'           => _x( 'Nieuwe release', 'rijksreleasekalender' ),
+			'view_item'          => _x( 'Bekijk release', 'rijksreleasekalender' ),
+			'search_items'       => _x( 'Zoek releases', 'rijksreleasekalender' ),
+			'not_found'          => _x( 'Geen releases gevonden', 'rijksreleasekalender' ),
+			'not_found_in_trash' => _x( 'Geen releases gevonden in prullenbak', 'rijksreleasekalender' ),
+			'parent_item_colon'  => _x( 'Hoofd release:', 'rijksreleasekalender' ),
+			'menu_name'          => _x( 'Releases', 'rijksreleasekalender' ),
+		);
+
+		$args = array(
+			'labels'              => $labels,
+			'hierarchical'        => false,
+			'supports'            => array(
+				'title',
+				'editor',
+				'excerpt',
+				'author',
+				'thumbnail',
+				'custom-fields',
+				'revisions',
+				'page-attributes'
+			),
+			'public'              => true,
+			'show_ui'             => true,
+			'show_in_menu'        => true,
+			'menu_position'       => 20,
+			'menu_icon'           => 'dashicons-upload',
+			'show_in_nav_menus'   => true,
+			'publicly_queryable'  => true,
+			'exclude_from_search' => false,
+			'has_archive'         => true,
+			'query_var'           => true,
+			'can_export'          => true,
+			'rewrite'             => true,
+			'capability_type'     => 'post'
+		);
+
+		register_post_type( 'release', $args );
 	}
 
 	/**
