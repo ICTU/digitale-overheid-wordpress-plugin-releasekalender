@@ -606,12 +606,14 @@ class rijksreleasekalender_Admin {
 							'post_content'   => $voorziening->beschrijving,
 							'post_title'     => $voorziening->naam,
 							'post_status'    => 'draft',
-							'post_type'      => 'voorziening',
+							'post_type'      => $post_type,
 							'comment_status' => 'closed',
 							'ping_status'    => 'closed'
 						);
 						// check if post already exists
 						// check for voorziening ID, since this is (or should be) fixed.
+
+						// todo make a function of this
 						$voorz_query_args = array(
 							'post_type'  => $post_type,
 							'meta_key'   => 'voorziening_id',
@@ -750,16 +752,11 @@ class rijksreleasekalender_Admin {
 					$messages[] = __( 'Geen voorzieningen gevonden...', 'rijksreleasekalender' );
 				}
 
-				//$messages[] = print_r($voorzieningen, true);
-				// store_voorzieningen_temp()
-				// if no errors -> store_voorzieningen()
-
 				$_step ++; // next step
 				break;
 
-			case
-			1:
-				$post_type       = 'producten';
+			case 1:
+				$post_type       = 'product';
 				$producten       = $this->rijksreleasekalender_api_get( 'producten' );
 				$producten_count = $this->rijksreleasekalender_count_api_objects( $producten );
 
@@ -767,12 +764,145 @@ class rijksreleasekalender_Admin {
 
 				$author_id = get_option( $this->option_name . '_author_id' );
 				if ( 0 < $producten_count ) {
+					$num = 0;
+					foreach ( $producten->records as $product ) {
+						$num ++;
+						$messages[] = $num . '. ' . $product->naam;
+
+						$post_args = array(
+							'post_author'    => $author_id,
+							'post_content'   => $product->beschrijving,
+							'post_title'     => $product->naam,
+							'post_status'    => 'draft',
+							'post_type'      => $post_type,
+							'comment_status' => 'closed',
+							'ping_status'    => 'closed'
+						);
+						// check if post already exists
+						// check for product ID, since this is (or should be) fixed.
+
+						// todo make a function of this
+						$product_query_args = array(
+							'post_type'  => $post_type,
+							'meta_key'   => 'product_id',
+							'meta_value' => $product->id
+						);
+						$prod_query         = new WP_Query( $product_query_args );
+
+						if ( $prod_query->have_posts() ) {
+							// post exists
+							$prod_query->the_post();
+							// store ID for future use
+							$product_post_id = get_the_ID();
+							$messages[]      = __( 'Product gevonden met id: ', 'rijksreleasekalender' ) .
+							                   $product->id .
+							                   ' (post_id: ' . $product_post_id . ') ' .
+							                   __( 'en titel: ', 'rijksreleasekalender' ) .
+							                   get_the_title();
+							$product_exists  = true;
+						} else {
+							$product_exists = false;
+						}
+
+						if ( ! $product_exists ) {
+
+							// post does not exist - so let's create it.
+							$product_post_id = wp_insert_post( $post_args, true );
+							if ( $product_post_id > 0 ) {
+								$messages[] = __( 'Product aangemaakt: ', 'rijksreleasekalender' ) . $product->naam . '(post_id: ' . $product_post_id . ')';
+
+								// add custom fields
+								// todo make a function for this
+
+								$product_voorziening = array(
+									'id'   => $product->bouwsteen->id,
+									'naam' => $product->bouwsteen->naam
+								);
+
+								$product_productmanager = array(
+									'id'          => $product->productmanager->id,
+									'naam'        => $product->productmanager->naam,
+									'organisatie' => array(
+										'id'      => $product->productmanager->organisatie->id,
+										'naam'    => $product->productmanager->organisatie->naam,
+										'website' => $product->productmanager->organisatie->website,
+										'updated' => $product->productmanager->organisatie->updated
+									),
+								);
+
+								$product_contact_opdrachtgever = array(
+									'id'          => $product->contactOpdrachtgever->id,
+									'naam'        => $product->contactOpdrachtgever->naam,
+									'organisatie' => array(
+										'id'      => $product->contactOpdrachtgever->organisatie->id,
+										'naam'    => $product->contactOpdrachtgever->organisatie->naam,
+										'website' => $product->contactOpdrachtgever->organisatie->website,
+										'updated' => $product->contactOpdrachtgever->organisatie->updated
+									)
+								);
+								$product_opdrachtgever         = array(
+									'id'      => $product->opdrachtgever->id,
+									'naam'    => $product->opdrachtgever->naam,
+									'website' => $product->opdrachtgever->website,
+									'updated' => $product->opdrachtgever->updated
+								);
+
+								$product_aanbieder = array(
+									'id'      => $product->aanbieder->id,
+									'naam'    => $product->aanbieder->naam,
+									'website' => $product->aanbieder->website,
+									'updated' => $product->aanbieder->updated
+								);
+								// multiple producttypen may exist
+								$product_producttypen = array();
+
+								foreach ( $product->producttypen as $product_product_type ) {
+									$product_producttypen[] = array(
+										'id'           => $product->producttypen->id,
+										'naam'         => $product->producttypen->naam,
+										'omschrijving' => $product->producttypen->omschrijving,
+										'updated'      => $product->producttypen->updated
+									);
+								}
+
+								// add all fields to array
+
+								$custom_field_array = array(
+									'product_id'                    => $product->id,
+									'product_referentieProduct'     => $product->referentieProduct,
+									'product_datumIngebruikname'    => $product->datumIngebruikname,
+									'product_datumUitfasering'      => $product->datumUitfasering,
+									'product_doelgroep'             => $product->doelgroep,
+									'product_verwijzing'            => $product->verwijzing,
+									'product_goedgekeurd'           => $product->goedgekeurd,
+									'product_updated'               => $product->updated,
+									'product_voorziening'           => $product_voorziening,
+									'product_productmanager'        => $product_productmanager,
+									'product_contact_opdrachtgever' => $product_contact_opdrachtgever,
+									'product_opdrachtgever'         => $product_opdrachtgever,
+									'product_aanbieder'             => $product_aanbieder,
+									'product_producttypen'          => $product_producttypen
+								);
+
+								foreach ( $custom_field_array as $key => $value ) {
+									update_post_meta( $product_post_id, $key, $value );
+								}
+							} else {
+								$messages[] = __( 'Fout bij aanmaken product: ', 'rijksreleasekalender' ) . $product->naam . '(WP_Error: ' . $product_post_id->get_error_message() . ')';
+							}
+
+
+						}
+
+
+					}
+				} else {
+					$messages[] = __( 'Geen producten gevonden...', 'rijksreleasekalender' );
 				}
 				$_step ++; // next step
 				break;
 
-			case
-			2:
+			case 2:
 				$releases       = $this->rijksreleasekalender_api_get( 'releases' );
 				$releases_count = $this->rijksreleasekalender_count_api_objects( $releases );
 
@@ -781,6 +911,7 @@ class rijksreleasekalender_Admin {
 				$_step ++;
 				break;
 		}
+
 
 		// todo bij fout stoppen en foutmelding
 		if ( 3 == $_step ) {
@@ -808,16 +939,14 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public
-	function rijksreleasekalender_api_get(
-		$api_parameters
-	) {
-		$api_url  = get_option( $this->option_name . '_restapi_url' );
-		$username = get_option( $this->option_name . '_restapi_user' );
-		$password = get_option( $this->option_name . '_restapi_pwd' );
-		$apikey   = get_option( $this->option_name . '_restapi_key' );
-		$format   = '.json'; // format to retrieve
-		$url      = $api_url . $api_parameters . $format . '?api-key=' . $apikey;
+	public function rijksreleasekalender_api_get( $api_parameters ) {
+		$api_url   = get_option( $this->option_name . '_restapi_url' );
+		$username  = get_option( $this->option_name . '_restapi_user' );
+		$password  = get_option( $this->option_name . '_restapi_pwd' );
+		$apikey    = get_option( $this->option_name . '_restapi_key' );
+		$format    = '.json'; // format to retrieve
+		$page_size = 500; //maximum number of records in response
+		$url       = $api_url . $api_parameters . $format . '?page_size=' . $page_size . '&api-key=' . $apikey;
 		// todo connect through proxy
 
 		// if username is empty, use API key
@@ -843,10 +972,7 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public
-	function rijksreleasekalender_count_api_objects(
-		$json_object
-	) {
+	public function rijksreleasekalender_count_api_objects( $json_object ) {
 		$totalcount = $json_object->totalCount;
 
 		return $totalcount;
