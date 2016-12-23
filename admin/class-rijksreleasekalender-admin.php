@@ -814,7 +814,7 @@ class rijksreleasekalender_Admin {
 				$producten       = $this->rijksreleasekalender_api_get( 'producten' );
 				$producten_count = $this->rijksreleasekalender_count_api_objects( $producten );
 
-				$messages[] = __( 'Aantal producten (nog niet geimporteerd): ', 'rijksreleasekalender' ) . $producten_count;
+				$messages[] = __( 'Aantal producten: ', 'rijksreleasekalender' ) . $producten_count;
 
 				$author_id = get_option( $this->option_name . '_author_id' );
 				if ( 0 < $producten_count ) {
@@ -1011,7 +1011,7 @@ class rijksreleasekalender_Admin {
 
 							// add all fields to array
 
-							$custom_field_array = array(
+							$product_custom_field_array = array(
 								'product_id'                    => $product->id,
 								'product_referentieProduct'     => $product->referentieProduct,
 								'product_datumIngebruikname'    => $product->datumIngebruikname,
@@ -1029,7 +1029,7 @@ class rijksreleasekalender_Admin {
 							);
 
 							$product_post_array[ 'args' ]          = $product_post_args;
-							$product_post_array[ 'custom_fields' ] = $custom_field_array;
+							$product_post_array[ 'custom_fields' ] = $product_custom_field_array;
 
 							// store new values in temp meta field.
 							$meta_result = update_post_meta( $product_post_id, 'temp_post_array', $product_post_array );
@@ -1062,10 +1062,183 @@ class rijksreleasekalender_Admin {
 				break;
 
 			case 2:
+				$post_type      = 'release';
 				$releases       = $this->rijksreleasekalender_api_get( 'releases' );
 				$releases_count = $this->rijksreleasekalender_count_api_objects( $releases );
 
-				$messages[] = __( 'Aantal releases (nog niet geimporteerd): ', 'rijksreleasekalender' ) . $releases_count;
+				$messages[] = __( 'Aantal releases: ', 'rijksreleasekalender' ) . $releases_count;
+
+				$author_id = get_option( $this->option_name . '_author_id' );
+				if ( 0 < $releases_count ) {
+					$num = 0;
+					foreach ( $releases->records as $release ) {
+						$num ++;
+						$messages[]           = $num . '. ' . $release->naam;
+						$release_post_content = $release->nieuweFunctionaliteiten;
+						// some releases don't have a value, so set it to an empty string
+						if ( $release_post_content === null ) {
+							$release_post_content = '';
+						}
+						$release_post_args = array(
+							'post_author'    => $author_id,
+							'post_content'   => $release_post_content,
+							'post_title'     => $release->naam,
+							'post_status'    => 'draft',
+							'post_type'      => $post_type,
+							'comment_status' => 'closed',
+							'ping_status'    => 'closed'
+						);
+						// check if post already exists
+						// check for release ID, since this is (or should be) fixed.
+
+						// todo make a function of this
+						$release_query_args = array(
+							'post_type'  => $post_type,
+							'meta_key'   => 'release_id',
+							'meta_value' => $release->id
+						);
+						$rel_query          = new WP_Query( $release_query_args );
+
+						if ( $rel_query->have_posts() ) {
+							// post exists
+							$rel_query->the_post();
+							// store ID for future use
+							$release_post_id = get_the_ID();
+							$messages[]      = __( 'Release gevonden met id: ', 'rijksreleasekalender' ) .
+							                   $release->id .
+							                   ' (post_id: ' . $release_post_id . ') ' .
+							                   __( 'en titel: ', 'rijksreleasekalender' ) .
+							                   get_the_title();
+							$release_exists  = true;
+						} else {
+							$release_exists = false;
+						}
+
+						if ( ! $release_exists ) {
+
+							// post does not exist - so let's create it.
+							$release_post_id = wp_insert_post( $release_post_args, true );
+							if ( $release_post_id > 0 ) {
+								$messages[] = __( 'Release aangemaakt: ', 'rijksreleasekalender' ) . $release->naam . '(post_id: ' . $release_post_id . ')';
+
+								// add custom fields
+								// todo make a function for this
+
+								$release_product = array(
+									'id'          => $release->product->id,
+									'naam'        => $release->product->naam,
+									'voorziening' => array(
+										'id'   => $release->product->bouwsteen->id,
+										'naam' => $release->product->bouwsteen->naam
+									)
+								);
+
+								$release_release_status = array(
+									'id'           => $release->releaseStatus->id,
+									'naam'         => $release->releaseStatus->naam,
+									'omschrijving' => $release->releaseStatus->omschrijving
+								);
+
+								$release_release_marge = array(
+									'id'           => $release->releaseMarge->id,
+									'naam'         => $release->releaseMarge->naam,
+									'omschrijving' => $release->releaseMarge->omschrijving
+								);
+								// add all fields to array
+
+								$release_custom_field_array = array(
+									'release_id'              => $release->id,
+									'release_releasedatum'    => $release->releasedatum,
+									'release_aandachtspunten' => $release->aandachtspunten,
+									'release_website'         => $release->website,
+									'release_updated'         => $release->updated,
+									'release_product'         => $release_product,
+									'release_release_status'  => $release_release_status,
+									'release_release_marge'   => $release_release_marge
+								);
+
+								foreach ( $release_custom_field_array as $key => $value ) {
+									update_post_meta( $release_post_id, $key, $value );
+								}
+							} else {
+								$messages[] = __( 'Fout bij aanmaken release: ', 'rijksreleasekalender' ) . $release->naam . '(WP_Error: ' . $release_post_id->get_error_message() . ')';
+							}
+
+
+						} else {
+							// post exists - store all values in a temp custom field
+							// var to check of we need to continue with the sync after temp storing new data.
+							$continue = true;
+
+							// add post ID to post_args
+							$release_post_args[ 'ID' ] = $release_post_id;
+							// todo recreate post_name in case this has been changed. Use: sanitize_title_with_dashes()
+
+							// store custom fields
+							// todo make a function for this
+
+							$release_product        = array(
+								'id'          => $release->product->id,
+								'naam'        => $release->product->naam,
+								'voorziening' => array(
+									'id'   => $release->product->bouwsteen->id,
+									'naam' => $release->product->bouwsteen->naam
+								)
+							);
+							$release_release_status = array(
+								'id'           => $release->releaseStatus->id,
+								'naam'         => $release->releaseStatus->naam,
+								'omschrijving' => $release->releaseStatus->omschrijving
+							);
+
+							$release_release_marge = array(
+								'id'           => $release->releaseMarge->id,
+								'naam'         => $release->releaseMarge->naam,
+								'omschrijving' => $release->releaseMarge->omschrijving
+							);
+							// add all fields to array
+
+							$release_custom_field_array = array(
+								'release_id'              => $release->id,
+								'release_releasedatum'    => $release->releasedatum,
+								'release_aandachtspunten' => $release->aandachtspunten,
+								'release_website'         => $release->website,
+								'release_updated'         => $release->updated,
+								'release_product'         => $release_product,
+								'release_release_status'  => $release_release_status,
+								'release_release_marge'   => $release_release_marge
+							);
+
+							$release_post_array[ 'args' ]          = $release_post_args;
+							$release_post_array[ 'custom_fields' ] = $release_custom_field_array;
+
+							// store new values in temp meta field.
+							$meta_result = update_post_meta( $release_post_id, 'temp_post_array', $release_post_array );
+							if ( $meta_result ) {
+								$messages[] = __( 'Release tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $release_post_id;
+							} else {
+								$messages[] = __( 'FOUT - Product niet tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $release_post_id;
+								$continue   = false;
+							}
+						}
+						if ( $continue ) {
+							// we may save the new data.
+							$result = $this->rijksreleasekalender_update_post( $release_post_id, $post_type, $release_post_array );
+							if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
+								$messages[] = __( 'Product bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
+								// remove temp meta fields
+								$messages[] = $this->rijksreleasekalender_delete_post_meta( $release_post_id, 'temp_post_array' );
+
+							}
+
+						} else {
+							// only remove the temp meta fields
+							$messages[] = $this->rijksreleasekalender_delete_post_meta( $release_post_id, 'temp_post_array' );
+						}
+					}
+				} else {
+					$messages[] = __( 'Geen producten gevonden...', 'rijksreleasekalender' );
+				}
 
 				$_step ++;
 				break;
@@ -1104,7 +1277,7 @@ class rijksreleasekalender_Admin {
 		$password  = get_option( $this->option_name . '_restapi_pwd' );
 		$apikey    = get_option( $this->option_name . '_restapi_key' );
 		$format    = '.json'; // format to retrieve
-		$page_size = 500; //maximum number of records in response
+		$page_size = 600; //maximum number of records in response
 		$url       = $api_url . $api_parameters . $format . '?page_size=' . $page_size . '&api-key=' . $apikey;
 		// todo connect through proxy
 
@@ -1203,6 +1376,20 @@ class rijksreleasekalender_Admin {
 						'product_producttypen'          => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_producttypen' ] )
 					);
 					break;
+				case 'release':
+					// set release meta fields
+					$meta_fields = array(
+						'release_id'              => $all_args[ 'custom_fields' ][ 'release_id' ],
+						'release_releasedatum'    => $all_args[ 'custom_fields' ][ 'release_releasedatum' ],
+						'release_aandachtspunten' => $all_args[ 'custom_fields' ][ 'release_aandachtspunten' ],
+						'release_website'         => $all_args[ 'custom_fields' ][ 'release_website' ],
+						'release_updated'         => $all_args[ 'custom_fields' ][ 'release_updated' ],
+						'release_product'         => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_product' ] ),
+						'release_release_status'  => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_release_status' ] ),
+						'release_release_marge'   => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_release_marge' ] )
+					);
+					break;
+
 			}
 
 
