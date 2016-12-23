@@ -601,7 +601,7 @@ class rijksreleasekalender_Admin {
 						$num ++;
 						$messages[] = $num . '. ' . $voorziening->naam;
 
-						$post_args = array(
+						$voorz_post_args = array(
 							'post_author'    => $author_id,
 							'post_content'   => $voorziening->beschrijving,
 							'post_title'     => $voorziening->naam,
@@ -639,7 +639,7 @@ class rijksreleasekalender_Admin {
 						if ( ! $voorziening_exists ) {
 
 							// post does not exist - so let's create it.
-							$voorziening_post_id = wp_insert_post( $post_args, true );
+							$voorziening_post_id = wp_insert_post( $voorz_post_args, true );
 							if ( $voorziening_post_id > 0 ) {
 								$messages[] = __( 'Voorziening aangemaakt: ', 'rijksreleasekalender' ) . $voorziening->naam . '(post_id: ' . $voorziening_post_id . ')';
 
@@ -688,7 +688,8 @@ class rijksreleasekalender_Admin {
 							$continue = true;
 
 							// add post ID to post_args
-							$post_args[ 'ID' ] = $voorziening_post_id;
+							$voorz_post_args[ 'ID' ] = $voorziening_post_id;
+							// todo recreate post_name in case this has been changed. Use: sanitize_title_with_dashes()
 
 							// store custom fields
 
@@ -721,7 +722,7 @@ class rijksreleasekalender_Admin {
 								'voorziening_eigenaarContact'     => $eigenaar_contact
 							);
 
-							$post_array[ 'args' ]          = $post_args;
+							$post_array[ 'args' ]          = $voorz_post_args;
 							$post_array[ 'custom_fields' ] = $custom_field_array;
 
 							// store new values in temp meta field.
@@ -769,7 +770,7 @@ class rijksreleasekalender_Admin {
 						$num ++;
 						$messages[] = $num . '. ' . $product->naam;
 
-						$post_args = array(
+						$product_post_args = array(
 							'post_author'    => $author_id,
 							'post_content'   => $product->beschrijving,
 							'post_title'     => $product->naam,
@@ -807,7 +808,7 @@ class rijksreleasekalender_Admin {
 						if ( ! $product_exists ) {
 
 							// post does not exist - so let's create it.
-							$product_post_id = wp_insert_post( $post_args, true );
+							$product_post_id = wp_insert_post( $product_post_args, true );
 							if ( $product_post_id > 0 ) {
 								$messages[] = __( 'Product aangemaakt: ', 'rijksreleasekalender' ) . $product->naam . '(post_id: ' . $product_post_id . ')';
 
@@ -867,7 +868,7 @@ class rijksreleasekalender_Admin {
 
 								// add all fields to array
 
-								$custom_field_array = array(
+								$product_custom_field_array = array(
 									'product_id'                    => $product->id,
 									'product_referentieProduct'     => $product->referentieProduct,
 									'product_datumIngebruikname'    => $product->datumIngebruikname,
@@ -884,7 +885,7 @@ class rijksreleasekalender_Admin {
 									'product_producttypen'          => $product_producttypen
 								);
 
-								foreach ( $custom_field_array as $key => $value ) {
+								foreach ( $product_custom_field_array as $key => $value ) {
 									update_post_meta( $product_post_id, $key, $value );
 								}
 							} else {
@@ -892,9 +893,114 @@ class rijksreleasekalender_Admin {
 							}
 
 
+						} else {
+							// post exists - store all values in a temp custom field
+							// var to check of we need to continue with the sync after temp storing new data.
+							$continue = true;
+
+							// add post ID to post_args
+							$product_post_args[ 'ID' ] = $product_post_id;
+							// todo recreate post_name in case this has been changed. Use: sanitize_title_with_dashes()
+
+							// store custom fields
+							// todo make a function for this
+
+							$product_voorziening = array(
+								'id'   => $product->bouwsteen->id,
+								'naam' => $product->bouwsteen->naam
+							);
+
+							$product_productmanager = array(
+								'id'          => $product->productmanager->id,
+								'naam'        => $product->productmanager->naam,
+								'organisatie' => array(
+									'id'      => $product->productmanager->organisatie->id,
+									'naam'    => $product->productmanager->organisatie->naam,
+									'website' => $product->productmanager->organisatie->website,
+									'updated' => $product->productmanager->organisatie->updated
+								),
+							);
+
+							$product_contact_opdrachtgever = array(
+								'id'          => $product->contactOpdrachtgever->id,
+								'naam'        => $product->contactOpdrachtgever->naam,
+								'organisatie' => array(
+									'id'      => $product->contactOpdrachtgever->organisatie->id,
+									'naam'    => $product->contactOpdrachtgever->organisatie->naam,
+									'website' => $product->contactOpdrachtgever->organisatie->website,
+									'updated' => $product->contactOpdrachtgever->organisatie->updated
+								)
+							);
+							$product_opdrachtgever         = array(
+								'id'      => $product->opdrachtgever->id,
+								'naam'    => $product->opdrachtgever->naam,
+								'website' => $product->opdrachtgever->website,
+								'updated' => $product->opdrachtgever->updated
+							);
+
+							$product_aanbieder = array(
+								'id'      => $product->aanbieder->id,
+								'naam'    => $product->aanbieder->naam,
+								'website' => $product->aanbieder->website,
+								'updated' => $product->aanbieder->updated
+							);
+							// multiple producttypen may exist
+							$product_producttypen = array();
+
+							foreach ( $product->producttypen as $product_product_type ) {
+								$product_producttypen[] = array(
+									'id'           => $product->producttypen->id,
+									'naam'         => $product->producttypen->naam,
+									'omschrijving' => $product->producttypen->omschrijving,
+									'updated'      => $product->producttypen->updated
+								);
+							}
+
+							// add all fields to array
+
+							$custom_field_array = array(
+								'product_id'                    => $product->id,
+								'product_referentieProduct'     => $product->referentieProduct,
+								'product_datumIngebruikname'    => $product->datumIngebruikname,
+								'product_datumUitfasering'      => $product->datumUitfasering,
+								'product_doelgroep'             => $product->doelgroep,
+								'product_verwijzing'            => $product->verwijzing,
+								'product_goedgekeurd'           => $product->goedgekeurd,
+								'product_updated'               => $product->updated,
+								'product_voorziening'           => $product_voorziening,
+								'product_productmanager'        => $product_productmanager,
+								'product_contact_opdrachtgever' => $product_contact_opdrachtgever,
+								'product_opdrachtgever'         => $product_opdrachtgever,
+								'product_aanbieder'             => $product_aanbieder,
+								'product_producttypen'          => $product_producttypen
+							);
+
+							$product_post_array[ 'args' ]          = $product_post_args;
+							$product_post_array[ 'custom_fields' ] = $custom_field_array;
+
+							// store new values in temp meta field.
+							$meta_result = update_post_meta( $product_post_id, 'temp_post_array', $product_post_array );
+							if ( $meta_result ) {
+								$messages[] = __( 'Product tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $product_post_id;
+							} else {
+								$messages[] = __( 'FOUT - Product niet tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $product_post_id;
+								$continue   = false;
+							}
 						}
+						if ( $continue ) {
+							// we may save the new data.
+							$result = $this->rijksreleasekalender_update_post( $product_post_id, $post_type, $product_post_array );
+							if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
+								$messages[] = __( 'Product bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
+								// remove temp meta fields
+								$messages[] = $this->rijksreleasekalender_delete_post_meta( $product_post_id, 'temp_post_array' );
 
+							}
 
+						} else {
+							// only remove the temp meta fields
+							$messages[] = $this->rijksreleasekalender_delete_post_meta( $product_post_id, 'temp_post_array' );
+						}
 					}
 				} else {
 					$messages[] = __( 'Geen producten gevonden...', 'rijksreleasekalender' );
@@ -1013,14 +1119,39 @@ class rijksreleasekalender_Admin {
 
 		} else {
 			// post is updated now do the meta fields
-			$meta_fields = array(
-				'voorziening_id'                  => $all_args[ 'custom_fields' ][ 'voorziening_id' ],
-				'voorziening_website'             => $all_args[ 'custom_fields' ][ 'voorziening_website' ],
-				'voorziening_aantekeningen'       => $all_args[ 'custom_fields' ][ 'voorziening_aantekeningen' ],
-				'voorziening_updated'             => $all_args[ 'custom_fields' ][ 'voorziening_updated' ],
-				'voorziening_eigenaarOrganisatie' => maybe_unserialize( $all_args[ 'custom_fields' ][ 'voorziening_eigenaarOrganisatie' ] ),
-				'voorziening_eigenaarContact'     => maybe_unserialize( $all_args[ 'custom_fields' ][ 'voorziening_eigenaar_Ccontact' ] )
-			);
+			switch ( $post_type ) {
+				case 'voorziening':
+					//set voorziening meta fields
+					$meta_fields = array(
+						'voorziening_id'                  => $all_args[ 'custom_fields' ][ 'voorziening_id' ],
+						'voorziening_website'             => $all_args[ 'custom_fields' ][ 'voorziening_website' ],
+						'voorziening_aantekeningen'       => $all_args[ 'custom_fields' ][ 'voorziening_aantekeningen' ],
+						'voorziening_updated'             => $all_args[ 'custom_fields' ][ 'voorziening_updated' ],
+						'voorziening_eigenaarOrganisatie' => maybe_unserialize( $all_args[ 'custom_fields' ][ 'voorziening_eigenaarOrganisatie' ] ),
+						'voorziening_eigenaarContact'     => maybe_unserialize( $all_args[ 'custom_fields' ][ 'voorziening_eigenaar_Ccontact' ] )
+					);
+					break;
+				case 'product':
+					// set product meta fields
+					$meta_fields = array(
+						'product_id'                    => $all_args[ 'custom_fields' ][ 'product_id' ],
+						'product_referentieProduct'     => $all_args[ 'custom_fields' ][ 'product_referentieProduct' ],
+						'product_datumIngebruikname'    => $all_args[ 'custom_fields' ][ 'product_datumIngebruikname' ],
+						'product_datumUitfasering'      => $all_args[ 'custom_fields' ][ 'product_datumUitfasering' ],
+						'product_doelgroep'             => $all_args[ 'custom_fields' ][ 'product_doelgroep' ],
+						'product_verwijzing'            => $all_args[ 'custom_fields' ][ 'product_verwijzing' ],
+						'product_goedgekeurd'           => $all_args[ 'custom_fields' ][ 'product_goedgekeurd' ],
+						'product_updated'               => $all_args[ 'custom_fields' ][ 'product_updated' ],
+						'product_voorziening'           => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_voorziening' ] ),
+						'product_productmanager'        => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_productmanager' ] ),
+						'product_contact_opdrachtgever' => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_contact_opdrachtgever' ] ),
+						'product_opdrachtgever'         => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_opdrachtgever' ] ),
+						'product_aanbieder'             => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_aanbieder' ] ),
+						'product_producttypen'          => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_producttypen' ] )
+					);
+					break;
+			}
+
 
 			foreach ( $meta_fields as $meta_key => $meta_value ) {
 
