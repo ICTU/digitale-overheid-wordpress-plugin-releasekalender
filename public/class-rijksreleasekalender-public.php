@@ -101,7 +101,7 @@ class rijksreleasekalender_Public {
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->rijksreleasekalender, plugin_dir_url( __FILE__ ) . 'css/rijksreleasekalender-public.css', array(), $this->version, 'all' );
+//		wp_enqueue_style( $this->rijksreleasekalender, plugin_dir_url( __FILE__ ) . 'css/rijksreleasekalender-public.css', array(), $this->version, 'all' );
 
 	}
 
@@ -149,7 +149,18 @@ class rijksreleasekalender_Public {
 
   		$page_template = get_post_meta( get_the_ID(), '_wp_page_template', true );
   		
-  		if ( $this->releasekalender_dossieraginatemplate == $page_template ) {
+      if ( is_single() && ( 'voorziening' == get_post_type() ) ) {
+
+        // Customize the entry meta in the entry header (requires HTML5 theme support)
+        add_filter( 'genesis_post_info', array( $this, 'rijksreleasekalender_correct_postinfo' ) );
+
+    		// filter the dossier template page
+  			add_filter( 'the_content', array( $this, 'rijksreleasekalender_dossieraginatemplate_filter' ) );
+
+    		wp_enqueue_style( $this->rijksreleasekalender, plugin_dir_url( __FILE__ ) . 'css/releasekalender-dossier-template.css', array(), $this->version, 'all' );
+
+  		}
+  		elseif ( $this->releasekalender_dossieraginatemplate == $page_template ) {
     		// filter the dossier template page
   			add_filter( 'the_content', array( $this, 'rijksreleasekalender_dossieraginatemplate_filter' ) );
 
@@ -190,14 +201,77 @@ class rijksreleasekalender_Public {
   	 * @return string  $content  The modified page content
   	 */
   	public function rijksreleasekalender_dossieraginatemplate_filter( $content ) {
+    	
+    	global $post;
 
-  		$page_template = get_post_meta( get_the_ID(), '_wp_page_template', true );
+      $tempcontent = $content;
+
+      $tijdbalkhiero                = 'tijdbalkhiero';
+      $datumnu                      = 'datumnu';
+      $totaleprogramma              = 'totaleprogramma';
+      $voorziening_updated          = get_post_meta( get_the_ID(), 'voorziening_updated', true ); // 'voorziening_updated';
+      $voorziening_website          = get_post_meta( get_the_ID(), 'voorziening_website', true ); // 'voorziening_website';
+      $voorziening_eigenaarContact  = get_post_meta( get_the_ID(), 'voorziening_eigenaarContact', true ); // 'voorziening_eigenaarContact';
+      $voorziening_aantekeningen    = get_post_meta( get_the_ID(), 'voorziening_aantekeningen', true ); // 'voorziening_aantekeningen';
+      
+
 
       // TODO: toon de juist informatie voor deze voorziening
 
-  		$content = '<h2>' . __( 'Releasekalender info voor een dossier pagina', 'rijksreleasekalender' ) . '</h2><p>' . __( 'Meer volgt.', 'rijksreleasekalender' ) . '<br>' . $page_template . '</p>' . $content;
+  		$content = '<div id="releasekalenderoutput">'; 
+  		$content .= '<div class="rk-bouwsteen">'; 
+ 
+  		
+  		$content .= '<p>' . get_the_title() . ' ' . _x( 'heeft de volgende producten en releases:', 'rijksreleasekalender' ) . '<br><a href="#beschrijving">'. _x( '(naar omschrijving)', 'rijksreleasekalender' ) . '</a></p>';
+
+      // hier de tijdbalk
+  		$content .= '<div class="tijdbalk">' . $tijdbalkhiero . '</div>';
+
+      // de pijlstok voor het heden
+  		$content .= '<div class="nu"><p>' . $datumnu . '</p></div>';
+      
+      // het overzicht van alle producten en releases
+  		$content .= '<div class="programma">' . $totaleprogramma . '</div>';
+
+      // de legenda
+  		$content .= '<ul class="legenda"><li class="vervallen"><span class="status">Vervallen = </span> Vervallen release</li><li class="gerealiseerd"><span class="status">Gerealiseerd = </span> Gerealiseerde release</li><li><span class="status">Gepland of Verwacht = </span>Een geplande of verwachte release</li><li class="waarschuwing"><span class="status">Waarschuwing = </span> Release met mogelijk probleem bij afhankelijkheid</li></ul>';
+
+      // de beschrijving
+  		$content .= '<div><h2 id="omschrijving">' . __( 'Omschrijving', 'rijksreleasekalender' ) . '</h2>' . $tempcontent . '<p><em>' . __('Datum laatste wijziging:', 'rijksreleasekalender' ) . date_i18n( get_option( 'date_format' ), strtotime( $voorziening_updated ) ) . '</em></p></div>';
+
+      // zie ook
+      if ( $voorziening_website ) {
+        
+    		$content .= '<div class="block"><h2>' . __( 'Zie ook', 'rijksreleasekalender' ) . '</h2><ul class="external"><li><a href="' . $voorziening_website . '">' . get_the_title() . '</a></li></ul></div>';
+
+      }
+
+    
+
+      
+  		$content .= '</div>'; 
+  		$content .= '</div>'; 
+
+
+
   		return $content;
+  		
   	}
+
+    
+    function rijksreleasekalender_correct_postinfo($post_info) {
+        global $wp_query;
+        global $post;
+
+        if ( is_single() && ( 'voorziening' == get_post_type() ) ) {
+          return '';
+        }
+        else {
+          return $post_info;
+        }
+        
+    }
+
 
 
 }
