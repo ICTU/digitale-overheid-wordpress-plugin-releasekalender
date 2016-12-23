@@ -149,7 +149,9 @@ class rijksreleasekalender_Public {
 
   		$page_template = get_post_meta( get_the_ID(), '_wp_page_template', true );
   		
-      if ( is_single() && ( 'voorziening' == get_post_type() ) ) {
+      if ( ( is_single() && ( 'voorziening' == get_post_type() ) ) ||
+            ( is_single() && ( 'release' == get_post_type() ) ) ||
+            ( is_single() && ( 'product' == get_post_type() ) ) ) {
 
         // Customize the entry meta in the entry header (requires HTML5 theme support)
         add_filter( 'genesis_post_info', array( $this, 'rijksreleasekalender_correct_postinfo' ) );
@@ -189,9 +191,44 @@ class rijksreleasekalender_Public {
 
       // TODO: toon de juist informatie voor deze voorziening
 
-  		$content = '<h2>' . __( 'Hoofdpagina releasekalender', 'rijksreleasekalender' ) . '</h2><p>' . __( 'Meer volgt.', 'rijksreleasekalender' ) . '<br>' . $page_template . '</p>' . $content;
-  		return $content;
-  	}
+//  		$content = '<h2>' . __( 'Hoofdpagina releasekalender', 'rijksreleasekalender' ) . '</h2><p>' . __( 'Meer volgt.', 'rijksreleasekalender' ) . '<br>' . $page_template . '</p>';
+  		$content = '<h2>' . __( 'Hoofdpagina releasekalender', 'rijksreleasekalender' ) . '</h2><p style="background: red; color: white;">Hieronder staan alleen de voorzieniningen die aan een groep zijn toegekend.<br>De links tonen op dit moment alleen nog maar ruwe test-data</p>';
+      
+      $member_group_terms = get_terms( 'voorziening-groep' );
+      
+      foreach ( $member_group_terms as $member_group_term ) {
+        
+        $member_group_query = new WP_Query( array(
+            'post_type' => 'voorziening',
+            'tax_query' => array(
+            array(
+              'taxonomy' => 'voorziening-groep',
+              'field' => 'slug',
+              'terms' => array( $member_group_term->slug ),
+              'operator' => 'IN'
+            )
+            )
+          ) 
+        );
+        
+        $content .= '<h3>' . $member_group_term->name . '</h3>';
+        $content .= '<ul>';
+        
+        if ( $member_group_query->have_posts() ) : 
+          while ( $member_group_query->have_posts() ) : $member_group_query->the_post(); 
+            $content .= '<li><a href="' . get_the_permalink() . '">' . get_the_title() . '</a></li>';
+          endwhile; 
+        endif; 
+
+        $content .= '</ul>';
+
+        // Reset things, for good measure
+        $member_group_query = null;
+        wp_reset_postdata();
+      }  
+  
+      return $content;
+    }
 
   
   	/**
@@ -204,6 +241,7 @@ class rijksreleasekalender_Public {
     	
     	global $post;
 
+
       $tempcontent = $content;
 
       $tijdbalkhiero                = 'tijdbalkhiero';
@@ -213,8 +251,12 @@ class rijksreleasekalender_Public {
       $voorziening_website          = get_post_meta( get_the_ID(), 'voorziening_website', true ); // 'voorziening_website';
       $voorziening_eigenaarContact  = get_post_meta( get_the_ID(), 'voorziening_eigenaarContact', true ); // 'voorziening_eigenaarContact';
       $voorziening_aantekeningen    = get_post_meta( get_the_ID(), 'voorziening_aantekeningen', true ); // 'voorziening_aantekeningen';
+
+  		$content                      = ''; 
       
 
+if ( 22 == 33 ) {
+  
 
       // TODO: toon de juist informatie voor deze voorziening
 
@@ -252,7 +294,69 @@ class rijksreleasekalender_Public {
   		$content .= '</div>'; 
   		$content .= '</div>'; 
 
+}
 
+      //============================================================================================================
+      $metadata = get_post_meta( $post->ID );    	
+
+//$posttype = ads;
+
+  		$content .= '<div class="metadata">'; 
+  		$content .= '<h2>Tijdelijke testdata</h2>'; 
+  		$content .= '<ul><li><a href="/voorziening/">Voorzieningen</a></li><li><a href="/product/">Producten</a></li><li><a href="/release/">Releases</a></li></ul>'; 
+  		$content .= '<h3>(' . strtoupper( get_post_type() ) . ') ' . get_the_title() . '</h3>'; 
+  		$content .= '<p><strong>Content:</strong></p><pre>' . esc_html( get_the_content() ) . '</pre>'; 
+  		$content .= '<ul>'; 
+      foreach( $metadata as $key => $value ){        
+
+        if ( is_array( $value ) ) {
+        
+          $data = maybe_unserialize( $value[0] );
+          
+          if ( is_array( $data ) ) {
+        
+//          	$content .= "<li>JA DATA: " . $key . '<ul>'; 
+          	$content .= "<li><strong>" . $key . ':</strong><ul>'; 
+      
+            foreach( $data as $key1 => $value1 ){        
+
+              $data2 = maybe_unserialize( $value1 );
+              
+              if ( is_array( $data2 ) ) {
+            
+              	$content .= "<li><strong>" . $key1 . ':</strong><ul>'; 
+            
+                foreach( $data2 as $key2 => $value2 ){        
+
+                  if ( is_array( $value2 ) ) {
+                    $content .= "<li>" . $key2 . ' => ' . implode( ', ', $value2 ) . "</li>"; 
+                  }
+                  else {
+                    $content .= "<li>" . $key2 . ' => ' . $value2 . "</li>"; 
+                  }
+                }
+              	$content .= "</ul></li>"; 
+              }
+              else {
+              	$content .= "<li>" . $key1 . ' => ' . $value1 . "</li>"; 
+              }
+
+              
+            }
+          	$content .= "</ul></li>"; 
+          }
+          else {
+          	$content .= "<li><strong>" . $key . '</strong> => ' . implode( ', ', $value ) . "</li>"; 
+          }
+        }
+        else {
+        	$content .= "<li>GEEN ARRAY / " . $key . ' => ' . $value . "</li>"; 
+        }
+
+      }
+  		$content .= '</ul>'; 
+  		$content .= '</div>'; 
+      //============================================================================================================
 
   		return $content;
   		
@@ -263,7 +367,9 @@ class rijksreleasekalender_Public {
         global $wp_query;
         global $post;
 
-        if ( is_single() && ( 'voorziening' == get_post_type() ) ) {
+        if ( ( is_single() && ( 'product' == get_post_type() ) ) ||
+             ( is_single() && ( 'release' == get_post_type() ) ) ||
+             ( is_single() && ( 'voorziening' == get_post_type() ) ) ) {
           return '';
         }
         else {
