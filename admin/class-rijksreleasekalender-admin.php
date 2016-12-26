@@ -177,11 +177,20 @@ class rijksreleasekalender_Admin {
 
 		add_settings_field(
 			$this->option_name . '_author_id',
-			__( 'Gebruiker', 'rijksreleasekalender' ),
+			__( 'Voer data in als:', 'rijksreleasekalender' ),
 			array( $this, $this->option_name . '_author_id_cb' ),
 			$this->plugin_name,
 			$this->option_name . '_general',
 			array( 'label_for' => $this->option_name . '_author_id' )
+		);
+
+		add_settings_field(
+			$this->option_name . '_legenda_kalender',
+			__( 'HTML voor de legenda:', 'rijksreleasekalender' ),
+			array( $this, $this->option_name . '_legenda_kalender_cb' ),
+			$this->plugin_name,
+			$this->option_name . '_general',
+			array( 'label_for' => $this->option_name . '_legenda_kalender' )
 		);
 
 
@@ -202,6 +211,7 @@ class rijksreleasekalender_Admin {
 		register_setting( $this->plugin_name, $this->option_name . '_restapi_pwd' );
 		register_setting( $this->plugin_name, $this->option_name . '_rss_size' );
 		register_setting( $this->plugin_name, $this->option_name . '_update_key' );
+		register_setting( $this->plugin_name, $this->option_name . '_legenda_kalender' );
 		register_setting( $this->plugin_name, $this->option_name . '_author_id' );
 		register_setting( $this->plugin_name, $this->option_name . '_recent_max_age' );
 
@@ -291,6 +301,23 @@ class rijksreleasekalender_Admin {
 		$update_key = get_option( $this->option_name . '_update_key' );
 		echo '<input class="regular-text code" type="text" name="' . $this->option_name . '_update_key' . '" id="' . $this->option_name . '_update_key' . '" value="' . $update_key . '"> ';
 	}
+
+	/**
+	 * Render the update key input for this plugin
+	 *
+	 * @since  1.0.0
+	 */
+	public function rijksreleasekalender_legenda_kalender_cb() {
+	  $legenda_kalender = get_option( $this->option_name . '_legenda_kalender' );
+	  
+	  if ( ! $legenda_kalender ) {
+	    $legenda_kalender = '<ul class="legenda"><li class="vervallen"><span class="status">Vervallen = </span> Vervallen release</li><li class="gerealiseerd"><span class="status">Gerealiseerd = </span> Gerealiseerde release</li><li><span class="status">Gepland of Verwacht = </span>Een geplande of verwachte release</li><li class="waarschuwing"><span class="status">Waarschuwing = </span> Release met mogelijk probleem bij afhankelijkheid</li></ul>';
+	  }  
+	  
+	  echo '<textarea class="regular-text code" name="' . $this->option_name . '_legenda_kalender' . '" id="' . $this->option_name . '_legenda_kalender' . '">' . $legenda_kalender . '</textarea>';
+	}
+	
+
 
 	/**
 	 * Render the author dropdown
@@ -979,7 +1006,9 @@ class rijksreleasekalender_Admin {
 									'product_contact_opdrachtgever' => $product_contact_opdrachtgever,
 									'product_opdrachtgever'         => $product_opdrachtgever,
 									'product_aanbieder'             => $product_aanbieder,
-									'product_producttypen'          => $product_producttypen
+									'product_producttypen'          => $product_producttypen,
+									'product_voorziening_id'        => $product->bouwsteen->id
+									
 								);
 
 								foreach ( $product_custom_field_array as $key => $value ) {
@@ -1069,7 +1098,8 @@ class rijksreleasekalender_Admin {
 								'product_contact_opdrachtgever' => $product_contact_opdrachtgever,
 								'product_opdrachtgever'         => $product_opdrachtgever,
 								'product_aanbieder'             => $product_aanbieder,
-								'product_producttypen'          => $product_producttypen
+								'product_producttypen'          => $product_producttypen,
+								'product_voorziening_id'        => $product->bouwsteen->id
 							);
 
 							$product_post_array[ 'args' ]          = $product_post_args;
@@ -1208,7 +1238,9 @@ class rijksreleasekalender_Admin {
 									'release_website'                 => $release->website,
 									'release_product'                 => $release_product,
 									'release_release_status'          => $release_release_status,
-									'release_release_marge'           => $release_release_marge
+  								'release_release_marge'           => $release_release_marge,
+  								'release_product_id'              => $release->product->id,
+  								'release_voorziening_id'          => $release->product->bouwsteen->id
 								);
 
 								foreach ( $release_custom_field_array as $key => $value ) {
@@ -1230,6 +1262,8 @@ class rijksreleasekalender_Admin {
 
 							// store custom fields
 							// todo make a function for this
+
+
 
 							$release_product        = array(
 								'id'          => $release->product->id,
@@ -1264,8 +1298,11 @@ class rijksreleasekalender_Admin {
 								'release_website'                 => $release->website,
 								'release_product'                 => $release_product,
 								'release_release_status'          => $release_release_status,
-								'release_release_marge'           => $release_release_marge
+								'release_release_marge'           => $release_release_marge,
+								'release_product_id'              => $release->product->id,
+								'release_voorziening_id'          => $release->product->bouwsteen->id
 							);
+
 
 							$messages[]          = date('H:i:s') . ' - ' . $release_post_id . __( ' bestaat al; publish date gezet op' ) . date( 'Y-m-d H:i:s', strtotime( $release->updated ) );
 
@@ -1439,7 +1476,9 @@ class rijksreleasekalender_Admin {
 						'product_contact_opdrachtgever'   => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_contact_opdrachtgever' ] ),
 						'product_opdrachtgever'           => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_opdrachtgever' ] ),
 						'product_aanbieder'               => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_aanbieder' ] ),
-						'product_producttypen'            => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_producttypen' ] )
+						'product_producttypen'            => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_producttypen' ] ),
+						'product_voorziening_id'          => $all_args[ 'custom_fields' ][ 'product_voorziening_id' ],
+						
 					);
 					break;
 				case 'release':
@@ -1455,7 +1494,11 @@ class rijksreleasekalender_Admin {
 						'release_website'                 => $all_args[ 'custom_fields' ][ 'release_website' ],
 						'release_product'                 => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_product' ] ),
 						'release_release_status'          => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_release_status' ] ),
-						'release_release_marge'           => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_release_marge' ] )
+						'release_release_marge'           => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_release_marge' ] ),
+						'release_product_id'              => $all_args[ 'custom_fields' ][ 'release_product_id' ],
+						'release_voorziening_id'          => $all_args[ 'custom_fields' ][ 'release_voorziening_id' ]
+
+						
 					);
 					break;
 
@@ -1485,7 +1528,7 @@ class rijksreleasekalender_Admin {
 		$delete_result = delete_post_meta( $post_id, $meta_key );
 
 		if ( $delete_result ) {
-			$messages[] = date('H:i:s') . ' - ' . __('$messages[]          = time() . ' - ' .ijderd van post_id:', 'rijksreleasekalender' ) . ' ' . $post_id;
+  		$messages[] = date('H:i:s') . ' - ' . __('Tijdelijke data verwijderd van post_id: ', 'rijksreleasekalender' ) . $post_id;
 		} else {
 			$messages[] = date('H:i:s') . ' - ' . __('FOUT - Bij verwijderen van tijdelijke data van post_id: ', 'rijksreleasekalender' ) . ' ' . $post_id;
 		}
