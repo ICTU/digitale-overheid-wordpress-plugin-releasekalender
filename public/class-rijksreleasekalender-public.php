@@ -53,7 +53,7 @@ class rijksreleasekalender_Public {
 	 * @access   private
 	 * @var      string    $version    page template slug
 	 */
-	private $releasekalender_hoofdpaginatemplate;
+	private $releasekalender_template_hoofdpagina;
 
 	/**
 	 * The page template slug for the dossier page template
@@ -62,7 +62,14 @@ class rijksreleasekalender_Public {
 	 * @access   private
 	 * @var      string    $version    page template slug
 	 */
-	private $releasekalender_dossieraginatemplate;
+	private $releasekalender_template_dossier;
+
+	private $releasekalender_queryvar_voorziening;
+	private $releasekalender_queryvar_product;
+	private $releasekalender_queryvar_kalender;
+	private $releasekalender_queryvar_plainhtml;
+
+	private $option_name = 'rijksreleasekalender';
 
 	/**
 	 * Initialize the class and set its properties.
@@ -74,17 +81,32 @@ class rijksreleasekalender_Public {
 	public function __construct( $rijksreleasekalender, $version ) {
 
 		$this->rijksreleasekalender = $rijksreleasekalender;
-		$this->version = $version;
-		
-		$this->releasekalender_dossieraginatemplate   = 'releasekalender-dossier-template.php';
-		$this->releasekalender_hoofdpaginatemplate    = 'releasekalender-main-page-template.php';
+		$this->version              = $version;
+
 		
 
+		//========================================================================================================
+		// set up 2 different virtual page templates
+		// these are not actual page templates with their own .php file
+		$this->releasekalender_template_dossier        = 'releasekalender-dossier-template.php';
+		$this->releasekalender_template_hoofdpagina    = 'releasekalender-main-page-template.php';
+		
 		// add the page templates
-		add_filter( 'theme_page_templates', array( $this, 'rhswp_add_page_templates' ) );
+		add_filter( 'theme_page_templates', array( $this, 'rijksreleasekalender_add_page_templates' ) );
 		
 		// activate the page filters
 		add_action( 'template_redirect',    array( $this, 'use_page_template' )  );
+
+		//========================================================================================================
+    // initialize the query vars. Depending on the query vars we decide what to show
+		$this->releasekalender_queryvar_voorziening   = 'voorziening';    // query var to recognize the voorziening / bouwsteen
+		$this->releasekalender_queryvar_product   		= 'product';        // query var to recognize the product
+		$this->releasekalender_queryvar_kalender   		= 'kalender';       // show the calendar overview of upcoming releases
+		$this->releasekalender_queryvar_plainhtml   	= 'plainhtml';      // show the complete data in plain HTML 
+
+    // add rewrite rules and make WP recognize the query vars
+		add_filter( 'init',				array( $this, 'rijksreleasekalender_add_rewrite_rules' ) );
+		add_filter( 'query_vars',	array( $this, 'rijksreleasekalender_add_query_vars' ) );
 
 	}
 
@@ -107,7 +129,7 @@ class rijksreleasekalender_Public {
 		 * class.
 		 */
 
-//		wp_enqueue_style( $this->rijksreleasekalender, plugin_dir_url( __FILE__ ) . 'css/rijksreleasekalender-public.css', array(), $this->version, 'all' );
+    wp_enqueue_style( $this->rijksreleasekalender, plugin_dir_url( __FILE__ ) . 'css/rijksreleasekalender-public.css', array(), $this->version, 'all' );
 
 	}
 
@@ -140,10 +162,10 @@ class rijksreleasekalender_Public {
      * @param array $post_templates Array of page templates. Keys are filenames, values are translated names.
      * @return array Expanded array of page templates.
      */
-    function rhswp_add_page_templates( $post_templates ) {
+    function rijksreleasekalender_add_page_templates( $post_templates ) {
 
-      $post_templates[$this->releasekalender_dossieraginatemplate]  = __( 'Releasekalender - Dossierpagina ', 'rijksreleasekalender' );    
-      $post_templates[$this->releasekalender_hoofdpaginatemplate]   = __( 'Releasekalender - Hoofdpagina', 'rijksreleasekalender' );    
+      $post_templates[$this->releasekalender_template_dossier]  = __( 'Releasekalender - Dossierpagina ', 'rijksreleasekalender' );    
+      $post_templates[$this->releasekalender_template_hoofdpagina]   = __( 'Releasekalender - Hoofdpagina', 'rijksreleasekalender' );    
       return $post_templates;
       
     }
@@ -154,7 +176,14 @@ class rijksreleasekalender_Public {
   	public function use_page_template() {
 
   		$page_template = get_post_meta( get_the_ID(), '_wp_page_template', true );
-  		
+
+      if ( $this->releasekalender_template_hoofdpagina == $page_template ) {
+      
+        // action for writing extra info in the alt-sidebar
+        add_action( 'genesis_before_sidebar_widget_area',    array( $this, 'rijksreleasekalender_sidebar_context_widgets' )  );
+        
+      }  		
+  
       if ( ( is_single() && ( 'voorziening' == get_post_type() ) ) ||
             ( is_single() && ( 'release' == get_post_type() ) ) ||
             ( is_single() && ( 'product' == get_post_type() ) ) ) {
@@ -163,21 +192,21 @@ class rijksreleasekalender_Public {
         add_filter( 'genesis_post_info', array( $this, 'rijksreleasekalender_correct_postinfo' ) );
 
     		// filter the dossier template page
-  			add_filter( 'the_content', array( $this, 'rijksreleasekalender_dossieraginatemplate_filter' ) );
+  			add_filter( 'the_content', array( $this, 'rijksreleasekalender_template_dossier_filter' ) );
 
     		wp_enqueue_style( $this->rijksreleasekalender, plugin_dir_url( __FILE__ ) . 'css/releasekalender-dossier-template.css', array(), $this->version, 'all' );
 
   		}
-  		elseif ( $this->releasekalender_dossieraginatemplate == $page_template ) {
+  		elseif ( $this->releasekalender_template_dossier == $page_template ) {
     		// filter the dossier template page
-  			add_filter( 'the_content', array( $this, 'rijksreleasekalender_dossieraginatemplate_filter' ) );
+  			add_filter( 'the_content', array( $this, 'rijksreleasekalender_template_dossier_filter' ) );
 
     		wp_enqueue_style( $this->rijksreleasekalender, plugin_dir_url( __FILE__ ) . 'css/releasekalender-dossier-template.css', array(), $this->version, 'all' );
 
   		}
-  		elseif ( $this->releasekalender_hoofdpaginatemplate == $page_template ) {
+  		elseif ( $this->releasekalender_template_hoofdpagina == $page_template ) {
     		// filter the main template page
-  			add_filter( 'the_content', array( $this, 'rijksreleasekalender_hoofdpaginatemplate_filter' ) );
+  			add_filter( 'the_content', array( $this, 'rijksreleasekalender_template_hoofdpagina_filter' ) );
 
     		wp_enqueue_style( $this->rijksreleasekalender, plugin_dir_url( __FILE__ ) . 'css/releasekalender-main-page-template.css', array(), $this->version, 'all' );
 
@@ -191,7 +220,7 @@ class rijksreleasekalender_Public {
   	 * @param  string  $content  The page content
   	 * @return string  $content  The modified page content
   	 */
-  	public function rijksreleasekalender_hoofdpaginatemplate_filter( $content ) {
+  	public function rijksreleasekalender_template_hoofdpagina_filter( $content ) {
 
   		$page_template = get_post_meta( get_the_ID(), '_wp_page_template', true );
 
@@ -251,7 +280,7 @@ class rijksreleasekalender_Public {
   	 * @param  string  $content  The page content
   	 * @return string  $content  The modified page content
   	 */
-  	public function rijksreleasekalender_dossieraginatemplate_filter( $content ) {
+  	public function rijksreleasekalender_template_dossier_filter( $content ) {
     	
     	global $post;
 
@@ -357,7 +386,13 @@ if ( 22 == 33 ) {
           	$content .= "</ul></li>"; 
           }
           else {
-          	$content .= "<li><strong>" . $key . '</strong> => ' . implode( ', ', $value ) . "</li>"; 
+            if ( $key == 'release_releasedatum_translated' || $key == 'release_updated_translated' ) {
+              $releasedate = implode( '', $value );
+            	$content .= "<li><strong>" . $key . '</strong> => ' . date( 'j F Y -  H:i:s', $releasedate ) . " (" . $releasedate . ")</li>"; 
+            }
+            else {
+            	$content .= "<li><strong>" . $key . '</strong> => ' . implode( ', ', $value ) . "</li>"; 
+            }
           }
         }
         else {
@@ -389,6 +424,128 @@ if ( 22 == 33 ) {
         
     }
 
+		//========================================================================================================
+		
+		function rijksreleasekalender_sidebar_context_widgets() {
+
+  		$page_template = get_post_meta( get_the_ID(), '_wp_page_template', true );
+  		
+      if ( $this->releasekalender_template_hoofdpagina == $page_template ) {
+
+    		$recent_max_age           = intval( get_option( $this->option_name . '_recent_max_age' ) );
+
+        if ( is_int( $recent_max_age ) && $recent_max_age > 0 ) {
+        }
+        else {
+          $recent_max_age = 10;
+        }
+
+        $url = get_permalink( get_the_ID() );
+
+        $start  = strtotime( date('y:m:d') );
+        $end    = strtotime( date('y:m:d') . ' + ' . $recent_max_age . ' days' );
+        
+				// Select the upcoming releases for the x few days
+				$releases_query_args = array(
+          'post_type'   => 'release',
+          'order'       => 'ASC',					
+          'orderby'     => 'meta_value',					
+          'meta_key'    => 'release_releasedatum_translated',
+          'meta_query' => array(
+              array(
+                  'key' => 'release_releasedatum_translated',
+                  'value' => array($start, $end),
+                  'compare' => 'BETWEEN'
+              )
+          )				
+				);
+
+
+				$releases_query = new WP_Query( $releases_query_args );
+
+        echo '<div id="releasekalender_kalender-widget_' . get_the_ID() . '" class="widget releasekalender releasekalender-kalender-widget">
+                <div class="widget-wrap">
+                  <div class="text">
+                    <h3 class="widgettitle">' . __('Aankomende releases', 'rijksreleasekalender' ) . '</h3>';
+        
+				if ( $releases_query->have_posts() ) {
+          echo '<p>' . sprintf( _n( 'Dit zijn de releases voor morgen.', 'Dit zijn de releases van de eerstkomende %s dagen.', $recent_max_age, 'rijksreleasekalender' ), $recent_max_age ) . '</p>';
+  
+
+          echo '<ul class="list">';
+
+          while ($releases_query->have_posts()) : $releases_query->the_post();
+
+$releasedatum = get_post_meta( get_the_id(), 'release_releasedatum_translated' );
+
+$releasedatum = date_i18n( get_option( 'date_format' ), $releasedatum[0] );
+          
+    				echo '<li><h4>';
+    				echo get_the_title();
+    				echo '</h4>';
+    				echo '<p class="details">' . $releasedatum . '</p>';
+    				echo '</li>';
+          endwhile;
+
+          echo '</ul>';
+  				
+
+//          echo '<ul class="list">
+//          <h4><a href=' . $url . $this->releasekalender_queryvar_voorziening . '/berichtenbox-voor-bedrijven/' . $this->releasekalender_queryvar_product . '/berichtenbox-voor-bedrijven#aansluitvoorziening-via-digikoppeling">Aansluitvoorziening via Digikoppeling</a></h4>
+//          Berichtenbox voor bedrijven
+//         <p class="details">31 december 2016</p>
+//          </li>
+//          </ul>';
+  				
+				}
+				else {
+
+          echo '<p>' . sprintf( _n( 'Geen releases gevonden voor morgen.', 'Geen releases gevonden voor de eerstkomende %s dagen.', $recent_max_age, 'rijksreleasekalender' ), $recent_max_age ) . '</p>';
+  				
+				}
+
+
+        
+        echo '<div class="category-link more"><a href="' . $url . $this->releasekalender_queryvar_kalender . '/">' . __( 'Volledige kalender','' ) . '</a></div>';
+        
+        
+        echo '
+              </div>
+            </div>
+          </div>';
+        
+  		}
+
+		}
+		
+		//========================================================================================================
+		
+		function rijksreleasekalender_add_rewrite_rules() {
+
+		  // rewrite rules for posts in dossier context
+		  add_rewrite_rule( '(.+?)(/' . $this->releasekalender_queryvar_voorziening . '/)(.+?)(/' . $this->releasekalender_queryvar_product . '/)(.+?)/?$', 'index.php?pagename=$matches[1]&' . $this->releasekalender_queryvar_voorziening . '=$matches[3]&' . $this->releasekalender_queryvar_product . '=$matches[5]', 'top');
+		  add_rewrite_rule( '(.+?)(/' . $this->releasekalender_queryvar_voorziening . '/)(.+?)/?$', 'index.php?pagename=$matches[1]&' . $this->releasekalender_queryvar_voorziening . '=$matches[3]', 'top');
+
+		  add_rewrite_rule( '(.+?)(/' . $this->releasekalender_queryvar_voorziening . '/)(.+?)(/' . $this->releasekalender_queryvar_product . '/)(.+?)?$', 'index.php?pagename=$matches[1]&' . $this->releasekalender_queryvar_voorziening . '=$matches[3]&' . $this->releasekalender_queryvar_product . '=$matches[5]', 'top');
+		  add_rewrite_rule( '(.+?)(/' . $this->releasekalender_queryvar_voorziening . '/)(.+?)?$', 'index.php?pagename=$matches[1]&' . $this->releasekalender_queryvar_voorziening . '=$matches[3]', 'top');
+		
+
+		  add_rewrite_rule( '(.+?)/' . $this->releasekalender_queryvar_kalender . '/?$', 'index.php?pagename=$matches[1]&' . $this->releasekalender_queryvar_kalender . '=' . $this->releasekalender_queryvar_kalender, 'top');
+
+		}
+
+		//========================================================================================================
+		
+		function rijksreleasekalender_add_query_vars($vars) {
+			$vars[] = $this->releasekalender_queryvar_voorziening;
+			$vars[] = $this->releasekalender_queryvar_product;
+			$vars[] = $this->releasekalender_queryvar_kalender;
+			$vars[] = $this->releasekalender_queryvar_kalender;
+
+			return $vars;
+		}
+		
+		//========================================================================================================
 
 
 }
