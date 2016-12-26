@@ -652,7 +652,7 @@ class rijksreleasekalender_Admin {
 					$num = 0;
 					foreach ( $voorzieningen->records as $voorziening ) {
 						$num ++;
-						$messages[] = $num . '. ' . $voorziening->naam;
+						$messages[] = '<strong>' . $num . '. ' . $voorziening->naam . '</strong>';
 
 						$voorz_post_args = array(
 							'post_author'    => $author_id,
@@ -821,7 +821,7 @@ class rijksreleasekalender_Admin {
 					$num = 0;
 					foreach ( $producten->records as $product ) {
 						$num ++;
-						$messages[] = $num . '. ' . $product->naam;
+						$messages[] = '<strong>' . $num . '. ' . $product->naam . '</strong>';
 
             // set publish for product to 'publish'
 						$product_post_args = array(
@@ -911,14 +911,14 @@ class rijksreleasekalender_Admin {
 								// multiple producttypen may exist
 								$product_producttypen = array();
 
-								foreach ( $product->producttypen as $product_product_type ) {
-									$product_producttypen[] = array(
-										'id'           => $product->producttypen->id,
-										'naam'         => $product->producttypen->naam,
-										'omschrijving' => $product->producttypen->omschrijving,
-										'updated'      => $product->producttypen->updated
-									);
-								}
+  							foreach ( $product->producttypen as $product_product_type ) {
+  								$product_producttypen[] = array(
+    								'id'           => $product_product_type->id,
+    								'naam'         => $product_product_type->naam,
+    								'omschrijving' => $product_product_type->omschrijving,
+    								'updated'      => $product_product_type->updated,
+  								);
+  							}
 
 								// add all fields to array
 
@@ -1003,10 +1003,10 @@ class rijksreleasekalender_Admin {
 
 							foreach ( $product->producttypen as $product_product_type ) {
 								$product_producttypen[] = array(
-									'id'           => isset($product->producttypen->id) ? $product->producttypen->id : '',
-									'naam'         => isset($product->producttypen->naam) ? $product->producttypen->naam : '',
-									'omschrijving' => isset($product->producttypen->omschrijving) ? $product->producttypen->omschrijving : '',
-									'updated'      => isset($product->producttypen->updated) ? $product->producttypen->updated : ''
+  								'id'           => $product_product_type->id,
+  								'naam'         => $product_product_type->naam,
+  								'omschrijving' => $product_product_type->omschrijving,
+  								'updated'      => $product_product_type->updated,
 								);
 							}
 
@@ -1074,7 +1074,7 @@ class rijksreleasekalender_Admin {
 					$num = 0;
 					foreach ( $releases->records as $release ) {
 						$num ++;
-						$messages[]           = $num . '. ' . $release->naam;
+						$messages[] = '<strong>' . $num . '. ' . $release->naam . '</strong>';
 						$release_post_content = $release->nieuweFunctionaliteiten;
 						// some releases don't have a value, so set it to an empty string
 						if ( $release_post_content === null ) {
@@ -1150,14 +1150,15 @@ class rijksreleasekalender_Admin {
 								// add all fields to array
 
 								$release_custom_field_array = array(
-									'release_id'              => $release->id,
-									'release_releasedatum'    => $release->releasedatum,
-									'release_aandachtspunten' => $release->aandachtspunten,
-									'release_website'         => $release->website,
-									'release_updated'         => $release->updated,
-									'release_product'         => $release_product,
-									'release_release_status'  => $release_release_status,
-									'release_release_marge'   => $release_release_marge
+									'release_id'                      => $release->id,
+									'release_releasedatum'            => $release->releasedatum,
+									'release_aandachtspunten'         => $release->aandachtspunten,
+									'release_nieuwefunctionaliteiten' => $release->nieuweFunctionaliteiten,
+									'release_website'                 => $release->website,
+									'release_updated'                 => $release->updated,
+									'release_product'                 => $release_product,
+									'release_release_status'          => $release_release_status,
+									'release_release_marge'           => $release_release_marge
 								);
 
 								foreach ( $release_custom_field_array as $key => $value ) {
@@ -1195,21 +1196,22 @@ class rijksreleasekalender_Admin {
 							);
 
 							$release_release_marge = array(
-								'id'           => isset($release->releaseMarge->id) ? $release->releaseMarge->id : '',
-								'naam'         => isset($release->releaseMarge->naam) ? $release->releaseMarge->naam : '',
-								'omschrijving' => isset($release->releaseMarge->omschrijving) ? $release->releaseMarge->omschrijving : '',
+								'id'           => $release->releaseMarge->id,
+								'naam'         => $release->releaseMarge->naam,
+								'omschrijving' => $release->releaseMarge->omschrijving
 							);
 							// add all fields to array
 
 							$release_custom_field_array = array(
-								'release_id'              => $release->id,
-								'release_releasedatum'    => $release->releasedatum,
-								'release_aandachtspunten' => $release->aandachtspunten,
-								'release_website'         => $release->website,
-								'release_updated'         => $release->updated,
-								'release_product'         => $release_product,
-								'release_release_status'  => $release_release_status,
-								'release_release_marge'   => $release_release_marge
+								'release_id'                      => $release->id,
+								'release_releasedatum'            => $release->releasedatum,
+								'release_aandachtspunten'         => $release->aandachtspunten,
+								'release_nieuwefunctionaliteiten' => $release->nieuweFunctionaliteiten,
+								'release_website'                 => $release->website,
+								'release_updated'                 => $release->updated,
+								'release_product'                 => $release_product,
+								'release_release_status'          => $release_release_status,
+								'release_release_marge'           => $release_release_marge
 							);
 
 							$release_post_array[ 'args' ]          = $release_post_args;
@@ -1251,7 +1253,7 @@ class rijksreleasekalender_Admin {
 		// todo bij fout stoppen en foutmelding
 		if ( 3 == $_step ) {
 			$_result    = 'done';
-			$messages[]          = date('h:i:s') . ' - ' . __( 'Sync klaar.', 'rijksreleasekalender' );
+			$messages[] = '<h2 style="background: green; color: white;">' . date('h:i:s') . ' - ' . __( 'Sync klaar!', 'rijksreleasekalender' ) . '</h2>';
 		} else {
 			$_result = $_step;
 		}
@@ -1363,35 +1365,37 @@ class rijksreleasekalender_Admin {
 				case 'product':
 					// set product meta fields
 					$meta_fields = array(
-						'product_id'                    => $all_args[ 'custom_fields' ][ 'product_id' ],
-						'product_referentieProduct'     => $all_args[ 'custom_fields' ][ 'product_referentieProduct' ],
-						'product_datumIngebruikname'    => $all_args[ 'custom_fields' ][ 'product_datumIngebruikname' ],
-						'product_datumUitfasering'      => $all_args[ 'custom_fields' ][ 'product_datumUitfasering' ],
-						'product_doelgroep'             => $all_args[ 'custom_fields' ][ 'product_doelgroep' ],
-						'product_verwijzing'            => $all_args[ 'custom_fields' ][ 'product_verwijzing' ],
-						'product_goedgekeurd'           => $all_args[ 'custom_fields' ][ 'product_goedgekeurd' ],
-						'product_updated'               => $all_args[ 'custom_fields' ][ 'product_updated' ],
-						'product_voorziening'           => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_voorziening' ] ),
-						'product_productmanager'        => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_productmanager' ] ),
-						'product_contact_opdrachtgever' => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_contact_opdrachtgever' ] ),
-						'product_opdrachtgever'         => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_opdrachtgever' ] ),
-						'product_aanbieder'             => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_aanbieder' ] ),
-						'product_producttypen'          => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_producttypen' ] )
+						'product_id'                      => $all_args[ 'custom_fields' ][ 'product_id' ],
+						'product_referentieProduct'       => $all_args[ 'custom_fields' ][ 'product_referentieProduct' ],
+						'product_datumIngebruikname'      => $all_args[ 'custom_fields' ][ 'product_datumIngebruikname' ],
+						'product_datumUitfasering'        => $all_args[ 'custom_fields' ][ 'product_datumUitfasering' ],
+						'product_doelgroep'               => $all_args[ 'custom_fields' ][ 'product_doelgroep' ],
+						'product_verwijzing'              => $all_args[ 'custom_fields' ][ 'product_verwijzing' ],
+						'product_goedgekeurd'             => $all_args[ 'custom_fields' ][ 'product_goedgekeurd' ],
+						'product_updated'                 => $all_args[ 'custom_fields' ][ 'product_updated' ],
+						'product_voorziening'             => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_voorziening' ] ),
+						'product_productmanager'          => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_productmanager' ] ),
+						'product_contact_opdrachtgever'   => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_contact_opdrachtgever' ] ),
+						'product_opdrachtgever'           => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_opdrachtgever' ] ),
+						'product_aanbieder'               => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_aanbieder' ] ),
+						'product_producttypen'            => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_producttypen' ] )
 					);
 					break;
 				case 'release':
 					// set release meta fields
 					$meta_fields = array(
-						'release_id'              => $all_args[ 'custom_fields' ][ 'release_id' ],
-						'release_releasedatum'    => $all_args[ 'custom_fields' ][ 'release_releasedatum' ],
-						'release_aandachtspunten' => $all_args[ 'custom_fields' ][ 'release_aandachtspunten' ],
-						'release_website'         => $all_args[ 'custom_fields' ][ 'release_website' ],
-						'release_updated'         => $all_args[ 'custom_fields' ][ 'release_updated' ],
-						'release_product'         => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_product' ] ),
-						'release_release_status'  => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_release_status' ] ),
-						'release_release_marge'   => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_release_marge' ] )
+						'release_id'                      => $all_args[ 'custom_fields' ][ 'release_id' ],
+						'release_releasedatum'            => $all_args[ 'custom_fields' ][ 'release_releasedatum' ],
+						'release_aandachtspunten'         => $all_args[ 'custom_fields' ][ 'release_aandachtspunten' ],
+						'release_nieuwefunctionaliteiten' => $all_args[ 'custom_fields' ][ 'release_nieuwefunctionaliteiten' ],
+						'release_website'                 => $all_args[ 'custom_fields' ][ 'release_website' ],
+						'release_updated'                 => $all_args[ 'custom_fields' ][ 'release_updated' ],
+						'release_product'                 => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_product' ] ),
+						'release_release_status'          => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_release_status' ] ),
+						'release_release_marge'           => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_release_marge' ] )
 					);
 					break;
+
 
 			}
 

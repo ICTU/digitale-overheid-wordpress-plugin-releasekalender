@@ -1,5 +1,11 @@
 <?php
 
+// If this file is called directly, abort.
+if ( ! defined( 'WPINC' ) ) {
+	die;
+}
+
+
 /**
  * The public-facing functionality of the plugin.
  *
@@ -211,10 +217,18 @@ class rijksreleasekalender_Public {
           ) 
         );
         
-        $content .= '<h3>' . $member_group_term->name . '</h3>';
-        $content .= '<ul>';
         
         if ( $member_group_query->have_posts() ) : 
+
+          $titletag = 'h2';
+          
+          if ( $member_group_term->parent > 0 ) {
+            $titletag = 'h3';
+          }
+          
+          $content .= '<' . $titletag . '>' . $member_group_term->name . '</' . $titletag . '>';
+          $content .= '<ul>';
+
           while ( $member_group_query->have_posts() ) : $member_group_query->the_post(); 
             $content .= '<li><a href="' . get_the_permalink() . '">' . get_the_title() . '</a></li>';
           endwhile; 
@@ -299,8 +313,6 @@ if ( 22 == 33 ) {
       //============================================================================================================
       $metadata = get_post_meta( $post->ID );    	
 
-//$posttype = ads;
-
   		$content .= '<div class="metadata">'; 
   		$content .= '<h2>Tijdelijke testdata</h2>'; 
   		$content .= '<ul><li><a href="/voorziening/">Voorzieningen</a></li><li><a href="/product/">Producten</a></li><li><a href="/release/">Releases</a></li></ul>'; 
@@ -314,8 +326,7 @@ if ( 22 == 33 ) {
           $data = maybe_unserialize( $value[0] );
           
           if ( is_array( $data ) ) {
-        
-//          	$content .= "<li>JA DATA: " . $key . '<ul>'; 
+
           	$content .= "<li><strong>" . $key . ':</strong><ul>'; 
       
             foreach( $data as $key1 => $value1 ){        
@@ -350,7 +361,7 @@ if ( 22 == 33 ) {
           }
         }
         else {
-        	$content .= "<li>GEEN ARRAY / " . $key . ' => ' . $value . "</li>"; 
+        	$content .= "<li>" . $key . ' => ' . $value . "</li>"; 
         }
 
       }
