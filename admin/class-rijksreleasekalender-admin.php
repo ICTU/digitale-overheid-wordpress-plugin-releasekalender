@@ -567,7 +567,7 @@ class rijksreleasekalender_Admin {
 			'capability_type'     => 'post'
 		);
 
-		register_post_type( 'voorziening', $args );
+		register_post_type( 'voorzieningen', $args );
 	}
 
 	/**
@@ -578,7 +578,7 @@ class rijksreleasekalender_Admin {
 	function rijksreleasekalender_register_voorziening_groep() {
 		register_taxonomy(
 			'voorziening-groep',
-			'voorziening',
+			'voorzieningen',
 			array(
 				'labels'        => array(
 					'name'          => __( 'Groep', 'rijksreleasekalender' ),
@@ -643,7 +643,7 @@ class rijksreleasekalender_Admin {
 			'capability_type'     => 'post'
 		);
 
-		register_post_type( 'product', $args );
+		register_post_type( 'producten', $args );
 	}
 
 	/**
@@ -696,7 +696,7 @@ class rijksreleasekalender_Admin {
 			'capability_type'     => 'post'
 		);
 
-		register_post_type( 'release', $args );
+		register_post_type( 'releases', $args );
 	}
 
 	/**
@@ -713,7 +713,7 @@ class rijksreleasekalender_Admin {
 
 		switch ( $_step ) {
 			case 0:
-				$post_type           = 'voorziening';
+				$post_type           = 'voorzieningen';
 				$voorzieningen       = $this->rijksreleasekalender_api_get( 'bouwstenen' );
 				$voorzieningen_count = $this->rijksreleasekalender_count_api_objects( $voorzieningen );
 				$messages[]          = date('H:i:s') . ' - ' . __( 'Aantal voorzieningen: ', 'rijksreleasekalender' ) . $voorzieningen_count;
@@ -880,7 +880,7 @@ class rijksreleasekalender_Admin {
 				break;
 
 			case 1:
-				$post_type       = 'product';
+				$post_type       = 'producten';
 				$producten       = $this->rijksreleasekalender_api_get( 'producten' );
 				$producten_count = $this->rijksreleasekalender_count_api_objects( $producten );
 
@@ -919,7 +919,7 @@ class rijksreleasekalender_Admin {
 							$prod_query->the_post();
 							// store ID for future use
 							$product_post_id = get_the_ID();
-							$messages[]      = __( 'Product gevonden met id: ', 'rijksreleasekalender' ) .
+							$messages[]      = date('H:i:s') . ' - ' . __( 'Product gevonden met id: ', 'rijksreleasekalender' ) .
 							                   $product->id .
 							                   ' (post_id: ' . $product_post_id . ') ' .
 							                   __( 'en titel: ', 'rijksreleasekalender' ) .
@@ -991,9 +991,14 @@ class rijksreleasekalender_Admin {
   							}
 
 								// add all fields to array
-
+								// get the real ID and slug of the related voorziening
+								$arr_voorziening = $this->get_real_id_and_slug( $product->bouwsteen->id, 'voorzieningen', 'voorziening_id' );
+	
 								$product_custom_field_array = array(
 									'product_id'                    => $product->id,
+									'product_voorziening_id'        => $product->bouwsteen->id,
+									'product_voorziening_real_id'     => $arr_voorziening['id'],
+									'product_voorziening_real_id_slug'=> $arr_voorziening['slug'],
 									'product_referentieProduct'     => $product->referentieProduct,
 									'product_datumIngebruikname'    => $product->datumIngebruikname,
 									'product_datumUitfasering'      => $product->datumUitfasering,
@@ -1006,8 +1011,7 @@ class rijksreleasekalender_Admin {
 									'product_contact_opdrachtgever' => $product_contact_opdrachtgever,
 									'product_opdrachtgever'         => $product_opdrachtgever,
 									'product_aanbieder'             => $product_aanbieder,
-									'product_producttypen'          => $product_producttypen,
-									'product_voorziening_id'        => $product->bouwsteen->id
+									'product_producttypen'          => $product_producttypen
 									
 								);
 
@@ -1083,9 +1087,14 @@ class rijksreleasekalender_Admin {
 							}
 
 							// add all fields to array
+							// get the real ID and slug of the related voorziening
+							$arr_voorziening = $this->get_real_id_and_slug( $product->bouwsteen->id, 'voorzieningen', 'voorziening_id' );
 
 							$product_custom_field_array = array(
 								'product_id'                    => $product->id,
+								'product_voorziening_id'        => $product->bouwsteen->id,
+								'product_voorziening_real_id'     => $arr_voorziening['id'],
+								'product_voorziening_real_id_slug'=> $arr_voorziening['slug'],
 								'product_referentieProduct'     => $product->referentieProduct,
 								'product_datumIngebruikname'    => $product->datumIngebruikname,
 								'product_datumUitfasering'      => $product->datumUitfasering,
@@ -1098,8 +1107,7 @@ class rijksreleasekalender_Admin {
 								'product_contact_opdrachtgever' => $product_contact_opdrachtgever,
 								'product_opdrachtgever'         => $product_opdrachtgever,
 								'product_aanbieder'             => $product_aanbieder,
-								'product_producttypen'          => $product_producttypen,
-								'product_voorziening_id'        => $product->bouwsteen->id
+								'product_producttypen'          => $product_producttypen
 							);
 
 							$product_post_array[ 'args' ]          = $product_post_args;
@@ -1136,7 +1144,7 @@ class rijksreleasekalender_Admin {
 				break;
 
 			case 2:
-				$post_type      = 'release';
+				$post_type      = 'releases';
 				$releases       = $this->rijksreleasekalender_api_get( 'releases' );
 				$releases_count = $this->rijksreleasekalender_count_api_objects( $releases );
 				$messages[]     = date('H:i:s') . ' - ' . __( 'Aantal releases: ', 'rijksreleasekalender' ) . $releases_count;
@@ -1227,8 +1235,19 @@ class rijksreleasekalender_Admin {
 
 								// add all fields to array
 
+								// get the real ID and slug of the related product and voorziening
+								$arr_voorziening = $this->get_real_id_and_slug( $release->product->bouwsteen->id, 'voorzieningen', 'voorziening_id' );
+								$arr_productinfo = $this->get_real_id_and_slug( $release->product->id, 'producten', 'product_id'  );
+
+								$messages[]          = date('H:i:s') . ' - ' . __( 'Zoeken naar ID voor voorziening ', 'rijksreleasekalender' ) . $release->product->bouwsteen->id . 'resultaat: ' . implode(',', $arr_voorziening);
+								$messages[]          = date('H:i:s') . ' - ' . __( 'Zoeken naar ID voor product ', 'rijksreleasekalender' ) . $release->product->id . 'resultaat: ' . implode(',', $arr_productinfo);
+								
 								$release_custom_field_array = array(
 									'release_id'                      => $release->id,
+  								'release_voorziening_real_id'     => $arr_voorziening['id'],
+  								'release_voorziening_real_id_slug'=> $arr_voorziening['slug'],
+  								'release_product_real_id'         => $arr_productinfo['id'],
+  								'release_product_real_id_slug'    => $arr_productinfo['slug'],
 									'release_releasedatum'            => $release->releasedatum,
 									'release_releasedatum_translated' => $this->rijksreleasekalender_format_a_date( $release->releasedatum ),
 									'release_updated'                 => $release->updated,
@@ -1238,9 +1257,7 @@ class rijksreleasekalender_Admin {
 									'release_website'                 => $release->website,
 									'release_product'                 => $release_product,
 									'release_release_status'          => $release_release_status,
-  								'release_release_marge'           => $release_release_marge,
-  								'release_product_id'              => $release->product->id,
-  								'release_voorziening_id'          => $release->product->bouwsteen->id
+  								'release_release_marge'           => $release_release_marge
 								);
 
 								foreach ( $release_custom_field_array as $key => $value ) {
@@ -1287,6 +1304,14 @@ class rijksreleasekalender_Admin {
 							
 							// add all fields to array
 
+							// get the real ID and slug of the related product and voorziening
+							$arr_voorziening = $this->get_real_id_and_slug( $release->product->bouwsteen->id, 'voorzieningen', 'voorziening_id' );
+							$arr_productinfo = $this->get_real_id_and_slug( $release->product->id, 'producten', 'product_id'  );
+
+							$messages[]          = date('H:i:s') . ' - ' . __( 'Zoeken naar ID voor voorziening ', 'rijksreleasekalender' ) . $release->product->bouwsteen->id . 'resultaat: ' . implode(',', $arr_voorziening);
+							$messages[]          = date('H:i:s') . ' - ' . __( 'Zoeken naar ID voor product ', 'rijksreleasekalender' ) . $release->product->id . 'resultaat: ' . implode(',', $arr_productinfo);
+							
+
 							$release_custom_field_array = array(
 								'release_id'                      => $release->id,
 								'release_releasedatum'            => $release->releasedatum,
@@ -1299,8 +1324,11 @@ class rijksreleasekalender_Admin {
 								'release_product'                 => $release_product,
 								'release_release_status'          => $release_release_status,
 								'release_release_marge'           => $release_release_marge,
-								'release_product_id'              => $release->product->id,
-								'release_voorziening_id'          => $release->product->bouwsteen->id
+								'release_product_real_id'         => $arr_productinfo['id'],
+								'release_product_real_id_slug'    => $arr_productinfo['slug'],
+								'release_voorziening_real_id'     => $arr_voorziening['id'],
+								'release_voorziening_real_id_slug'=> $arr_voorziening['slug']
+								
 							);
 
 
@@ -1449,7 +1477,7 @@ class rijksreleasekalender_Admin {
 		} else {
 			// post is updated now do the meta fields
 			switch ( $post_type ) {
-				case 'voorziening':
+				case 'voorzieningen':
 					//set voorziening meta fields
 					$meta_fields = array(
 						'voorziening_id'                  => $all_args[ 'custom_fields' ][ 'voorziening_id' ],
@@ -1460,7 +1488,8 @@ class rijksreleasekalender_Admin {
 						'voorziening_eigenaarContact'     => maybe_unserialize( $all_args[ 'custom_fields' ][ 'voorziening_eigenaarContact' ] )
 					);
 					break;
-				case 'product':
+					
+				case 'producten':
 					// set product meta fields
 					$meta_fields = array(
 						'product_id'                      => $all_args[ 'custom_fields' ][ 'product_id' ],
@@ -1477,11 +1506,13 @@ class rijksreleasekalender_Admin {
 						'product_opdrachtgever'           => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_opdrachtgever' ] ),
 						'product_aanbieder'               => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_aanbieder' ] ),
 						'product_producttypen'            => maybe_unserialize( $all_args[ 'custom_fields' ][ 'product_producttypen' ] ),
+						'product_voorziening_real_id_slug'	=> $all_args[ 'custom_fields' ][ 'product_voorziening_real_id_slug' ],
+						'product_voorziening_real_id'			=> $all_args[ 'custom_fields' ][ 'product_voorziening_real_id' ],
 						'product_voorziening_id'          => $all_args[ 'custom_fields' ][ 'product_voorziening_id' ],
-						
 					);
 					break;
-				case 'release':
+					
+				case 'releases':
 					// set release meta fields
 					$meta_fields = array(
 						'release_id'                      => $all_args[ 'custom_fields' ][ 'release_id' ],
@@ -1495,9 +1526,10 @@ class rijksreleasekalender_Admin {
 						'release_product'                 => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_product' ] ),
 						'release_release_status'          => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_release_status' ] ),
 						'release_release_marge'           => maybe_unserialize( $all_args[ 'custom_fields' ][ 'release_release_marge' ] ),
-						'release_product_id'              => $all_args[ 'custom_fields' ][ 'release_product_id' ],
-						'release_voorziening_id'          => $all_args[ 'custom_fields' ][ 'release_voorziening_id' ]
-
+						'release_product_real_id'         => $all_args[ 'custom_fields' ][ 'release_product_real_id' ],
+						'release_product_real_id_slug'    => $all_args[ 'custom_fields' ][ 'release_product_real_id_slug' ],
+						'release_voorziening_real_id'     => $all_args[ 'custom_fields' ][ 'release_voorziening_real_id' ],
+						'release_voorziening_real_id_slug'=> $all_args[ 'custom_fields' ][ 'release_voorziening_real_id_slug' ]
 						
 					);
 					break;
@@ -1556,6 +1588,49 @@ class rijksreleasekalender_Admin {
 
     return $datestring;
   }
+	
+
+	/**
+	 * Retrieves a post ID for a custom post type
+	 * @var    int    	$post_id id of the post to look up
+	 * @var    string   $post_type posttype of the post to lookup
+	 *
+	 * @return int			post id or 0
+	 *
+	 *
+	 * @since    1.0.0
+	 */
+  public function get_real_id_and_slug( $post_id = 0, $post_type = '', $key_id = '' ) {
+
+    $arrreturn = array();
+    $arrreturn['id'] = '';
+    
+    if ( $post_id && $post_type && $key_id ) {
+
+			$get_postid_args = array(
+				'post_status'=> 'publish',
+				'post_type'  => $post_type,
+				'meta_key'   => $key_id,
+				'meta_value' => $post_id
+			);
+			$rel_query          = new WP_Query( $get_postid_args );
+
+			if ( $rel_query->have_posts() ) {
+        $currentsite      = get_site_url();
+        $post_slug  			= str_replace( $currentsite, '', get_the_permalink() );
+        $post_slug  			= explode( '/', $post_slug );
+
+				// post exists
+				$rel_query->the_post();
+		    $arrreturn['id']		= get_the_ID();
+		    $arrreturn['slug']	= $post_slug[2];
+	    }
+    }
+
+    return $arrreturn;
+  }
+  
+  
 	
 	
 
