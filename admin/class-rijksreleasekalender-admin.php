@@ -1600,13 +1600,13 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-  public function get_real_id_and_slug( $post_id = 0, $post_type = '', $key_id = '' ) {
-
-    $arrreturn = array();
-    $arrreturn['id'] = '';
-    
-    if ( $post_id && $post_type && $key_id ) {
-
+	public function get_real_id_and_slug( $post_id = 0, $post_type = '', $key_id = '' ) {
+		
+		$arrreturn = array();
+		$arrreturn['id'] = '';
+		
+		if ( $post_id && $post_type && $key_id ) {
+			
 			$get_postid_args = array(
 				'post_status'=> 'publish',
 				'post_type'  => $post_type,
@@ -1614,21 +1614,24 @@ class rijksreleasekalender_Admin {
 				'meta_value' => $post_id
 			);
 			$rel_query          = new WP_Query( $get_postid_args );
-
+			
 			if ( $rel_query->have_posts() ) {
-        $currentsite      = get_site_url();
-        $post_slug  			= str_replace( $currentsite, '', get_the_permalink() );
-        $post_slug  			= explode( '/', $post_slug );
-
-				// post exists
 				$rel_query->the_post();
-		    $arrreturn['id']		= get_the_ID();
-		    $arrreturn['slug']	= $post_slug[2];
-	    }
-    }
-
-    return $arrreturn;
-  }
+				$currentsite      = get_site_url();
+				$post_slug  			= str_replace( $currentsite, '', get_the_permalink( get_the_ID() ) );
+				$post_slug  			= explode( '/', $post_slug );
+				
+				// post exists
+				$arrreturn['id']		= get_the_ID();
+				$arrreturn['slug']	= $post_slug[2];
+			}
+			
+			wp_reset_postdata();
+			
+		}
+		
+		return $arrreturn;
+	}
   
   
 	
