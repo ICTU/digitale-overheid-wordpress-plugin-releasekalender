@@ -1231,9 +1231,10 @@ class rijksreleasekalender_Admin {
 
 								$release_release_marge = array(
 									'id'           => $release->releaseMarge->id,
-									'naam'         => $release->releaseMarge->naam,
-									'omschrijving' => $release->releaseMarge->omschrijving
+									'label'        => $release->releaseMarge->label,
+									'numericValue' => $release->releaseMarge->numericValue
 								);
+
 
 								// add all fields to array
 
@@ -1300,8 +1301,8 @@ class rijksreleasekalender_Admin {
 
 							$release_release_marge = array(
 								'id'           => $release->releaseMarge->id,
-								'naam'         => $release->releaseMarge->naam,
-								'omschrijving' => $release->releaseMarge->omschrijving
+								'label'        => $release->releaseMarge->label,
+								'numericValue' => $release->releaseMarge->numericValue
 							);
 							
 							// add all fields to array
