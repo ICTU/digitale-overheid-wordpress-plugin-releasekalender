@@ -47,7 +47,7 @@
 				e.preventDefault();
 
 				jQuery(this).val('<?php _e( 'Sync gestart...', 'rijksreleasekalender' );?>').prop('disabled', true);
-
+				jQuery( '#log' ).empty();
 				_requestJob(0);
 
 			});
@@ -73,18 +73,29 @@
 				}
 			}
 
-			switch (response.result) {
-				case 0:
-				case 1:
-				case 2:
-					_requestJob(response.step);
-					break;
-				case 'done':
-					_button.val('<?php _e( 'Start Synchronisatie', 'rijksreleasekalender' );?>').prop('disabled', false);
-					break;
-				default:
-					_button.val('<?php _e( 'Sync fout', 'rijksreleasekalender' );?>');
-			}
+      console.log('Het resultaat: ' + response.result);
+
+      switch (response.result) {
+        case 0:
+          // De voorzieningen
+        case 1:
+          // De producten
+        case 2:
+          // De releases
+        case 3:
+          // De releaseafspraken
+        case 4:
+          // De releaseafhankelijkheden
+        case 5:
+          _requestJob(response.step);
+          break;
+        case 'done':
+          _button.val('<?php _e( 'Start Synchronisatie', 'rijksreleasekalender' );?>').prop('disabled', false);
+          break;
+        default:
+          _button.val('<?php _e( 'Sync fout', 'rijksreleasekalender' );?>');
+          break;
+      }
 		}
 
 	</script>
