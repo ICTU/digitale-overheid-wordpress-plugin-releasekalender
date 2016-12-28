@@ -24,11 +24,13 @@
 			</td>
 		</tr>
 	</table>
-	<div style="width: 100%; padding-top: 16px; font-style: italic;" id="log"></div>
+	<noscript style="background: red; padding: .5em; font-size: 120%;display: block; margin-top: 1em !important; color: white;"><strong><?php _e( 'Dit werkt alleen als je JavaScript hebt aangezet.', 'rijksreleasekalender' );?></strong></noscript>
+	<div style="width: 100%; padding-top: 16px; font-style: italic;" id="log"><?php _e( 'Druk op de knop!', 'rijksreleasekalender' );?></div>
 
 		<?php //todo this needs to be moved to an external script. ?>
 
 	<script type="text/javascript">
+
 
 		var _button = jQuery('input#startsync');
 		var _clearbutton = jQuery('input#clearlog');
@@ -75,7 +77,6 @@
 				case 0:
 				case 1:
 				case 2:
-					//console.log(response.step);
 					_requestJob(response.step);
 					break;
 				case 'done':
