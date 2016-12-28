@@ -522,7 +522,7 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function rijksreleasekalender_register_cpt_voorziening() {
+	public function rijksreleasekalender_register_cpt_voorzieningen() {
 
 		$labels = array(
 			'name'               => _x( 'Voorzieningen', 'rijksreleasekalender' ),
@@ -598,7 +598,7 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function rijksreleasekalender_register_cpt_product() {
+	public function rijksreleasekalender_register_cpt_producten() {
 
 		$labels = array(
 			'name'               => _x( 'Producten', 'rijksreleasekalender' ),
@@ -651,7 +651,7 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function rijksreleasekalender_register_cpt_release() {
+	public function rijksreleasekalender_register_cpt_releases() {
 
 		$labels = array(
 			'name'               => _x( 'Releases', 'rijksreleasekalender' ),
@@ -712,11 +712,13 @@ class rijksreleasekalender_Admin {
 		$author_id           = get_option( $this->option_name . '_author_id' );
 
 		switch ( $_step ) {
+
 			case 0:
 				$post_type           = 'voorzieningen';
 				$voorzieningen       = $this->rijksreleasekalender_api_get( 'bouwstenen' );
 				$voorzieningen_count = $this->rijksreleasekalender_count_api_objects( $voorzieningen );
 				$messages[]          = date('H:i:s') . ' - ' . __( 'Aantal voorzieningen: ', 'rijksreleasekalender' ) . $voorzieningen_count;
+
 				if ( 0 < $voorzieningen_count ) {
 
 					$num = 0;
@@ -886,7 +888,6 @@ class rijksreleasekalender_Admin {
 
 				$messages[]          = date('H:i:s') . ' - ' . __( 'Aantal producten: ', 'rijksreleasekalender' ) . $producten_count;
 
-				
 				if ( 0 < $producten_count ) {
 					$num = 0;
 					foreach ( $producten->records as $product ) {
@@ -978,6 +979,7 @@ class rijksreleasekalender_Admin {
 									'website' => $product->aanbieder->website,
 									'updated' => $product->aanbieder->updated
 								);
+
 								// multiple producttypen may exist
 								$product_producttypen = array();
 
@@ -1367,17 +1369,125 @@ class rijksreleasekalender_Admin {
 							$messages[] = $this->rijksreleasekalender_delete_post_meta( $release_post_id, 'temp_post_array' );
 						}
 					}
-				} else {
-					$messages[]          = date('H:i:s') . ' - ' . __( 'Geen producten gevonden...', 'rijksreleasekalender' );
+				}
+				else {
+					$messages[]          = date('H:i:s') . ' - ' . __( 'Geen releases gevonden...', 'rijksreleasekalender' );
 				}
 
-				$_step ++;
+				$_step ++; // next step
 				break;
+
+			case 3:
+				// Add releaseafspraken to releases, if any
+				$releases					= $this->rijksreleasekalender_api_get( 'releaseafspraken' );
+				$releases_count 	= $this->rijksreleasekalender_count_api_objects( $releases );
+				$messages[]     	= date('H:i:s') . ' - ' . __( 'Aantal releaseafspraken: ', 'rijksreleasekalender' ) . $releases_count;
+
+				if ( 0 < $releases_count ) {
+					$num = 0;
+					foreach ( $releases->records as $release ) {
+						$num++;
+						
+						if ( $release->afspraken ) {
+							// only update releases with afspraken if any exist
+
+							// check if we can find a release with the data provided
+							$product_query_args = array(
+								'post_type'  => 'releases',
+								'meta_key'   => 'release_id',
+								'meta_value' => $release->release->id
+							);
+							$prod_query         = new WP_Query( $product_query_args );
+	
+							if ( $prod_query->have_posts() ) {
+								// release does exist
+								$prod_query->the_post();
+								// store ID for future use
+								$product_post_id = get_the_ID();
+								$messages[]      = date('H:i:s') . ' - ' . __( '<strong>Afhankelijkheden</strong> Release voor release_id: ', 'rijksreleasekalender' ) .
+								                   $release->release->id .
+								                   ' (post_id: ' . $product_post_id . ') ' .
+								                   __( 'en titel: ', 'rijksreleasekalender' ) .
+								                   get_the_title();
+								$product_exists  = true;
+							
+								// multiple producttypen may exist
+								$release_afspraken = array();
+	
+								foreach ( $release->afspraken as $release_afspraak ) {
+									$release_afspraken[] = array(
+	  								'id'           => $release_afspraak->id,
+	  								'naam'         => $release_afspraak->naam
+									);
+								}
+								update_post_meta( $product_post_id, 'releaseafspraken', $release_afspraken );
+							}							
+						}
+					}
+				}
+
+				$_step ++; // next step
+				break;
+
+			case 4:
+				// Add releaseafhankelijkheden to releases, if any
+				$releases					= $this->rijksreleasekalender_api_get( 'releaseafhankelijkheden' );
+				$releases_count 	= $this->rijksreleasekalender_count_api_objects( $releases );
+				$messages[]     	= date('H:i:s') . ' - ' . __( 'Aantal releaseafhankelijkheden: ', 'rijksreleasekalender' ) . $releases_count;
+
+				if ( 0 < $releases_count ) {
+					$num = 0;
+					foreach ( $releases->records as $release ) {
+						$num++;
+
+					if ( $release->afhankelijkheden ) {
+							// only update releases with afspraken if any exist
+
+							// check if we can find a release with the data provided
+							$product_query_args = array(
+								'post_type'  => 'releases',
+								'meta_key'   => 'release_id',
+								'meta_value' => $release->release->id
+							);
+							$prod_query         = new WP_Query( $product_query_args );
+	
+							if ( $prod_query->have_posts() ) {
+								// release does exist
+								$prod_query->the_post();
+								// store ID for future use
+								$product_post_id = get_the_ID();
+								$messages[]      = date('H:i:s') . ' - ' . __( '<strong>Afhankelijkheden</strong> Release voor release_id: ', 'rijksreleasekalender' ) .
+								                   $release->release->id .
+								                   ' (post_id: ' . $product_post_id . ') ' .
+								                   __( 'en titel: ', 'rijksreleasekalender' ) .
+								                   get_the_title();
+								$product_exists  = true;
+							
+								// multiple producttypen may exist
+								$release_afspraken = array();
+	
+								foreach ( $release->afhankelijkheden as $release_afspraak ) {
+									$release_afspraken[] = array(
+	  								'id'           => $release_afspraak->id,
+	  								'naam'         => $release_afspraak->naam
+									);
+								}
+
+								update_post_meta( $product_post_id, 'releaseafhankelijkheden', $release_afspraken );
+
+							}							
+						}							
+					}
+				}
+
+				$_step ++; // next step
+				break;
+				
 		}
 
 
 		// todo bij fout stoppen en foutmelding
-		if ( 3 == $_step ) {
+		if ( 5 == $_step ) {
 			$_result    = 'done';
 			$messages[] = '<h2 style="background: green; color: white;">' . date('H:i:s') . ' - ' . __( 'Sync klaar!', 'rijksreleasekalender' ) . '</h2>';
 		} else {
@@ -1474,7 +1584,8 @@ class rijksreleasekalender_Admin {
 
 			return $messages;
 
-		} else {
+		}
+		else {
 			// post is updated now do the meta fields
 			switch ( $post_type ) {
 				case 'voorzieningen':
