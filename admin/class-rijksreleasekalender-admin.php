@@ -567,7 +567,7 @@ class rijksreleasekalender_Admin {
 			'capability_type'     => 'post'
 		);
 
-		register_post_type( 'voorzieningen', $args );
+		register_post_type( 'voorzieningencpt', $args );
 	}
 
 	/**
@@ -578,7 +578,7 @@ class rijksreleasekalender_Admin {
 	function rijksreleasekalender_register_voorziening_groep() {
 		register_taxonomy(
 			'voorziening-groep',
-			'voorzieningen',
+			'voorzieningencpt',
 			array(
 				'labels'        => array(
 					'name'          => __( 'Groep', 'rijksreleasekalender' ),
@@ -714,7 +714,7 @@ class rijksreleasekalender_Admin {
 		switch ( $_step ) {
 
 			case 0:
-				$post_type           = 'voorzieningen';
+				$post_type           = 'voorzieningencpt';
 				$voorzieningen       = $this->rijksreleasekalender_api_get( 'bouwstenen' );
 				$voorzieningen_count = $this->rijksreleasekalender_count_api_objects( $voorzieningen );
 				$messages[]          = date('H:i:s') . ' - ' . __( 'Aantal voorzieningen: ', 'rijksreleasekalender' ) . $voorzieningen_count;
@@ -994,7 +994,7 @@ class rijksreleasekalender_Admin {
 
 								// add all fields to array
 								// get the real ID and slug of the related voorziening
-								$arr_voorziening = $this->get_real_id_and_slug( $product->bouwsteen->id, 'voorzieningen', 'voorziening_id' );
+								$arr_voorziening = $this->get_real_id_and_slug( $product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
 	
 								$product_custom_field_array = array(
 									'product_id'                    => $product->id,
@@ -1090,7 +1090,7 @@ class rijksreleasekalender_Admin {
 
 							// add all fields to array
 							// get the real ID and slug of the related voorziening
-							$arr_voorziening = $this->get_real_id_and_slug( $product->bouwsteen->id, 'voorzieningen', 'voorziening_id' );
+							$arr_voorziening = $this->get_real_id_and_slug( $product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
 
 							$product_custom_field_array = array(
 								'product_id'                    => $product->id,
@@ -1239,7 +1239,7 @@ class rijksreleasekalender_Admin {
 								// add all fields to array
 
 								// get the real ID and slug of the related product and voorziening
-								$arr_voorziening = $this->get_real_id_and_slug( $release->product->bouwsteen->id, 'voorzieningen', 'voorziening_id' );
+								$arr_voorziening = $this->get_real_id_and_slug( $release->product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
 								$arr_productinfo = $this->get_real_id_and_slug( $release->product->id, 'producten', 'product_id'  );
 
 								$messages[]          = date('H:i:s') . ' - ' . __( 'Zoeken naar ID voor voorziening ', 'rijksreleasekalender' ) . $release->product->bouwsteen->id . 'resultaat: ' . implode(',', $arr_voorziening);
@@ -1308,7 +1308,7 @@ class rijksreleasekalender_Admin {
 							// add all fields to array
 
 							// get the real ID and slug of the related product and voorziening
-							$arr_voorziening = $this->get_real_id_and_slug( $release->product->bouwsteen->id, 'voorzieningen', 'voorziening_id' );
+							$arr_voorziening = $this->get_real_id_and_slug( $release->product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
 							$arr_productinfo = $this->get_real_id_and_slug( $release->product->id, 'producten', 'product_id'  );
 
 							$messages[]          = date('H:i:s') . ' - ' . __( 'Zoeken naar ID voor voorziening ', 'rijksreleasekalender' ) . $release->product->bouwsteen->id . 'resultaat: ' . implode(',', $arr_voorziening);
@@ -1589,7 +1589,7 @@ class rijksreleasekalender_Admin {
 		else {
 			// post is updated now do the meta fields
 			switch ( $post_type ) {
-				case 'voorzieningen':
+				case 'voorzieningencpt':
 					//set voorziening meta fields
 					$meta_fields = array(
 						'voorziening_id'                  => $all_args[ 'custom_fields' ][ 'voorziening_id' ],
