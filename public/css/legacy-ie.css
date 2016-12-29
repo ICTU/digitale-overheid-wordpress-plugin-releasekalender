@@ -1,0 +1,11 @@
+.kalender .prev, .kalender .next
+{
+	width: 5%;
+}
+.legenda {
+	margin-top : -80px;
+}
+
+.rk-bouwsteen .programma {
+	margin-bottom : 5em;
+}

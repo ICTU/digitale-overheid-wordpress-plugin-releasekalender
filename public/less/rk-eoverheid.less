@@ -1,0 +1,287 @@
+@charset "UTF-8";
+/* CSS Document */
+
+/* Stylesheet to correct releasekalender.css for the eoverheidheid theme,
+since it is built for the Rijkshuisstijl theme */
+
+#releasekalenderoutput {
+  
+
+
+
+  .rk-overview #page ul, .rk-overview ul, .rk-bouwsteen ul, .rk-product ul, .rk-kalender ul {
+    line-height: 1.6;
+    list-style: none;
+    margin-left: 0;
+    margin-bottom: 1.5125em;
+    padding-bottom: 0;
+  }
+  .rk-overview ul li, .rk-product ul li, .rk-kalender ul li {
+  }
+  .rk-bouwsteen ul a,  .rk-bouwsteen ul a:link,  .rk-overview ul a,  .rk-overview ul a:link {
+    text-decoration: none;
+  }
+  .rk-bouwsteen ul a:hover,  .rk-overview ul a:hover {
+    text-decoration: underline;
+  }
+  /* Overrides for releasekalender landing page */
+  .unit {
+    float: left;
+  }
+  .last_unit {
+    float: none;
+    overflow: hidden;
+    width: auto;
+  }
+  .size12 {
+    width: 50%;
+  }
+
+  .rk-overview .moduletable-rk-links ul.list li {
+    background: none;
+    font-size: 1em;
+    padding-left: 0;
+  }
+  .rk-changes ul.list a,  .rk-changes ul.list a:link  .rk-changes ul.list a:visited,  .rk-overview .moduletable-rk-links ul.list a,  .rk-overview .moduletable-rk-links ul.list a:link  .rk-overview .moduletable-rk-links ul.list a:visited {
+    text-decoration: underline;
+  }
+  .rk-changes ul.list a:hover,  .rk-overview .moduletable-rk-links ul.list a:hover {
+    text-decoration: none;
+  }
+  .rk-overview .moduletable-rk-links h2 {
+    padding: 0;
+  }
+
+
+  .rk-changes .details, .rk-overview .details {
+    color: #535353;
+  }
+  .rk-overview ul li.more {
+    font-weight: bold;
+  }
+  .more .rss, h2 + .rss {
+    font-size: 0.625em;
+    line-height: 1.5;
+    text-decoration: none;
+  }
+  .more .rss:hover, h2 + .rss:hover {
+    text-decoration: underline;
+  }
+  .more .rss {
+    font-size: 0.9em;
+  }
+  /* Overrides for releasekalender bouwsteen detail page */
+  .nu {
+    display: none;
+  }
+  .rk-bouwsteen .tijdbalk {
+    display: none; /* Will be revealed with script-styles */
+    margin-left: 0; /* correct for margin in shadow divs */
+    margin-right: 0;
+  }
+  .tijdbalk.sticky {
+    width: 940px;
+  }
+  .rk-bouwsteen .tijdbalk ul {
+    list-style: none;
+    font-size: 1.1em;
+  }
+  .rk-bouwsteen .tijdbalk ul li {
+    font-size: 0.625em;
+  }
+  .rk-bouwsteen .tijdbalk ul li li {
+    font-size: 0.75em;
+  }
+  .rk-bouwsteen .tijdbalk .eerder {
+    border-right: none;
+  }
+  .rk-bouwsteen .tijdbalk .later {
+    border-left: none;
+  }
+  .rk-bouwsteen .programma {
+    font-size: 0.625em;
+    margin-left: 0; /* correct for margin in shadow divs */
+    margin-right: 0;
+    margin-bottom: 10em;
+    overflow: visible;
+  }
+  .rk-bouwsteen .programma ul {
+    font-size: 1.1em;
+    list-style: none;
+    margin-bottom: 2.2em;
+    padding-left: 0;
+    position: relative; /* With this property the overflow hidden still seems to be buggy when tabbing */
+    line-height: 1.5;
+    padding-right: 0px;
+  }
+  .rk-bouwsteen .programma ul li {
+    font-size: 1em;
+  }
+  .rk-bouwsteen .programma > ul > li {
+    height: auto;
+    margin-right: 0;
+  }
+  .rk-bouwsteen .programma ul {
+    li {
+      li {
+        position: static; /* pos absolute with script-styles */
+      }
+    }
+  }
+  em.afhankelijkheid, span.status {
+    display: block;
+  }
+  .programma li li span.status span {
+    font-size: 1em;
+  }
+  em.afhankelijkheid, span.status {
+    position: absolute;
+    left: -1000em;
+    top: -1000em;
+  }
+  /** + selector is CSS2 but not supported by Chrome: http://css-tricks.com/webkit-sibling-bug/
+   * Therefore the ~ is also included, however this is CSS3 only, so + selector cannot be removed
+   */
+  .programma li li a:hover + span, .programma li li a:focus + span, .programma li li:hover span, .programma li li a:hover + span + em, .programma li li a:focus + span + em, .programma li li:hover em {
+    position: static;
+  }
+  .programma li li em {
+    margin-left: 12px;
+  }
+  .rk-bouwsteen .legenda li {
+    font-size: 0.625em;
+    line-height: 0.95em;
+  }
+
+  .rk-product ul li p {
+    font-size: 1em;
+  }
+  #container .rk-product .moduletablelinks.gridblocktwee ul li {
+    margin-left: 0;
+  }
+  /* Overrides for kalender page */
+  .rk-kalender {
+    p,
+    li,
+    h3,
+    h4 {
+      font-size: 0.75rem;
+    }
+  }
+  .rk-kalender h3.sticky {
+    background: #ffffff;
+    position: fixed;
+    top: 0;
+    margin: 0 -9px;
+    padding: 5px 19px;
+  }
+  .visual {
+    background-color: #dfe6e1;
+  }
+  .rk-kalender .row {
+    margin-bottom: 2.2em;
+  }
+  .rk-kalender .prev, .rk-kalender .next {
+    font-size: 0.625em;
+    text-decoration: none;
+  }
+  .rk-kalender .next {
+    float: right;
+  }
+  .rk-kalender ul a {
+    text-decoration: none;
+  }
+  .rk-kalender ul a:hover,  .rk-kalender .prev:hover,  .rk-kalender .next:hover {
+    text-decoration: underline;
+  }
+  .rk-kalender .months {
+    float: left;
+    min-height: 20em;
+    overflow: hidden;
+    position: relative;
+  }
+  .rk-kalender .unitcontainer {
+    position: absolute;
+    width: 99999%;
+  }
+  a.disabled, a.disabled:link, a.disabled:visited {
+    color: #cccccc;
+    cursor: not-allowed;
+    text-decoration: none;
+  }
+  .rk-kalender a.disabled:hover,  a.disabled:hover {
+    text-decoration: none;
+  }
+  .rk-bouwsteen .moduletablesocial img, .rk-product .moduletablesocial img {
+    position: static;
+  }
+  /* Toolbox with links */
+  #page .toolbox, .toolbox {
+    border: 1px solid #cccccc;
+    margin-right: 20px;
+    padding: 4px 10px 2px;
+  }
+  .toolbox a, .toolbox a:link {
+    background-image: url("skin/icons.png");
+    background-repeat: no-repeat;
+    height: 11px;
+    padding-left: 16px;
+    width: 12px;
+  }
+  .toolbox a:hover {
+    text-decoration: none;
+  }
+  .toolbox a.document {
+    background-position: left -221px;
+  }
+  /* External links */
+  .external li {
+    background: url('../images/directpijl.gif') no-repeat scroll -1px -3px transparent;
+    margin-bottom: 0.5em;
+    padding-left: 11px;
+  }
+  /* Breadcrumb position */
+  .rk-product #breadcrumb, .rk-bouwsteen #breadcrumb, .rk-kalender #breadcrumb {
+    width: auto;
+  }
+  /* Fix position absolute issue for the .moduletablesocial img */
+  .rk-kalender .moduletablesocial img {
+    position: static;
+  }
+  .legenda {
+    margin-top : -110px;
+  }
+  .rk-overview #breadcrumb, .rk-bouwsteen #breadcrumb, .rk-product #breadcrumb, .rk-kalender #breadcrumb {
+    margin-left: 0;
+  }
+  .kalender .prev, .kalender .next {
+    width: 12%;
+  }
+  
+  @media (min-width: 600px) {
+    .kalender .prev, .kalender .next {
+      width : 5%;
+    }
+    .gridblocktwee {
+      width: 49%;
+      padding-right: 1em;
+      float: left;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .legenda {
+      margin-top : -5em;
+    }
+    .rk-bouwsteen .programma {
+      margin-bottom : 7em;
+    }
+  }
+  
+  @media print {
+    .rk-overview #kolom3 {
+      display: block;
+    }
+  }
+
+}
