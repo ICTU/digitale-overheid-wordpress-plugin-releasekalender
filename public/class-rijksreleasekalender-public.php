@@ -81,7 +81,7 @@ class rijksreleasekalender_Public {
 	 */
 	private $TEMP_pagename_for_voorziening;
 	private $TEMP_pagename_for_product;
-	private $TEMP_pagename_for_kalender;
+	private $default_page_title_for_kalender;
 
 	//==========================================================================================================
 	/**
@@ -240,9 +240,9 @@ class rijksreleasekalender_Public {
         
         
         // ADD DEBUG CONTENT
-        // if ( WP_DEBUG ) {
+         if ( WP_DEBUG ) {
           add_filter( 'the_content', array( $this, 'DEBUG_template_add_metadata_overview' ) );
-        // }
+        }
 
       }
       elseif ( $this->requestedvoorziening ) {
@@ -255,18 +255,20 @@ class rijksreleasekalender_Public {
         add_filter( 'the_content', array( $this, 'get_template_hoofdpagina_gantt_chart' ) );
         
         // ADD DEBUG CONTENT
-        // if ( WP_DEBUG ) {
+         if ( WP_DEBUG ) {
           add_filter( 'the_content', array( $this, 'DEBUG_template_add_metadata_overview' ) );
-        // }
+        }
+
         
       }
       elseif ( $this->requestedproduct ) {
         // we know only the product
         
         // filter the dossier template page
-        // if ( WP_DEBUG ) {
+         if ( WP_DEBUG ) {
           add_filter( 'the_content', array( $this, 'DEBUG_template_add_metadata_overview' ) );
-        // }
+        }
+
         
       }
       else {
@@ -319,9 +321,10 @@ class rijksreleasekalender_Public {
 
       
       // filter the dossier template page
-        // if ( WP_DEBUG ) {
+         if ( WP_DEBUG ) {
           add_filter( 'the_content', array( $this, 'DEBUG_template_add_metadata_overview' ) );
-        // }
+        }
+
       
       
     }
@@ -905,8 +908,15 @@ class rijksreleasekalender_Public {
     $tempcontent = $content;
     
     $url = get_permalink( get_the_ID() );
+
+    $groepargs  = array(
+      'taxonomy'    => 'voorziening-groep',
+      'order'       => 'ASC',
+      'orderby'     => 'slug',
+      'hide_empty'  => true
+    ); 
     
-    $member_group_terms = get_terms( 'voorziening-groep' );
+    $member_group_terms = get_terms( $groepargs );
 
     $tempterms = '';
     
@@ -1063,7 +1073,7 @@ $year_end   = intval($year_end);
         elseif ( get_query_var( $this->releasekalender_queryvar_kalender ) ) {
           $replacer = '<a href="' . get_permalink( get_the_id() ) . '">' . $nieuwetitle .'</a>';
           $crumb = str_replace( $nieuwetitle, $replacer, $crumb);
-          $crumb .= $args['sep'] . $this->TEMP_pagename_for_kalender;
+          $crumb .= $args['sep'] . $this->default_page_title_for_kalender;
         }
         elseif ( $this->requestedvoorziening ) {
           $replacer = '<a href="' . get_permalink( get_the_id() ) . '">' . $nieuwetitle .'</a>';
@@ -1482,7 +1492,7 @@ $year_end   = intval($year_end);
     public function set_names() {
       $this->TEMP_pagename_for_voorziening  = '';
       $this->TEMP_pagename_for_product      = '';
-      $this->TEMP_pagename_for_kalender     = 'Kalender';
+      $this->default_page_title_for_kalender     = __( 'Kalender', 'rijksreleasekalender' );
 
       if ( $this->requestedproduct ) {
       	$get_producten_args = array(
@@ -1530,7 +1540,7 @@ $year_end   = intval($year_end);
     function filter_the_page_title( $title, $sep, $seplocation ) {
 
       if ( get_query_var( $this->releasekalender_queryvar_kalender ) == $this->releasekalender_queryvar_kalender ) {
-        $title = $this->TEMP_pagename_for_kalender;
+        $title = $this->default_page_title_for_kalender;
       }  
       elseif ( $this->requestedproduct &&  $this->requestedvoorziening ) {
         $title = $this->TEMP_pagename_for_product;
@@ -1555,7 +1565,7 @@ $year_end   = intval($year_end);
     function filter_the_title( $title ) {
 
       if ( get_query_var( $this->releasekalender_queryvar_kalender ) == $this->releasekalender_queryvar_kalender ) {
-        $title = $this->TEMP_pagename_for_kalender;
+        $title = $this->default_page_title_for_kalender;
       }  
       elseif ( $this->requestedproduct &&  $this->requestedvoorziening ) {
         $title = $this->TEMP_pagename_for_product;
