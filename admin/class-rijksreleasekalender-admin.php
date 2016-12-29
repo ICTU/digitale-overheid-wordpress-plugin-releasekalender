@@ -405,7 +405,7 @@ class rijksreleasekalender_Admin {
 	 */
 	public function rijksreleasekalender_rss_size_cb() {
 		$rss_size = get_option( $this->option_name . '_rss_size' );
-		echo '<select name="' . $this->option_name . '_rss_size' . '" id="' . $this->option_name . '_rss_size' . '" class="regular-text">';
+		echo '<select name="' . $this->option_name . '_rss_size' . '" id="' . $this->option_name . '_rss_size' . '" class="regular-text" disabled>';
     
     for ($i = 1; $i <= 20; $i++) {
       $selected = '';
@@ -420,7 +420,7 @@ class rijksreleasekalender_Admin {
       echo '<option value="' . $i . '"' . $selected . '>' . $i . ' ' . $name. '</option>';
     }		
     
-		echo '</select>';
+		echo '</select> (deze instelling heeft nog geen enkel effect, dus uitgezet (PvB)';
 	}
 
 
