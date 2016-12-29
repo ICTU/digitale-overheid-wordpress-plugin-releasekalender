@@ -240,9 +240,9 @@ class rijksreleasekalender_Public {
         
         
         // ADD DEBUG CONTENT
-        if ( WP_DEBUG ) {
-          // add_filter( 'the_content', array( $this, 'DEBUG_template_add_metadata_overview' ) );
-        }
+        // if ( WP_DEBUG ) {
+          add_filter( 'the_content', array( $this, 'DEBUG_template_add_metadata_overview' ) );
+        // }
 
       }
       elseif ( $this->requestedvoorziening ) {
@@ -255,18 +255,18 @@ class rijksreleasekalender_Public {
         add_filter( 'the_content', array( $this, 'get_template_hoofdpagina_gantt_chart' ) );
         
         // ADD DEBUG CONTENT
-        if ( WP_DEBUG ) {
-          // add_filter( 'the_content', array( $this, 'DEBUG_template_add_metadata_overview' ) );
-        }
+        // if ( WP_DEBUG ) {
+          add_filter( 'the_content', array( $this, 'DEBUG_template_add_metadata_overview' ) );
+        // }
         
       }
       elseif ( $this->requestedproduct ) {
         // we know only the product
         
         // filter the dossier template page
-        if ( WP_DEBUG ) {
-          // add_filter( 'the_content', array( $this, 'DEBUG_template_add_metadata_overview' ) );
-        }
+        // if ( WP_DEBUG ) {
+          add_filter( 'the_content', array( $this, 'DEBUG_template_add_metadata_overview' ) );
+        // }
         
       }
       else {
@@ -319,9 +319,9 @@ class rijksreleasekalender_Public {
 
       
       // filter the dossier template page
-        if ( WP_DEBUG ) {
-          // add_filter( 'the_content', array( $this, 'DEBUG_template_add_metadata_overview' ) );
-        }
+        // if ( WP_DEBUG ) {
+          add_filter( 'the_content', array( $this, 'DEBUG_template_add_metadata_overview' ) );
+        // }
       
       
     }
@@ -902,11 +902,26 @@ class rijksreleasekalender_Public {
 	 */
   public function get_template_hoofdpagina_groepen( $content ) {
     
+    $tempcontent = $content;
+    
     $url = get_permalink( get_the_ID() );
     
     $member_group_terms = get_terms( 'voorziening-groep' );
+
+    $tempterms = '';
     
     foreach ( $member_group_terms as $member_group_term ) {
+      
+      $geengegevensgevonden = true;      
+      
+      $titletag = 'h2';
+      if ( $member_group_term->parent > 0 ) {
+        $titletag = 'h3';
+      }
+      
+      $tempterms .= '<' . $titletag . '>' . $member_group_term->name . '</' . $titletag . '><p>Geen voorzieningen gevonden</p>';
+
+      
       $voorzieningen_query = new WP_Query( array(
       'post_type' => 'voorzieningen',
       'tax_query' => array(
@@ -917,12 +932,9 @@ class rijksreleasekalender_Public {
                       'operator' => 'IN'
                     ) ) ) );
       
-      if ( $voorzieningen_query->have_posts() ) : 
+      if ( $voorzieningen_query->have_posts() ) { 
         
-        $titletag = 'h2';
-        if ( $member_group_term->parent > 0 ) {
-          $titletag = 'h3';
-        }
+        $geengegevensgevonden = false;
         
         $content .= '<' . $titletag . '>' . $member_group_term->name . '</' . $titletag . '>';
         $content .= '<ul>';
@@ -944,14 +956,23 @@ class rijksreleasekalender_Public {
         
         $content .= '</ul>';
       
-      endif; 
+      }
+      else {
+        
+      } 
 
       // Reset things, for good measure
       $voorzieningen_query = null;
       wp_reset_postdata();
     }  
+
+    if ( $geengegevensgevonden ) {
+      return $tempcontent .= $tempterms;
+    } 
+    else {
+      return $content;
+    }     
     
-    return $content;
   }
 
 	//========================================================================================================
