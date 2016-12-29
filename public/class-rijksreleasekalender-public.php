@@ -70,7 +70,6 @@ class rijksreleasekalender_Public {
 	private $requestedproduct;
 	private $releasekalender_queryvar_kalender;
 	private $releasekalender_queryvar_plainhtml;
-
 	private $option_name = 'rijksreleasekalender';
 
 	/**
@@ -120,6 +119,9 @@ class rijksreleasekalender_Public {
 		add_filter( 'init',				array( $this, 'add_rewrite_rules' ) );
 		add_filter( 'query_vars',	array( $this, 'add_query_vars' ) );
 
+		add_filter( 'init',				array( $this, 'add_acf_functions' ) );
+
+
 	}
 
 	//==========================================================================================================
@@ -131,7 +133,7 @@ class rijksreleasekalender_Public {
    * @return array Expanded array of page templates.
    */
   function add_page_templates( $post_templates ) {
-    
+
     $post_templates[$this->releasekalender_template_dossier]      = __( 'Releasekalender - Dossierpagina ', 'rijksreleasekalender' );    
     $post_templates[$this->releasekalender_template_hoofdpagina]  = __( 'Releasekalender - Hoofdpagina', 'rijksreleasekalender' );    
     return $post_templates;
@@ -194,19 +196,27 @@ class rijksreleasekalender_Public {
       die($this->write_plainhtmloutput());
     }
 
+    if ( ( $this->releasekalender_template_hoofdpagina == $page_template ) ||
+        ( $this->releasekalender_template_dossier == $page_template ) ) {
 
-
-    if ( $this->releasekalender_template_hoofdpagina == $page_template ) {
-
-      add_filter( 'genesis_post_title_text', array( $this, 'filter_the_title' ) );
-
-      remove_filter( 'wp_title', 'genesis_default_title', 10, 3 );
-      add_filter( 'wp_title', array( $this, 'filter_the_page_title' ), 10, 3 );
-
+      // dingen die voor beide templates gelden
+        
       // check the breadcrumb
       add_filter( 'genesis_single_crumb',   array( $this, 'filter_breadcrumb' ), 10, 2 );
       add_filter( 'genesis_page_crumb',     array( $this, 'filter_breadcrumb' ), 10, 2 );
       add_filter( 'genesis_archive_crumb',  array( $this, 'filter_breadcrumb' ), 10, 2 ); 				
+
+      add_filter( 'genesis_post_title_text', array( $this, 'filter_the_title' ) );
+          
+    }
+
+
+    if ( $this->releasekalender_template_hoofdpagina == $page_template ) {
+
+
+      remove_filter( 'wp_title', 'genesis_default_title', 10, 3 );
+      add_filter( 'wp_title', array( $this, 'filter_the_page_title' ), 10, 3 );
+
 
 
       if ( get_query_var( $this->releasekalender_queryvar_kalender ) == $this->releasekalender_queryvar_kalender ) {
@@ -224,12 +234,10 @@ class rijksreleasekalender_Public {
 
 
         //* Force full-width-content layout
-//        add_filter( 'genesis_pre_get_option_site_layout', '__genesis_return_full_width_content' );
 
         // filter the main template page
         add_filter( 'the_content', array( $this, 'get_template_release_info' ) );
         
-        add_filter( 'the_content', array( $this, 'get_template_release_info' ) );
         
         // ADD DEBUG CONTENT
         if ( WP_DEBUG ) {
@@ -281,11 +289,34 @@ class rijksreleasekalender_Public {
       ( is_single() && ( 'releases' == get_post_type() ) ) ||
       ( is_single() && ( 'producten' == get_post_type() ) ) ||
       ( $this->releasekalender_template_dossier == $page_template ) ) {
+
+
+      if( get_field('releasekalender_voorziening') ) {
+  			$this->requestedvoorziening = get_field('releasekalender_voorziening');
+      }
+
+      if ( $this->requestedproduct &&  $this->requestedvoorziening ) {
+
+        // we know the product and the voorziening
+
+        // filter the main template page
+        add_filter( 'the_content', array( $this, 'get_template_release_info' ) );
+
+      }
+      elseif ( $this->requestedvoorziening ) {
+        // we know only the voorziening
+      
+        //* Force full-width-content layout
+        add_filter( 'genesis_pre_get_option_site_layout', '__genesis_return_full_width_content' );
+      
+        // filter the main template page
+        add_filter( 'the_content', array( $this, 'get_template_hoofdpagina_gantt_chart' ) );
+
+      }      
       
       // Customize the entry meta in the entry header (requires HTML5 theme support)
       add_filter( 'genesis_post_info', array( $this, 'filter_postinfo' ) );
 
-      add_filter( 'genesis_post_title_text', array( $this, 'filter_the_title' ) );
       
       // filter the dossier template page
         if ( WP_DEBUG ) {
@@ -783,6 +814,10 @@ class rijksreleasekalender_Public {
       endwhile;
       
     }
+    // Reset things, for good measure
+    $releases_query = null;
+    wp_reset_postdata();
+    //==
 
     $tijdbalk = '';
     $dejaren  = '';
@@ -1142,6 +1177,93 @@ $year_end   = intval($year_end);
       
     }
   }
+
+  
+		
+	//========================================================================================================
+	/**
+	 *
+	 * @param  none
+	 * @return  none
+	 * this function will modify a voorzieningen list
+	 */
+  function add_acf_functions() {
+
+
+    $vars = array();
+
+		$voorzieningen_args = array(
+      'post_type'       => 'voorzieningen',
+      'posts_status'    => 'publish',
+      'posts_per_page'  => '-1',
+      'order'           => 'ASC',					
+      'orderby'         => 'title',
+		);
+    $voorzieningen_query = new WP_Query($voorzieningen_args);
+
+    if ( $voorzieningen_query->have_posts() ) { 
+      while ($voorzieningen_query->have_posts()) :
+        $voorzieningen_query->the_post(); 
+        $vars[ $this->get_slug( get_the_permalink() ) ] = get_the_title();
+      endwhile;
+    }
+    // Reset things, for good measure
+    $voorzieningen_query = null;
+    wp_reset_postdata();
+    //==
+
+
+    if( function_exists('acf_add_local_field_group') ):
+    
+      acf_add_local_field_group(array (
+      	'key' => 'group_58500d27b83da',
+      	'title' => 'Kies bijbehorende voorzieningen (releasekalender)',
+      	'fields' => array (
+      		array (
+      			'layout' => 'vertical',
+      			'choices' => $vars,
+      			'default_value' => '',
+      			'other_choice' => 0,
+      			'save_other_choice' => 0,
+      			'allow_null' => 1,
+      			'return_format' => 'value',
+      			'key' => 'field_58500d3f113fe',
+      			'label' => 'Voorzieningen',
+      			'name' => 'releasekalender_voorziening',
+      			'type' => 'radio',
+      			'instructions' => '',
+      			'required' => 0,
+      			'conditional_logic' => 0,
+      			'wrapper' => array (
+      				'width' => '',
+      				'class' => '',
+      				'id' => '',
+      			),
+      		),
+      	),
+      	'location' => array (
+      		array (
+      			array (
+      				'param' => 'page_template',
+      				'operator' => '==',
+      				'value' => 'releasekalender-dossier-template.php',
+      			),
+      		),
+      	),
+      	'menu_order' => 0,
+      	'position' => 'acf_after_title',
+      	'style' => 'default',
+      	'label_placement' => 'top',
+      	'instruction_placement' => 'label',
+      	'hide_on_screen' => '',
+      	'active' => 1,
+      	'description' => '',
+      ));
+    
+    endif;
+    
+  }
+    
 		
 	//========================================================================================================
 	/**
@@ -1175,6 +1297,7 @@ $year_end   = intval($year_end);
 	 * @return  $vars - the new collection of query variables
 	 */
   function add_query_vars($vars) {
+    
     $vars[] = $this->releasekalender_queryvar_voorziening;
     $vars[] = $this->releasekalender_queryvar_product;
     $vars[] = $this->releasekalender_queryvar_kalender;
@@ -1182,6 +1305,7 @@ $year_end   = intval($year_end);
     
     return $vars;
   }
+
 
 	//========================================================================================================
 	/**
@@ -1408,14 +1532,6 @@ $year_end   = intval($year_end);
 		//========================================================================================================
 
     function filter_the_title( $title ) {
-
- // TEMP_pagename_for_voorziening;
- // TEMP_pagename_for_product;
- // TEMP_pagename_for_kalender;
- // releasekalender_queryvar_voorziening;
- // releasekalender_queryvar_product;
- // releasekalender_queryvar_kalender;
- // releasekalender_queryvar_plainhtml;
 
       if ( get_query_var( $this->releasekalender_queryvar_kalender ) == $this->releasekalender_queryvar_kalender ) {
         $title = $this->TEMP_pagename_for_kalender;
