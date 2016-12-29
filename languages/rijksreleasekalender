@@ -1,0 +1,644 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"Project-Id-Version: ICTU / WP Rijksreleasekalender plugin\n"
+"POT-Creation-Date: 2016-12-29 12:43+0100\n"
+"PO-Revision-Date: 2016-12-29 12:42+0100\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.8.11\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-WPHeader: rhswp-releasekalender.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.js\n"
+
+#: admin/class-rijksreleasekalender-admin.php:109
+msgid "Algemeen"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:117
+msgid "Verbinding"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:126
+msgid "REST-API url"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:135
+msgid "REST-API key"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:144
+msgid "REST-API gebruikersnaam"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:153
+msgid "REST-API wachtwoord"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:162
+msgid "Maximum aantal items in RSS"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:171
+msgid "Update key"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:180
+msgid "Voer data in als:"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:189
+msgid "HTML voor de legenda:"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:199
+msgid "Widget: toon releases van de komende"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:222
+msgid "SSL negeren"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:231
+msgid "Proxy host"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:240
+msgid "Proxy port"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:364
+msgid "dagen"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:367
+msgid "dag"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:390
+msgid "Ja"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:395
+msgid "Nee"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:412
+msgid "items"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:415
+msgid "item"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:457
+#: admin/class-rijksreleasekalender-admin.php:458
+#: admin/class-rijksreleasekalender-admin.php:467
+#: admin/class-rijksreleasekalender-admin.php:468
+msgid "Releasekalender"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:476
+msgid "Releasekalender instellingen"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:477
+msgid "Instellingen"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:490
+msgid "Algemene instellingen"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:499
+msgid "Verbindingsinstellingen"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:528
+#: admin/class-rijksreleasekalender-admin.php:539
+msgctxt "rijksreleasekalender"
+msgid "Voorzieningen"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:529
+msgctxt "rijksreleasekalender"
+msgid "Voorziening"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:530
+#: admin/class-rijksreleasekalender-admin.php:606
+#: admin/class-rijksreleasekalender-admin.php:659
+msgctxt "rijksreleasekalender"
+msgid "Nieuwe toevoegen"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:531
+msgctxt "rijksreleasekalender"
+msgid "Nieuwe voorziening toevoegen"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:532
+msgctxt "rijksreleasekalender"
+msgid "Bewerk voorziening voorziening"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:533
+msgctxt "rijksreleasekalender"
+msgid "Nieuwe voorziening"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:534
+msgctxt "rijksreleasekalender"
+msgid "Bekijk voorziening"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:535
+msgctxt "rijksreleasekalender"
+msgid "Zoek voorzieningen"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:536
+msgctxt "rijksreleasekalender"
+msgid "Geen voorzieningen gevonden"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:537
+msgctxt "rijksreleasekalender"
+msgid "Geen voorzieningen gevonden in prullenbak"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:538
+msgctxt "rijksreleasekalender"
+msgid "Hoofd voorziening:"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:584
+msgid "Groep"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:585
+msgid "Groep toevoegen"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:586
+msgid "Nieuwe groep"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:604
+#: admin/class-rijksreleasekalender-admin.php:615
+msgctxt "rijksreleasekalender"
+msgid "Producten"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:605
+msgctxt "rijksreleasekalender"
+msgid "Product"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:607
+msgctxt "rijksreleasekalender"
+msgid "Nieuw product toevoegen"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:608
+msgctxt "rijksreleasekalender"
+msgid "Bewerk product"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:609
+msgctxt "rijksreleasekalender"
+msgid "Nieuw product"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:610
+msgctxt "rijksreleasekalender"
+msgid "Bekijk product"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:611
+msgctxt "rijksreleasekalender"
+msgid "Zoek producten"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:612
+msgctxt "rijksreleasekalender"
+msgid "Geen producten gevonden"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:613
+msgctxt "rijksreleasekalender"
+msgid "Geen producten gevonden in prullenbak"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:614
+msgctxt "rijksreleasekalender"
+msgid "Hoofd product:"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:657
+#: admin/class-rijksreleasekalender-admin.php:668
+msgctxt "rijksreleasekalender"
+msgid "Releases"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:658
+msgctxt "rijksreleasekalender"
+msgid "Release"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:660
+msgctxt "rijksreleasekalender"
+msgid "Nieuwe release toevoegen"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:661
+msgctxt "rijksreleasekalender"
+msgid "Bewerk release"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:662
+msgctxt "rijksreleasekalender"
+msgid "Nieuwe release"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:663
+msgctxt "rijksreleasekalender"
+msgid "Bekijk release"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:664
+msgctxt "rijksreleasekalender"
+msgid "Zoek releases"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:665
+msgctxt "rijksreleasekalender"
+msgid "Geen releases gevonden"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:666
+msgctxt "rijksreleasekalender"
+msgid "Geen releases gevonden in prullenbak"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:667
+msgctxt "rijksreleasekalender"
+msgid "Hoofd release:"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:720
+msgid "Aantal voorzieningen: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:754
+msgid "Voorziening gevonden met id: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:757
+#: admin/class-rijksreleasekalender-admin.php:926
+#: admin/class-rijksreleasekalender-admin.php:1199
+#: admin/class-rijksreleasekalender-admin.php:1411
+#: admin/class-rijksreleasekalender-admin.php:1463
+msgid "en titel: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:769
+msgid "Voorziening aangemaakt: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:806
+msgid "Fout bij aanmaken voorziening: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:856
+msgid "Voorziening tijdelijk opgeslagen, post_id: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:858
+msgid "FOUT - Voorziening niet tijdelijk opgeslagen, post_id: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:866
+msgid "Voorziening bijgewerkt, post_id: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:878
+msgid "Geen voorzieningen gevonden..."
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:889
+msgid "Aantal producten: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:923
+msgid "Product gevonden met id: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:938
+msgid "Product aangemaakt: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1024
+msgid "Fout bij aanmaken product: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1121
+msgid "Product tijdelijk opgeslagen, post_id: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1123
+#: admin/class-rijksreleasekalender-admin.php:1354
+msgid "FOUT - Product niet tijdelijk opgeslagen, post_id: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1131
+#: admin/class-rijksreleasekalender-admin.php:1362
+msgid "Product bijgewerkt, post_id: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1143
+msgid "Geen producten gevonden..."
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1152
+msgid "Aantal releases: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1196
+msgid "Release gevonden met id: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1212
+msgid "Release aangemaakt: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1245
+#: admin/class-rijksreleasekalender-admin.php:1314
+msgid "Zoeken naar ID voor voorziening "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1246
+#: admin/class-rijksreleasekalender-admin.php:1315
+msgid "Zoeken naar ID voor product "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1270
+msgid "Fout bij aanmaken release: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1338
+msgid " bestaat al; publish date gezet op"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1352
+msgid "Release tijdelijk opgeslagen, post_id: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1375
+msgid "Geen releases gevonden..."
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1385
+msgid "Aantal releaseafspraken: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1408
+#: admin/class-rijksreleasekalender-admin.php:1460
+msgid "<strong>Afhankelijkheden</strong> Release voor release_id: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1437
+msgid "Aantal releaseafhankelijkheden: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1493
+msgid "Sync klaar!"
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1675
+msgid "Tijdelijke data verwijderd van post_id: "
+msgstr ""
+
+#: admin/class-rijksreleasekalender-admin.php:1677
+msgid "FOUT - Bij verwijderen van tijdelijke data van post_id: "
+msgstr ""
+
+#: admin/partials/rijksreleasekalender-admin-main-display.php:17
+msgid "Synchroniseren"
+msgstr ""
+
+#: admin/partials/rijksreleasekalender-admin-main-display.php:22
+msgid "Start synchronisatie"
+msgstr ""
+
+#: admin/partials/rijksreleasekalender-admin-main-display.php:23
+msgid "Log leegmaken"
+msgstr ""
+
+#: admin/partials/rijksreleasekalender-admin-main-display.php:27
+msgid "Dit werkt alleen als je JavaScript hebt aangezet."
+msgstr ""
+
+#: admin/partials/rijksreleasekalender-admin-main-display.php:28
+msgid "Druk op de knop!"
+msgstr ""
+
+#: admin/partials/rijksreleasekalender-admin-main-display.php:49
+msgid "Sync gestart..."
+msgstr ""
+
+#: admin/partials/rijksreleasekalender-admin-main-display.php:93
+msgid "Start Synchronisatie"
+msgstr ""
+
+#: admin/partials/rijksreleasekalender-admin-main-display.php:96
+msgid "Sync fout"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:137
+msgid "Releasekalender - Dossierpagina "
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:138
+msgid "Releasekalender - Hoofdpagina"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:421
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:49
+msgid "Ingebruikname"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:423
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:51
+msgid "Voorziening"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:430
+#: public/class-rijksreleasekalender-public.php:433
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:58
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:61
+msgid "Aanbieder"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:438
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:66
+msgid "Doelgroep"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:441
+#: public/class-rijksreleasekalender-public.php:497
+#: public/class-rijksreleasekalender-public.php:511
+#: public/class-rijksreleasekalender-public.php:523
+#: public/class-rijksreleasekalender-public.php:526
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:69
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:142
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:158
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:175
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:178
+msgid "Verwijzing"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:499
+#: public/class-rijksreleasekalender-public.php:513
+#: public/class-rijksreleasekalender-public.php:528
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:144
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:160
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:181
+msgid "Releasestatus"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:502
+#: public/class-rijksreleasekalender-public.php:516
+#: public/class-rijksreleasekalender-public.php:531
+#: public/class-rijksreleasekalender-public.php:1711
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:147
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:164
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:185
+msgid "Afhankelijkheden"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:503
+#: public/class-rijksreleasekalender-public.php:517
+#: public/class-rijksreleasekalender-public.php:532
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:148
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:165
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:186
+msgid "Afspraken en standaarden"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:541
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:197
+msgid "Gerealiseerde releases"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:546
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:202
+msgid "Er zijn geen gerealiseerde releases."
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:552
+#: public/class-rijksreleasekalender-public.php:1141
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:208
+msgid "Aankomende releases"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:557
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:213
+msgid "Er zijn geen aankomende releases."
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:563
+#: public/partials/rijksreleasekalender_template_release_info_orig.php:219
+msgid "Vervallen releases"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:726
+msgid "heeft de volgende producten en releases:"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:726
+msgid "naar omschrijving"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:731
+msgid "Omschrijving"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:733
+msgid "Datum laatste wijziging"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:838
+msgid "Naar boven"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:860
+msgid "Geen releases"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:896
+msgid "Extra's"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:896
+msgid "RSS Recente wijzigingen"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:896
+msgid "Releasekalender als herbruikbare tabel"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:1145
+#, php-format
+msgid "Dit zijn de releases voor morgen."
+msgid_plural "Dit zijn de releases van de eerstkomende %s dagen."
+msgstr[0] ""
+msgstr[1] ""
+
+#: public/class-rijksreleasekalender-public.php:1196
+#, php-format
+msgid "Geen releases gevonden voor morgen."
+msgid_plural "Geen releases gevonden voor de eerstkomende %s dagen."
+msgstr[0] ""
+msgstr[1] ""
+
+#: public/class-rijksreleasekalender-public.php:1201
+msgid "Bekijk de kalender"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:1495
+msgid "Kalender"
+msgstr ""
+
+#: public/class-rijksreleasekalender-public.php:1712
+msgid "Afspraken"
+msgstr ""
+
+#. Plugin Name of the plugin/theme
+msgid "ICTU / WP Rijksreleasekalender plugin"
+msgstr ""
+
+#. Plugin URI of the plugin/theme
+msgid "http://nostromo.nl"
+msgstr ""
+
+#. Description of the plugin/theme
+msgid "Synchroniseert met Rijksrelease REST API en zorgt voor weergave"
+msgstr ""
+
+#. Author of the plugin/theme
+msgid "Marcel Bootsman / Paul van Buuren"
+msgstr ""
+
+#. Author URI of the plugin/theme
+msgid "http://nostromo.nl/"
+msgstr ""
