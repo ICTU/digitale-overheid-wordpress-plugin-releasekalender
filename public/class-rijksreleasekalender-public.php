@@ -689,8 +689,7 @@ class rijksreleasekalender_Public {
         'post_type'   => 'producten',
         'order'       => 'ASC',					
         'posts_per_page'  => '-1',
-        'orderby'     => 'meta_value',					
-        'meta_key'    => $sortering,
+        'orderby'     => 'title',					
         'meta_query' => array(
         	array(
         		'key'     => 'product_voorziening_real_id_slug',
@@ -707,8 +706,7 @@ class rijksreleasekalender_Public {
         'post_type'   => 'producten',
         'order'       => 'ASC',					
         'posts_per_page'  => '-1',
-        'orderby'     => 'meta_value',					
-        'meta_key'    => $sortering,
+        'orderby'     => 'title',					
         'meta_query' => array(
         	array(
         		'key'     => 'product_voorziening_real_id',
