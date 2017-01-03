@@ -1,5 +1,6 @@
-(function($) {
-    $(document).ready(function() {
+(function($){
+    $(document).ready(function()
+    {
         /*
          * Includes stylesheet for scripting purposes only
          * Use document.createStyleSheet for IE workaround. The CSS is not loaded in IE8
@@ -15,18 +16,15 @@
         // Save the sate of the mouse button globbaly for use in the :focus event of the timeline,
         // so that we can see if a release is focused with mouse or 'Tab' key
         var mousedown;
-        $(document).mousedown(function() {
-            mousedown = true;
-        });
-        $(document).mouseup(function() {
-            mousedown = false;
-        });
+        $(document).mousedown(function() { mousedown = true; });
+        $(document).mouseup(function() { mousedown = false; });
         var tabOffsetCorrection = 0;
 
         /*
          * Visualiseer projecten en te realiseren resultaten op tijdbalk
          */
-        if ($('.tijdbalk').length > 0) {
+        if($('.tijdbalk').length > 0)
+        {
             $('.tijdbalk').show();
             $('.tijdbalk li').attr('unselectable', 'on'); // IE fix
 
@@ -34,7 +32,6 @@
             var jaar_1 = $('.tijdbalk>ul>li').eq(0).offset();
             var jaar_2 = $('.tijdbalk>ul>li').eq(1).offset();
             var day_px = (3 + jaar_2.left - jaar_1.left) / 365.25;
-            console.log('day_px: ' + day_px );
 
             // big bang: begin van de tijd(balk)
             var big_bang = $('.tijdbalk>ul>li').eq(0).text().split(' ');
@@ -46,14 +43,15 @@
                 return $('.tijdbalk').position().top - 25;
             }
 
-            $('.nu').each(function() {
+            $('.nu').each(function()
+            {
                 // Datum label onder bouwsteenbeschrijving
                 // During initialization getStandlijnLabelTop return a different value. Removed the margin and border of
                 // the container to position it correctly.
                 $(this).children('p').css('top', getStandlijnLabelTop() + 'px');
 
                 // Positioneer standlijn
-                var nu = $.datepicker.parseDate('d MM yy', $(this).find('p').text());
+                var nu = $.datepicker.parseDate('mm/dd/yy', $(this).find('p').data( "datumnu") );
                 var left = daydiff(big_bang, nu) * day_px + 5;
                 $(this).css('left', left);
 
@@ -67,17 +65,13 @@
             });
 
             // verwerk datum per resultaat
-            $('.programma li li').each(function() {
-                $(this).find('span.datum').each(function() {
+            $('.programma li li').each(function()
+            {
+                $(this).find('span.datum').each(function()
+                {
                     var data = $.datepicker.parseDate('d MM yy', $(this).text());
                     var left = daydiff(big_bang, data) * day_px;
-
-//                    $(this).parent().parent().css('position', 'absolute');
                     $(this).parent().parent().css('left', left);
-//                    $(this).parent().parent().css('translate', 'translateX(' + left + ')' );
-
-//            console.log('List item: ' + $(this).text() + ' moet naar ' + left );
-                    
                 });
             });
 
@@ -87,12 +81,12 @@
             $('.programma > ul > li').each(function() {
                 rowCount = 1;
                 $(this).find('li').each(function() {
-                    if ($(this).next().length > 0 && $(this).next().position().left - $(this).position().left < $(this).outerWidth()) {
-                        $(this).next().css('margin-top', rowHeight * rowCount + 'px');
+                    if ($(this).next().length > 0 && $(this).next().position().left - $(this).position().left< $(this).outerWidth()) {
+                        $(this).next().css('margin-top', rowHeight*rowCount + 'px');
                         rowCount++;
                     }
                 });
-                $(this).css('height', 9 + rowHeight * rowCount + 'px');
+                $(this).css('height', 9 + rowHeight*rowCount + 'px');
             })
 
             // Hoogte standlijn. Heeft tijd nodig om CSS bij te laten werken
@@ -106,16 +100,18 @@
             // Sticky tijdsbalk
             var tijdbalkOffset = $('.tijdbalk').offset();
             var tijdbalkMarginLeft = $('.tijdbalk>ul').css('margin-left').replace('px', '');
-            $(window).scroll(function() {
+            $(window).scroll(function()
+            {
                 var top = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop;
-                if (top > tijdbalkOffset.top) {
+                if(top > tijdbalkOffset.top) {
                     // als naar tijdsbalk uit beeld wordt gescrolld wordt 'ie sticky
                     $('.tijdbalk').addClass('sticky');
                     $('.tijdbalk').css('margin-left', $('#releasekalenderoutput').offset().left);
                     $('.tijdbalk').css('width', $('#releasekalenderoutput').width());
                     $('.nu').height(getStandlijnHeight());
                     $('.nu p').css('position', 'fixed').css('top', '42px');
-                } else {
+                }
+                else {
                     // als tijdsbalk in beeld wordt gescrolld is 'ie niet meer sticky
                     $('.tijdbalk').removeClass('sticky');
                     $('.tijdbalk').css('margin-left', '0');
@@ -128,7 +124,7 @@
 
             // Tijdbalk herpositioneren tov de pagina
             $(window).resize(function() {
-                if ($('.tijdbalk').hasClass('sticky')) {
+                if($('.tijdbalk').hasClass('sticky')) {
                     $('.tijdbalk').css('margin-left', $('#releasekalenderoutput').offset().left);
                     $('.tijdbalk').css('width', $('#releasekalenderoutput').width());
                 } else {
@@ -140,15 +136,16 @@
             // Drag tijdsbalk
             var tijdbalk = $('.tijdbalk').offset(),
                 // li width * number of li's - borderwidth
-                totalWidth = $('.tijdbalk > ul').children('li').last().outerWidth(true) * $('.tijdbalk > ul').children('li').length - 4;
+                totalWidth = $('.tijdbalk > ul').children('li').last().outerWidth(true)*$('.tijdbalk > ul').children('li').length-4;
 
             var x1 = tijdbalk.left - totalWidth + ($('.tijdbalk').width()); //*.8; // rechtergrens, (evt. 1/5 extra)
             var x2 = tijdbalk.left; // + $('.tijdbalk').width()*.2; // linkergrens, (evt. 1/5 extra)
             $('.tijdbalk>ul').draggable({
                 axis: "x",
                 distance: 15,
-                containment: [x1, 0, x2, 0],
-                drag: function(event, ui) {
+                containment: [ x1, 0, x2, 0 ],
+                drag: function(event, ui)
+                {
                     // drag ook (resp.): project, resultaat, standlijn
                     $('.programma li li, .nu').css('margin-left', $(this).css('left'));
                 }
@@ -160,15 +157,16 @@
          */
         $('.tijdbalk').prepend('<a href="#eerder" class="eerder">Eerder</a>');
         $('.tijdbalk').append('<a href="#later" class="later">Later</a>');
-        $('.tijdbalk>a').click(function(e) {
+        $('.tijdbalk>a').click(function(e)
+        {
             var draggable = $('.tijdbalk>ul');
             var position = draggable.position();
-            var width = draggable.children('li').length * draggable.children('li').last().outerWidth(true) - 4;
+            var width = draggable.children('li').length*draggable.children('li').last().outerWidth(true)-4;
             var distance = 150;
 
             // Calculate the new position, including boundaries
-            var newPosition = $(this).hasClass('eerder') ? position.left + distance : position.left - distance,
-                min = -width + $('.tijdbalk').outerWidth(),
+            var newPosition = $(this).hasClass('eerder')?position.left + distance:position.left - distance,
+                min = -width+$('.tijdbalk').outerWidth(),
                 max = 0;
             newPosition = Math.min(max, Math.max(min, newPosition));
 
@@ -176,13 +174,13 @@
             draggable.animate({
                 left: newPosition
             }, 150);
-            // draggable.css(position);
+           // draggable.css(position);
             $('.programma li li, .nu').animate({
                 marginLeft: newPosition
             }, 150);
 
             // IE8 does not support event.preventDefault()
-            (e.preventDefault) ? e.preventDefault(): e.returnValue = false;
+            (e.preventDefault) ? e.preventDefault() : e.returnValue = false;
         });
 
         /* Add tab control */
@@ -192,12 +190,12 @@
                 // When tabbing, the li is not focused, but the a, so we set them with javascript
                 $(this).parent().css('z-index', 999);
 
-                var newPosition = -$(this).parent().position().left + 0.5 * $('.tijdbalk').width();
+                var newPosition = -$(this).parent().position().left+0.5*$('.tijdbalk').width();
                 $('.tijdbalk>ul').animate({
                     left: newPosition
                 }, 300);
                 $('.programma li li, .nu').animate({
-                    marginLeft: newPosition
+                   marginLeft: newPosition
                 }, 300);
             }
         })
@@ -208,13 +206,15 @@
         /*
          * Add cursor control
          */
-        $('body').keydown(function(e) {
-            switch (e.keyCode) {
+        $('body').keydown(function(e)
+        {
+            switch (e.keyCode)
+            {
                 // links
                 case 37:
                     $('.tijdbalk .eerder, .kalender .prev').click();
                     break;
-                    // rechts
+                // rechts
                 case 39:
                     $('.tijdbalk .later, .kalender .next').click();
                     break;
@@ -224,12 +224,10 @@
         // Kalender controls
         if ($('.kalender').length > 0) {
             function nav(e) {
-                (e.preventDefault) ? e.preventDefault(): e.returnValue = false;
+                (e.preventDefault) ? e.preventDefault() : e.returnValue = false;
                 if (!$(this).hasClass('disabled')) {
-                    var direction = $(this).hasClass('prev') ? '+' : '-';
-                    $('.unitcontainer').stop(true, true).animate({
-                        'margin-left': direction + "=" + unitWidth
-                    }, toggleControls);
+                    var direction = $(this).hasClass('prev')?'+':'-';
+                    $('.unitcontainer').stop(true, true).animate({'margin-left' : direction + "=" + unitWidth}, toggleControls);
                 }
             }
 
@@ -240,7 +238,7 @@
                 } else {
                     $('.kalender .prev').removeClass('disabled');
                 }
-                if (left <= -($('.kalender .unit').length - nrOfUnitVisable) * unitWidth) {
+                if (left <= -($('.kalender .unit').length-nrOfUnitVisable)*unitWidth) {
                     $('.kalender .next').addClass('disabled');
                 } else {
                     $('.kalender .next').removeClass('disabled');
@@ -261,9 +259,7 @@
 
                 animate = animate || false;
                 if (animate) {
-                    $('.kalender .unitcontainer').stop(true, true).animate({
-                        'margin-left': -position + unitWidth + tabOffsetCorrection
-                    }, toggleControls);
+                    $('.kalender .unitcontainer').stop(true, true).animate({'margin-left' : -position + unitWidth + tabOffsetCorrection}, toggleControls);
                 } else {
                     $('.kalender .unitcontainer').css('margin-left', -position + unitWidth + tabOffsetCorrection + 'px');
                     toggleControls();
@@ -312,13 +308,12 @@
 
             // Initialize position to current month
             var currentDate = $.datepicker.formatDate('MM yy', new Date())
-            currentDate = currentDate.charAt(0).toUpperCase() + currentDate.slice(1);
             var currentMonth = $('.kalender .unit h3:contains(' + currentDate + ')').parent();
-            if (!currentMonth.length) {
-                var currentMonth = $('.kalender .unit').first();
+            if(!currentMonth.length) {
+              var currentMonth = $('.kalender .unit').first();
             }
 
-            var unitWidth = currentMonth.outerWidth() - 1;
+            var unitWidth = currentMonth.outerWidth()-1;
             moveKalender(currentMonth.position().left);
             toggleControls();
 
@@ -330,11 +325,12 @@
             })
 
             var datumOffset = $('.kalender .unit').offset();
-            $(window).scroll(function() {
+            $(window).scroll(function () {
                 var top = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop;
                 if (top > datumOffset.top && tabOffsetCorrection === 0) {
                     $('.unit h3').addClass('sticky');
-                } else {
+                }
+                else {
                     $('.unit h3').removeClass('sticky');
                 }
             });
@@ -346,7 +342,8 @@
      * @param {Date} first
      * @param {Date} second
      */
-    function daydiff(first, second) {
-        return (second - first) / (1000 * 60 * 60 * 24);
+    function daydiff(first, second)
+    {
+        return (second-first)/(1000*60*60*24);
     }
 })(jQuery);
