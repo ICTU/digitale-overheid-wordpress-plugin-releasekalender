@@ -193,6 +193,15 @@ class rijksreleasekalender_Admin {
 			array( 'label_for' => $this->option_name . '_legenda_kalender' )
 		);
 
+		add_settings_field(
+			$this->option_name . '_inleiding_tabelvorm',
+			__( 'Inleiding bij weergave in tabelvorm:', 'rijksreleasekalender' ),
+			array( $this, $this->option_name . '_inleiding_tabelvorm_cb' ),
+			$this->plugin_name,
+			$this->option_name . '_general',
+			array( 'label_for' => $this->option_name . '_inleiding_tabelvorm' )
+		);
+
 
 		add_settings_field(
 			$this->option_name . '_recent_max_age',
@@ -212,6 +221,7 @@ class rijksreleasekalender_Admin {
 		register_setting( $this->plugin_name, $this->option_name . '_rss_size' );
 		register_setting( $this->plugin_name, $this->option_name . '_update_key' );
 		register_setting( $this->plugin_name, $this->option_name . '_legenda_kalender' );
+		register_setting( $this->plugin_name, $this->option_name . '_inleiding_tabelvorm' );		
 		register_setting( $this->plugin_name, $this->option_name . '_author_id' );
 		register_setting( $this->plugin_name, $this->option_name . '_recent_max_age' );
 
@@ -302,6 +312,24 @@ class rijksreleasekalender_Admin {
 		echo '<input class="regular-text code" type="text" name="' . $this->option_name . '_update_key' . '" id="' . $this->option_name . '_update_key' . '" value="' . $update_key . '"> ';
 	}
 
+
+
+
+	/**
+	 * Render the inleiding input for this plugin
+	 *
+	 * @since  1.0.0
+	 */
+	public function rijksreleasekalender_inleiding_tabelvorm_cb() {
+	  $inleiding_tabelvorm = get_option( $this->option_name . '_inleiding_tabelvorm' );
+	  
+	  if ( ! $inleiding_tabelvorm ) {
+	    $inleiding_tabelvorm = '<p>De releasekalender digitale overheid biedt afnemers – en hun leveranciers – planningsinformatie over de digitale overheid voorzieningen, met bijbehorende producten en releases. De releasekalender geeft weer wat, wanneer opgeleverd is, wordt of moet worden. Op basis van deze gegevens kan een afnemer of leverancier bepalen welke releases relevant zijn voor de eigen implementatieplanning.</p><p>Dit document bevat dezelfde planningsinformatie als de online versie van de releasekalender en maakt het eenvoudiger de releasekalender informatie intern beschikbaar te stellen of informatie te selecteren en te kopiëren zodat dit gecombineerd kan worden met eigen planningsinformatie.</p><p>Heeft u vragen of opmerkingen over de releasekalender dan kunt u contact opnemen met <a href="mailto:oplossingen@ictu.nl">oplossingen@ictu.nl</a></p>';
+	  }  
+	  
+	  echo '<textarea class="regular-text code" name="' . $this->option_name . '_inleiding_tabelvorm' . '" id="' . $this->option_name . '_inleiding_tabelvorm' . '">' . $inleiding_tabelvorm . '</textarea>';
+	}
+	
 	/**
 	 * Render the update key input for this plugin
 	 *
