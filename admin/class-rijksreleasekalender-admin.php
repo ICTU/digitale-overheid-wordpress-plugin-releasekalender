@@ -167,6 +167,15 @@ class rijksreleasekalender_Admin {
 		);
 
 		add_settings_field(
+			$this->option_name . '_hoofdpagina',
+			__( 'Hoofdpagina voor releasekalender', 'rijksreleasekalender' ),
+			array( $this, $this->option_name . '_hoofdpagina_cb' ),
+			$this->plugin_name,
+			$this->option_name . '_general',
+			array( 'label_for' => $this->option_name . '_hoofdpagina' )
+		);
+
+		add_settings_field(
 			$this->option_name . '_update_key',
 			__( 'Update key', 'rijksreleasekalender' ),
 			array( $this, $this->option_name . '_update_key_cb' ),
@@ -219,6 +228,7 @@ class rijksreleasekalender_Admin {
 		register_setting( $this->plugin_name, $this->option_name . '_restapi_user' );
 		register_setting( $this->plugin_name, $this->option_name . '_restapi_pwd' );
 		register_setting( $this->plugin_name, $this->option_name . '_rss_size' );
+		register_setting( $this->plugin_name, $this->option_name . '_hoofdpagina' );
 		register_setting( $this->plugin_name, $this->option_name . '_update_key' );
 		register_setting( $this->plugin_name, $this->option_name . '_legenda_kalender' );
 		register_setting( $this->plugin_name, $this->option_name . '_inleiding_tabelvorm' );		
@@ -426,16 +436,53 @@ class rijksreleasekalender_Admin {
 		<?php
 	}
 
+
+
+	/**
+	 * Render the RSS size input for this plugin
+	 *
+	 * @since  1.0.0
+	 */
+	public function rijksreleasekalender_hoofdpagina_cb() {
+		$hoofdpagina = intval( get_option( $this->option_name . '_hoofdpagina' ) );
+    if ( is_int( $hoofdpagina ) && $hoofdpagina > 0 ) {
+    }
+    else {
+      $hoofdpagina = 73;
+    }
+
+    $args = array(
+        'depth'            => 0,
+        'child_of'         => 0,
+        'selected'         => esc_attr($hoofdpagina),
+        'echo'             => 1,
+        'name'             => $this->option_name . '_hoofdpagina'
+    );
+    
+    wp_dropdown_pages( $args );
+		
+	}
+
 	/**
 	 * Render the RSS size input for this plugin
 	 *
 	 * @since  1.0.0
 	 */
 	public function rijksreleasekalender_rss_size_cb() {
-		$rss_size = get_option( $this->option_name . '_rss_size' );
-		echo '<select name="' . $this->option_name . '_rss_size' . '" id="' . $this->option_name . '_rss_size' . '" class="regular-text" disabled>';
+		$rss_size = intval( get_option( $this->option_name . '_rss_size' ) );
+
+    if ( is_int( $rss_size ) && $rss_size > 0 ) {
+    }
+    else {
+      $rss_size = 10;
+    }
+
+
+    $maxrssitems = 50;
+		
+		echo '<select name="' . $this->option_name . '_rss_size' . '" id="' . $this->option_name . '_rss_size' . '" class="regular-text">';
     
-    for ($i = 1; $i <= 20; $i++) {
+    for ($i = 1; $i <= $maxrssitems; $i++) {
       $selected = '';
       $name = __( 'items', 'rijksreleasekalender' );
       
@@ -448,7 +495,7 @@ class rijksreleasekalender_Admin {
       echo '<option value="' . $i . '"' . $selected . '>' . $i . ' ' . $name. '</option>';
     }		
     
-		echo '</select> (deze instelling heeft nog geen enkel effect, dus uitgezet (PvB)';
+		echo '</select>';
 	}
 
 

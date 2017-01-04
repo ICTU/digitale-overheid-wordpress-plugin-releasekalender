@@ -71,6 +71,8 @@ class rijksreleasekalender_Public {
 	private $releasekalender_queryvar_kalender;
 	private $releasekalender_queryvar_plainhtml;
 	private $option_name = 'rijksreleasekalender';
+	private $feed_name;
+	
 
 	/**
 	 * A string to preserve the original page title 
@@ -96,6 +98,8 @@ class rijksreleasekalender_Public {
 		$this->rijksreleasekalender = $rijksreleasekalender;
 		$this->version              = $version;
 
+    $this->feed_name            = 'feedrijksreleasekalender';
+    
 		//========================================================================================================
 		// set up 2 different virtual page templates
 		// these are not actual page templates with their own .php file
@@ -120,6 +124,10 @@ class rijksreleasekalender_Public {
 		add_filter( 'query_vars',	array( $this, 'add_query_vars' ) );
 
 		add_filter( 'init',				array( $this, 'add_acf_functions' ) );
+
+    // custom RSS for overview of latest releases / voorzieningen / producten
+		add_action( 'init',				array( $this, 'customRSS' ) );
+
 
 
 	}
@@ -966,7 +974,7 @@ class rijksreleasekalender_Public {
 
     $url = get_permalink( get_the_ID() );
     
-    return $content . '<div class="block"><h3>' . __( "Extra's", 'rijksreleasekalender' ) . '</h3><ul><li class="rss"><a href="/releases/feed/">' . __( 'RSS Recente wijzigingen', 'rijksreleasekalender' ) . '</a></li><li><a href="' . $url . $this->releasekalender_queryvar_plainhtml . '/">' . __( 'Releasekalender als herbruikbare tabel', 'rijksreleasekalender' ) . '</a></li></ul></div>';  
+    return $content . '<div class="block"><h3>' . __( "Extra's", 'rijksreleasekalender' ) . '</h3><ul><li class="rss"><a href="/feed/' . $this->feed_name . '/">' . __( 'RSS Recente wijzigingen', 'rijksreleasekalender' ) . '</a></li><li><a href="' . $url . $this->releasekalender_queryvar_plainhtml . '/">' . __( 'Releasekalender als herbruikbare tabel', 'rijksreleasekalender' ) . '</a></li></ul></div>';  
 	}
 
 	//========================================================================================================
@@ -1885,8 +1893,238 @@ class rijksreleasekalender_Public {
       
     }
 
+		//========================================================================================================
+    function customRSS(){
+  		add_feed( $this->feed_name,				array( $this, 'customRSSFunc' ) );
+    }
+
+
+		//========================================================================================================
+    function customRSSFunc(){
+      
+      /**
+       * Template Name: Custom RSS Template - Feedname
+       */
+
+      $aggregatedposts  = array();
+      $url = '';
+
+  		$hoofdpagina = intval( get_option( $this->option_name . '_hoofdpagina' ) );
+      if ( is_int( $hoofdpagina ) && $hoofdpagina > 0 ) {
+      }
+      else {
+        $hoofdpagina = 73;
+      }
+      $url = get_the_permalink( $hoofdpagina );
+
+           
+      $thepermalink     = '[]';          
+      $postCount        = intval( get_option( $this->option_name . '_rss_size' ) );
+      if ( is_int( $postCount ) && $postCount > 0 ) {
+      }
+      else {
+        $postCount = 10;
+      }
+
+      // ======= Selecteer voorzieningen =======================================================
+      $countertje = 0;
+      
+    	$get_voorzieningen_args = array(
+        'post_type'       => 'producten',
+        'posts_per_page'  => $postCount,
+        'post_status'     => 'publish',
+        'order'           => 'DESC',					
+        'orderby'         => 'meta_value',					
+        'meta_key'        => 'product_updated',
+
+    	);
+      $voorzieningquery = new WP_Query( $get_voorzieningen_args );
+
+      if ( $voorzieningquery->have_posts() ) {
+        while ($voorzieningquery->have_posts()) : 
+          $voorzieningquery->the_post();
+          $countertje++;
+          $product_updated            = get_post_meta( get_the_ID(), 'product_updated', true );
+          $product_updated2            = strtotime( $product_updated );
+
+          $key = strtotime( $product_updated );
+
+          $argsforreleaseurl = array(
+            'currenturl'        => $url,
+            'voorziening_slug'  => $this->get_slug( get_the_permalink() ),
+            'context'           => 'customRSSFunc'
+          );
+          $thepermalink = $this->get_releaseurl( $argsforreleaseurl );    
+
+          $aggregatedposts[$key] = array(
+            'the_title'   => get_the_title(),
+            'the_content' => get_the_excerpt(),
+            'the_url'     => $thepermalink,
+          );
+
+        endwhile;
+      }    
+      // Reset things, for good measure
+      $voorzieningquery = null;
+      wp_reset_postdata();
+
+
+
+      // ======= Selecteer producten ===========================================================
+      $countertje = 0;
+      
+    	$get_producten_args = array(
+        'post_type'       => 'producten',
+        'posts_per_page'  => $postCount,
+        'post_status'     => 'publish',
+        'order'           => 'DESC',					
+        'orderby'         => 'meta_value',					
+        'meta_key'        => 'product_updated',
+
+    	);
+      $productquery = new WP_Query( $get_producten_args );
+
+      if ( $productquery->have_posts() ) {
+        while ($productquery->have_posts()) : 
+          $productquery->the_post();
+          $countertje++;
+          $product_updated            = get_post_meta( get_the_ID(), 'product_updated', true );
+          $product_updated2            = strtotime( $product_updated );
+
+          $key = strtotime( $product_updated );
+
+          $argsforreleaseurl = array(
+            'currenturl'        => $url,
+            'voorziening_slug'  => get_post_meta( get_the_ID(), 'product_voorziening_real_id_slug', true ),
+            'product_slug'      => $this->get_slug( get_the_permalink() ),
+            'context'           => 'customRSSFunc'
+          );
+          $thepermalink = $this->get_releaseurl( $argsforreleaseurl );    
+
+
+          $aggregatedposts[$key] = array(
+            'the_title'   => get_the_title(),
+            'the_content' => get_the_title( get_post_meta( get_the_ID(), 'product_voorziening_real_id', true ) ),
+            'the_url'     => $thepermalink,
+          );
+
+        endwhile;
+      }    
+      // Reset things, for good measure
+      $productquery = null;
+      wp_reset_postdata();
+
+      // ======= Selecteer releases ============================================================
+    	$get_releases_args = array(
+        'post_type'       => 'releases',
+        'posts_per_page'  => $postCount,
+        'post_status'     => 'publish',
+        'order'           => 'DESC',					
+        'orderby'         => 'meta_value',					
+        'meta_key'        => 'release_updated_translated',
+
+    	);
+      $releasequery = new WP_Query( $get_releases_args );
+
+      if ( $releasequery->have_posts() ) {
+        while ($releasequery->have_posts()) : 
+          $releasequery->the_post();
+          $countertje++;
+          $release_updated            = get_post_meta( get_the_ID(), 'release_updated', true );
+          $product_updated2            = strtotime( $product_updated );
+
+          $key = strtotime( $release_updated );
+
+          $argsforreleaseurl = array(
+            'currenturl'        => $url,
+            'voorziening_slug'  => get_post_meta( get_the_ID(), 'release_voorziening_real_id_slug', true ),
+            'product_slug'      => get_post_meta( get_the_ID(), 'release_product_real_id_slug', true ),
+            'inpage_id'         => $this->get_slug( get_the_permalink() ),
+            'context'           => 'customRSSFunc'
+          );
+          $thepermalink = $this->get_releaseurl( $argsforreleaseurl );    
+ 
+
+          $aggregatedposts[$key] = array(
+            'the_title'   => get_the_title(),
+            'the_content' => get_the_title( get_post_meta( get_the_ID(), 'release_product_real_id', true ) ),
+            'the_url'     => $thepermalink,
+          );
+
+        endwhile;
+      }    
+      // Reset things, for good measure
+      $releasequery = null;
+      wp_reset_postdata();
+
+
+
+      
+      header('Content-Type: '.feed_content_type('rss-http').'; charset='.get_option('blog_charset'), true);
+      echo '<?xml version="1.0" encoding="'.get_option('blog_charset').'"?'.'>';
+      ?>
+      <rss version="2.0"
+              xmlns:content="http://purl.org/rss/1.0/modules/content/"
+              xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+              xmlns:dc="http://purl.org/dc/elements/1.1/"
+              xmlns:atom="http://www.w3.org/2005/Atom"
+              xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+              xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+              <?php do_action('rss2_ns'); ?>>
+      <channel>
+              <title><?php _e( 'Releasekalender feed', 'rijksreleasekalender' ); ?> - <?php bloginfo_rss('name'); ?></title>
+              <atom:link href="<?php self_link(); ?>" rel="self" type="application/rss+xml" />
+              <link><?php self_link() ?></link>
+              <description><?php bloginfo_rss('description') ?></description>
+              <lastBuildDate><?php echo mysql2date('D, d M Y H:i:s +0000', get_lastpostmodified('GMT'), false); ?></lastBuildDate>
+              <language><?php echo get_option('rss_language'); ?></language>
+              <sy:updatePeriod><?php echo apply_filters( 'rss_update_period', 'hourly' ); ?></sy:updatePeriod>
+              <sy:updateFrequency><?php echo apply_filters( 'rss_update_frequency', '1' ); ?></sy:updateFrequency>
+              <?php do_action('rss2_head'); ?>
+              <?php
+              
+              // reverse sort the array with post info
+              krsort($aggregatedposts);
+              $counter = 0;
+              
+              foreach ($aggregatedposts as $key => $val) {
+              //    echo "$key = $val\n";
+              
+                $counter++;
+                
+                if ( $counter > $postCount ) {
+                  break;
+                }
+                $keyval = date( 'Y-m-d H:i:s', $key );  
+                ?>          
+                      <item>
+                              <title><?php echo esc_html( $val['the_title'] ); ?></title>
+                              <link><?php echo $val['the_url']; ?></link>
+                              <pubDate><?php echo mysql2date('D, d M Y H:i:s +0000', $keyval, false); ?></pubDate>
+                              <guid isPermaLink="true"><?php echo $val['the_url']; ?></guid>
+                              <description><![CDATA[<?php echo esc_html( $val['the_content'] ); ?>]]></description>
+                              <content:encoded><![CDATA[<?php echo esc_html( $val['the_content'] ); ?>]]></content:encoded>
+                              <?php rss_enclosure(); ?>
+                              <?php do_action('rss2_item'); ?>
+                      </item>
+
+              <?php
+              }
+              ?>          
+
+
+      </channel>
+      </rss>      
+      <?php
+      
+      die('');
+
+    }
+
+
+
 	//========================================================================================================
-//	include_once 'partials/DEBUG_template_add_metadata_overview.php';
+  //	include_once 'partials/DEBUG_template_add_metadata_overview.php';
 	//========================================================================================================
 	/**
 	 * THIS FUNCTION SHOULD BE DELETED
