@@ -676,7 +676,7 @@ class rijksreleasekalender_Public {
           $productquery->the_post();
           $title                  = get_the_title();
           $omschrijving           = get_the_content();
-          $voorziening_updated    = get_post_meta( get_the_ID(), 'voorziening_updated', true ); // 'voorziening_updated';
+          $voorziening_updated    = get_post_meta( get_the_ID(), 'voorziening_updated', true ); ;
         endwhile;
       }
       wp_reset_query();      
@@ -727,7 +727,7 @@ class rijksreleasekalender_Public {
       $programmaargs['year_end']              = ( date('Y') + 1 );
       $programmaargs['programma']             = '';
       $programmaargs['permalink']             = $url;
-      $programmaargs['voorziening_updated']   = strtotime( $voorziening_updated );
+      $programmaargs['global_last_update']    = strtotime( $voorziening_updated ); // this will be used to show a global last updated date
 
       // de pijlstok voor het heden
       $pijlstok   = '<div class="nu"><p data-datumnu="' . date( 'm/d/Y' ) . '">' . date_i18n( get_option( 'date_format' ) ) . '</p></div>';
@@ -739,9 +739,9 @@ class rijksreleasekalender_Public {
         
         $product_updated            = get_post_meta( get_the_ID(), 'product_updated', true );
 
-        if ( strtotime( $product_updated ) > $programmaargs['voorziening_updated'] ) {
+        if ( strtotime( $product_updated ) > $programmaargs['global_last_update'] ) {
           // Product update is recenter dan voorziening update;          
-          $programmaargs['voorziening_updated']   = strtotime( $product_updated );
+          $programmaargs['global_last_update']   = strtotime( $product_updated );
 
         } 
         else {
@@ -783,7 +783,7 @@ class rijksreleasekalender_Public {
       $content .= '<div id="kolom12" class="block"><h2 id="omschrijving">' . __('Omschrijving', 'rijksreleasekalender' ) . '</h2>';
 //      $content .= '<p>' . $omschrijving . '</p>';
       $content .= $omschrijving;
-      $content .= '<p>' . __('Datum laatste wijziging', 'rijksreleasekalender' ) . ': ' . date_i18n( get_option( 'date_format' ), $programmaargs['voorziening_updated'] ) . '</p>';
+      $content .= '<p>' . __('Datum laatste wijziging', 'rijksreleasekalender' ) . ': ' . date_i18n( get_option( 'date_format' ), $programmaargs['global_last_update'] ) . '</p>';
   		$content .= '</div>'; 
   		$content .= '</div>'; 
   		$content .= '</div>'; 
@@ -1449,12 +1449,12 @@ class rijksreleasekalender_Public {
           $release_updated  = $metadata['release_releasedatum_translated'][0];
 
 
-          if ( $release_updated > $args['voorziening_updated'] ) {
+          if ( $release_updated > $args['global_last_update'] ) {
             // Release update is recenter dan voorziening update          
-            $args['voorziening_updated']   = $release_updated;
+            $args['global_last_update']   = $release_updated;
           } 
           else {
-            // Voorziening update is recenter dan Release update          
+            // Voorziening update is recenter dan release update          
           }       
 
 
@@ -1718,14 +1718,6 @@ class rijksreleasekalender_Public {
                   <th scope="row">Website</th>
                   <td>' . $voorziening_site . '</td>
                 </tr>';
-//          echo '<tr>
-//                  <th scope="row">Aantekeningen</th>
-//                  <td>' . get_post_meta( $voorziening_id, 'voorziening_aantekeningen', true ) . '</td>
-//                </tr>';
-//          echo '<tr>
-//                  <th scope="row">Laatst bijgewerkt op</th>
-//                  <td>' . get_post_meta( $voorziening_id, 'voorziening_updated', true ) . '</td>
-//                </tr>';
           echo '</table>';
 
           // Get the producten
