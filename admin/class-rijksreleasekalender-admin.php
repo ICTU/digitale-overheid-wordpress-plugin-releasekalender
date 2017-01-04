@@ -204,12 +204,12 @@ class rijksreleasekalender_Admin {
 
 
 		add_settings_field(
-			$this->option_name . '_recent_max_age',
-			__( 'Widget: toon releases van de komende', 'rijksreleasekalender' ),
-			array( $this, $this->option_name . '_recent_max_age_cb' ),
+			$this->option_name . '_max_items_in_widget',
+			__( 'Widget: toon de eerstvolgend X releases', 'rijksreleasekalender' ),
+			array( $this, $this->option_name . '_max_items_in_widget_cb' ),
 			$this->plugin_name,
 			$this->option_name . '_general',
-			array( 'label_for' => $this->option_name . '_recent_max_age' )
+			array( 'label_for' => $this->option_name . '_max_items_in_widget' )
 		);
 
 		// Register the general options
@@ -223,7 +223,7 @@ class rijksreleasekalender_Admin {
 		register_setting( $this->plugin_name, $this->option_name . '_legenda_kalender' );
 		register_setting( $this->plugin_name, $this->option_name . '_inleiding_tabelvorm' );		
 		register_setting( $this->plugin_name, $this->option_name . '_author_id' );
-		register_setting( $this->plugin_name, $this->option_name . '_recent_max_age' );
+		register_setting( $this->plugin_name, $this->option_name . '_max_items_in_widget' );
 
 		// Connection options
 
@@ -372,29 +372,29 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since  1.0.0
 	 */
-	public function rijksreleasekalender_recent_max_age_cb() {
+	public function rijksreleasekalender_max_items_in_widget_cb() {
 
-    $maxdays = 90;
+    $maxdays = 30;
 
-		$recent_max_age           = intval( get_option( $this->option_name . '_recent_max_age' ) );
+		$max_items_in_widget           = intval( get_option( $this->option_name . '_max_items_in_widget' ) );
 
-    if ( is_int( $recent_max_age ) && $recent_max_age > 0  && $recent_max_age < $maxdays ) {
+    if ( is_int( $max_items_in_widget ) && $max_items_in_widget > 0  && $max_items_in_widget < $maxdays ) {
     }
     else {
-      $recent_max_age = 10;
+      $max_items_in_widget = 10;
     }
 
 
-		echo '<select name="' . $this->option_name . '_recent_max_age' . '" id="' . $this->option_name . '_recent_max_age' . '" class="regular-text">';
+		echo '<select name="' . $this->option_name . '_max_items_in_widget' . '" id="' . $this->option_name . '_max_items_in_widget' . '" class="regular-text">';
     
     for ($i = 1; $i <= $maxdays; $i++) {
       $selected = '';
-      $name = __( 'dagen', 'rijksreleasekalender' );
+      $name = __( 'items', 'rijksreleasekalender' );
       
       if ( $i < 2 ) {
-        $name = __( 'dag', 'rijksreleasekalender' );
+        $name = __( 'item', 'rijksreleasekalender' );
       }
-      if ( $i == $recent_max_age ) {
+      if ( $i == $max_items_in_widget ) {
         $selected = ' selected';
       }
       echo '<option value="' . $i . '"' . $selected . '>' . $i . ' ' . $name. '</option>';

@@ -658,7 +658,7 @@ class rijksreleasekalender_Public {
     $url                    = get_permalink( get_the_ID() );
     $title                  = '';
     $omschrijving           = '';
-    $voorziening_updated  = '';
+    $voorziening_updated    = '';
     $voorzieningslug        = $this->requestedvoorziening;
   	
 
@@ -723,19 +723,30 @@ class rijksreleasekalender_Public {
       // here be products
       $programma  = '<ul>';
       $programmaargs = array();        
-      $programmaargs['year_start']  = ( date('Y') - 1 );
-      $programmaargs['year_end']    = ( date('Y') + 1 );
-      $programmaargs['programma']   = 'ledig';
-      $programmaargs['permalink']   = $url;
+      $programmaargs['year_start']            = ( date('Y') - 1 );
+      $programmaargs['year_end']              = ( date('Y') + 1 );
+      $programmaargs['programma']             = '';
+      $programmaargs['permalink']             = $url;
+      $programmaargs['voorziening_updated']   = strtotime( $voorziening_updated );
 
       // de pijlstok voor het heden
       $pijlstok   = '<div class="nu"><p data-datumnu="' . date( 'm/d/Y' ) . '">' . date_i18n( get_option( 'date_format' ) ) . '</p></div>';
-      
 
       while ( $allproducts_query->have_posts() ) : 
         $allproducts_query->the_post();
         
         $product_datumIngebruikname = get_post_meta( get_the_ID(), 'product_datumIngebruikname', true );
+        
+        $product_updated            = get_post_meta( get_the_ID(), 'product_updated', true );
+
+        if ( strtotime( $product_updated ) > $programmaargs['voorziening_updated'] ) {
+          // Product update is recenter dan voorziening update;          
+          $programmaargs['voorziening_updated']   = strtotime( $product_updated );
+
+        } 
+        else {
+          // Voorziening update is recenter dan product update;          
+        }       
 
         $productslug  = $this->get_slug( get_the_permalink( get_the_ID() ) );
         $theurl       = $url . $this->releasekalender_queryvar_voorziening . '/' . $voorzieningslug . '/' . $this->releasekalender_queryvar_product . '/' . $productslug . '/';
@@ -772,7 +783,7 @@ class rijksreleasekalender_Public {
       $content .= '<div id="kolom12" class="block"><h2 id="omschrijving">' . __('Omschrijving', 'rijksreleasekalender' ) . '</h2>';
 //      $content .= '<p>' . $omschrijving . '</p>';
       $content .= $omschrijving;
-      $content .= '<p>' . __('Datum laatste wijziging', 'rijksreleasekalender' ) . ': ' . date_i18n( get_option( 'date_format' ), strtotime( $voorziening_updated ) ) . '</p>';
+      $content .= '<p>' . __('Datum laatste wijziging', 'rijksreleasekalender' ) . ': ' . date_i18n( get_option( 'date_format' ), $programmaargs['voorziening_updated'] ) . '</p>';
   		$content .= '</div>'; 
   		$content .= '</div>'; 
   		$content .= '</div>'; 
@@ -1169,14 +1180,14 @@ class rijksreleasekalender_Public {
     
     if ( $this->releasekalender_template_hoofdpagina == $page_template ) {
       
-      $recent_max_age           = intval( get_option( $this->option_name . '_recent_max_age' ) );
+      $max_items_in_widget           = intval( get_option( $this->option_name . '_max_items_in_widget' ) );
       
       // set the max number of days to look ahead under
       // [admin] > 'Rijksreleasekalender' > 'Instellingen' > 'Widget: toon releases van de komende
-      if ( is_int( $recent_max_age ) && $recent_max_age > 0 ) {
+      if ( is_int( $max_items_in_widget ) && $max_items_in_widget > 0 ) {
       }
       else {
-        $recent_max_age = 10;
+        $max_items_in_widget = 10;
       }
       
       $url = get_permalink( get_the_ID() );
@@ -1184,21 +1195,19 @@ class rijksreleasekalender_Public {
       // start day is today
       $start  = strtotime( date('y:m:d') );
       
-      // end day is today plus X days
-      $end    = strtotime( date('y:m:d') . ' + ' . $recent_max_age . ' days' );
       
       // Select the upcoming releases for the x few days
       $releases_query_args = array(
         'post_type'       => 'releases',
         'order'           => 'ASC',					
         'orderby'         => 'meta_value',					
-        'posts_per_page'  => '-1',
+        'posts_per_page'  => $max_items_in_widget,
         'meta_key'        => 'release_releasedatum_translated',
         'meta_query'      => array(
                         array(
                           'key' => 'release_releasedatum_translated',
-                          'value' => array($start, $end),
-                          'compare' => 'BETWEEN'
+                          'value' => $start,
+                          'compare' => '>='
                         )
         )				
       );
@@ -1211,7 +1220,7 @@ class rijksreleasekalender_Public {
       
       if ( $releases_query->have_posts() ) {
         
-        echo '<p>' . sprintf( _n( 'Dit zijn de releases voor morgen.', 'Dit zijn de releases van de eerstkomende %s dagen.', $recent_max_age, 'rijksreleasekalender' ), $recent_max_age ) . '</p>';
+//        echo '<p>' . sprintf( _n( 'Dit zijn de releases voor morgen.', 'Dit zijn de releases van de eerstkomende %s dagen.', $max_items_in_widget, 'rijksreleasekalender' ), $max_items_in_widget ) . '</p>';
         echo '<ul class="list">';
         
         while ($releases_query->have_posts()) : 
@@ -1242,7 +1251,6 @@ class rijksreleasekalender_Public {
           echo get_the_title();
           echo '</a></h4>';
           echo '<p class="details">' . $releasedatum . '</p>'; 
-//          echo '<p class="details">' . $releasedatum . ' (' . $releasestatus['naam'] . ')</p>'; // DEBUG
           echo '</li>';
 
         endwhile;
@@ -1252,7 +1260,7 @@ class rijksreleasekalender_Public {
       }
       else {
       
-        echo '<p>' . sprintf( _n( 'Geen releases gevonden voor morgen.', 'Geen releases gevonden voor de eerstkomende %s dagen.', $recent_max_age, 'rijksreleasekalender' ), $recent_max_age ) . '</p>';
+        echo '<p>' . __( 'Geen releases gevonden.', 'rijksreleasekalender' ) . '</p>';
       
       }
       wp_reset_postdata();
@@ -1435,9 +1443,20 @@ class rijksreleasekalender_Public {
 
         while ($releases_query->have_posts()) : 
           $releases_query->the_post();
-          $metadata       = get_post_meta( get_the_id() );    	
-          $releasestatus  = maybe_unserialize( $metadata['release_release_status'][0] );
-          $release_year   = date( 'Y', $metadata['release_releasedatum_translated'][0] );
+          $metadata         = get_post_meta( get_the_id() );    	
+          $releasestatus    = maybe_unserialize( $metadata['release_release_status'][0] );
+          $release_year     = date( 'Y', $metadata['release_releasedatum_translated'][0] );
+          $release_updated  = $metadata['release_releasedatum_translated'][0];
+
+
+          if ( $release_updated > $args['voorziening_updated'] ) {
+            // Release update is recenter dan voorziening update          
+            $args['voorziening_updated']   = $release_updated;
+          } 
+          else {
+            // Voorziening update is recenter dan Release update          
+          }       
+
 
           if ( intval( $release_year ) < intval( $args['year_start'] ) ) {
             $args['year_start'] = ( $release_year - 1 );
