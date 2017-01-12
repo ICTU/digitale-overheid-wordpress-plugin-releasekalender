@@ -474,7 +474,7 @@ class rijksreleasekalender_Admin {
     if ( is_int( $rss_size ) && $rss_size > 0 ) {
     }
     else {
-      $rss_size = 10;
+      $rss_size = 20;
     }
 
 
@@ -635,7 +635,7 @@ class rijksreleasekalender_Admin {
 			'show_in_nav_menus'   => true,
 			'publicly_queryable'  => true,
 			'exclude_from_search' => false,
-			'has_archive'         => true,
+			'has_archive'         => false,
 			'query_var'           => true,
 			'can_export'          => true,
 			'rewrite'             => true,
@@ -711,7 +711,7 @@ class rijksreleasekalender_Admin {
 			'show_in_nav_menus'   => true,
 			'publicly_queryable'  => true,
 			'exclude_from_search' => false,
-			'has_archive'         => true,
+			'has_archive'         => false,
 			'query_var'           => true,
 			'can_export'          => true,
 			'rewrite'             => true,
@@ -763,8 +763,8 @@ class rijksreleasekalender_Admin {
 			'menu_icon'           => 'dashicons-upload',
 			'show_in_nav_menus'   => true,
 			'publicly_queryable'  => true,
-			'exclude_from_search' => false,
-			'has_archive'         => true,
+			'exclude_from_search' => true,
+			'has_archive'         => false,
 			'query_var'           => true,
 			'can_export'          => true,
 			'rewrite'             => true,
