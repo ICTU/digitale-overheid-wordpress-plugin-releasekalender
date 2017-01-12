@@ -1,5 +1,8 @@
 @charset "UTF-8";
 
+@fontstrong:			     'Rijksoverheid Sans bold', Helvetica, Arial, sans-serif;
+
+
 #releasekalenderoutput {
 
   .programma {
@@ -239,6 +242,26 @@
     border: 1px solid #e5e5e5;
     border-width: 0 1px;
     margin-right: -1px;/*min-height: 20em !important;*/
+
+    p {
+      margin: 0;
+    }    
+    ul {
+      margin: 0 0 1em 0;
+      li {
+        line-height: 1.2;
+        margin: .25em 0 .75em 0;
+        &:before {
+          top: 5px;
+        }
+      }
+    }    
+    h3,
+    h4 {
+//      font-weight: bold;
+//      font-family: @fontstrong;
+
+    }
   }
   .kalender .prev, .kalender .next {
     float: left;
@@ -246,9 +269,7 @@
     width: 5%;
     padding: 1%;
   }
-  .kalender .unit p {
-    margin: 0;
-  }
+
   .kalender .unit h3 {
     margin-bottom: 1.4em !important;
   }
@@ -317,7 +338,6 @@
   }
 
   .back_to_top {
-//    border: 1px solid red;
     width: 100%;
     clear: both;
   }

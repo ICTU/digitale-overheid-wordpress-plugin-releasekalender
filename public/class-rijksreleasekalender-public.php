@@ -223,7 +223,13 @@ class rijksreleasekalender_Public {
 
   	//=================================================
     if ( ( $this->releasekalender_template_hoofdpagina == $page_template ) ||
-        ( $this->releasekalender_template_dossier == $page_template ) ) {
+        ( $this->releasekalender_template_dossier == $page_template ) ||
+        ( is_single() && ( 'releases' == get_post_type() ) ) ||
+        ( is_single() && ( 'voorzieningencpt' == get_post_type() ) ) ||
+        ( is_single() && ( 'producten' == get_post_type() ) ) ) {
+
+
+      add_filter( 'genesis_post_info',   array( $this, 'filter_postinfo' ), 10, 2 );
 
       // dingen die voor beide templates gelden
         
@@ -314,7 +320,7 @@ class rijksreleasekalender_Public {
     elseif( ( is_single() && ( 'releases' == get_post_type() ) ) ||
             ( is_single() && ( 'producten' == get_post_type() ) ) || 
             ( is_single() && ( 'voorzieningencpt' == get_post_type() ) ) || 
-            ( $this->releasekalender_template_dossier == $page_template ) ) {
+            ( is_page() && ( $this->releasekalender_template_dossier == $page_template ) ) ) {
 
       if( get_field('releasekalender_voorziening') ) {
   			$this->requestedvoorziening = get_field('releasekalender_voorziening');
@@ -330,7 +336,7 @@ class rijksreleasekalender_Public {
       }
       elseif ( $this->requestedvoorziening ) {
         // we know only the voorziening
-      
+       
         //* Force full-width-content layout
         add_filter( 'genesis_pre_get_option_site_layout', '__genesis_return_full_width_content' );
       
@@ -447,7 +453,18 @@ class rijksreleasekalender_Public {
           if ( $datestring ) {
             $args['programma']  .= '<li>' . __( 'Ingebruikname', 'rijksreleasekalender' ) . ': ' . date_i18n( get_option( 'date_format' ), $datestring ) . '</li>';
           }
-          $args['programma']  .= '<li>' . __( 'Voorziening', 'rijksreleasekalender' ) . ': <a href="' . get_permalink( $metadata['product_voorziening_real_id'][0] ) . '">' . get_the_title( $metadata['product_voorziening_real_id'][0] ) . '</a></li>';
+
+          $argsforreleaseurl = array(
+            'currenturl'        => get_the_permalink( intval( get_option( $this->option_name . '_hoofdpagina' ) ) ),
+            'voorziening_id'    => $metadata['product_voorziening_id'][0],
+            'voorziening_slug'  => $args['voorzieningslug'],
+            'context'           => 'get_template_release_info'
+          );
+          
+          
+          
+          // voorziening get_releaseurl
+          $args['programma']  .= '<li>' . __( 'Voorziening', 'rijksreleasekalender' ) . ': <a href="' . $this->get_releaseurl($argsforreleaseurl) . '">' . get_the_title( $metadata['product_voorziening_real_id'][0] ) . '</a></li>';
     
           if ( $metadata['product_aanbieder'][0] ) {
     
@@ -465,7 +482,7 @@ class rijksreleasekalender_Public {
             $args['programma']  .= '<li>' . __( 'Doelgroep', 'rijksreleasekalender' ) . ': ' . $metadata['product_doelgroep'][0] . '</li>';
           }
           if ( $metadata['product_verwijzing'][0] ) {
-            $args['programma']  .= '<li>' . __( 'Verwijzing', 'rijksreleasekalender' ) . ': <a href="' . get_permalink( $metadata['product_verwijzing'][0] ) . '">' . get_the_title( ) . '</a></li>';
+            $args['programma']  .= '<li>' .   __( 'Verwijzing', 'rijksreleasekalender' ) . ': <a href="' . $metadata['product_verwijzing'][0] . '">' . get_the_title( ) . '</a></li>';
           }
           $args['programma']  .= '</ul>';
           $args['programma']  .= get_the_content();
@@ -853,8 +870,10 @@ class rijksreleasekalender_Public {
           $year_end = intval( $release_year );
         }
 
-        $showdate     = strtotime( $release_year . '-' . $release_month . '-1' );
-        $keystring    = date_i18n( "d-F-Y", $showdate );
+        $showdate       = strtotime( $release_year . '-' . $release_month . '-1' );
+        $maandsleutel   = 'maandsleutel_' . date_i18n( "d-F-Y", $showdate );
+        $dagsleutel     = $releasedatum;
+//        $keystring    = 'maandsleutel_' . date_i18n( "d-F-Y", $releasedatum );
 
         $argsforreleaseurl = array(
           'currenturl'        => $url,
@@ -867,12 +886,13 @@ class rijksreleasekalender_Public {
           'context'           => 'get_template_hoofdpagina_kalender'
         );
 
-        $temparray = array();
-        $temparray['datum']                     = $releasedatum;
-        $temparray['titel']                     = get_the_title( $release_product_real_id );
-        $temparray['listitem']                  = '<a href="' . $this->get_releaseurl($argsforreleaseurl) . '">' . get_the_title() . '</a>';
+        $titlekey             = get_the_title( $release_product_real_id );
         
-        $releases_by_month[$keystring][]     = $temparray;  
+        $releases_by_month[$maandsleutel][$dagsleutel][$titlekey]['datum']            = $releasedatum;
+        $releases_by_month[$maandsleutel][$dagsleutel][$titlekey]['datum_translated'] = date_i18n( get_option( 'date_format' ) . " " . get_option( 'time_format' ), $releasedatum );
+        $releases_by_month[$maandsleutel][$dagsleutel][$titlekey]['listitems'][]      = '<a href="' . $this->get_releaseurl($argsforreleaseurl) . '">' . get_the_title() . '</a>';  
+        
+        
 
       endwhile;
       
@@ -881,6 +901,9 @@ class rijksreleasekalender_Public {
     $releases_query = null;
     wp_reset_postdata();
     //==
+
+//dovardump($releases_by_month);
+//die();
 
     $tijdbalk = '';
     $dejaren  = '';
@@ -905,35 +928,55 @@ class rijksreleasekalender_Public {
           $rowcounter++;
 
           if ( $rowcounter == 1 ) {
-//            $tijdbalk .= '<div class="row">' . $totop . $currentyearstring;
             $tijdbalk .= '<div class="row">' . $currentyearstring;
             $totop = '';
             $currentyearstring = '';
           }
 
-          $showdate = strtotime( $currentyear . '-' . $maand . '-1' );
-          $keystring = date_i18n( "d-F-Y", $showdate );
+          $showdate     = strtotime( $currentyear . '-' . $maand . '-1' );
+          $keystring    = date_i18n( "d-F-Y", $showdate );
+          $maandsleutel = 'maandsleutel_' . date_i18n( "d-F-Y", $showdate );
 
           $datastring = '<p><em>' . __( "Geen releases", 'rijksreleasekalender' ) . '</em></p>';
           
-          if ( isset( $releases_by_month[$keystring] ) ) {
-            // voor deze dag / maand / jaar is er een release
+          if ( isset( $releases_by_month[$maandsleutel] ) ) {
+            // voor deze maand/jaar-combinatie zijn er 1 of meer releases
 
             $datastring   = ''; // effe leegmaken, zodat we geen onzin tonen
             $currentdate  = '';
             $previousdate = '';
 
-            foreach ( $releases_by_month[$keystring] as $member_group_term ) {
-              // voor alle releases op deze dag-maand-jaar
+            // sortering op datum ASC
+            if ( count( $releases_by_month[$maandsleutel] ) > 1 ) {
+              ksort( $releases_by_month[$maandsleutel] );
+            }
 
-              $releasedatum = $member_group_term['datum'];
-              $currentdate  = date_i18n( "d-F-Y", $releasedatum );
+            foreach ( $releases_by_month[$maandsleutel] as $member_group_term => $value2 ) {
+              // we lopen nu alle dagen af
 
-              if ( $previousdate != $currentdate ) {
-                $datastring .= '<h4>' . date_i18n( "j F", $releasedatum ) . '</h4>';
+              // sortering op productnaam ASC
+              if ( count( $value2 ) > 1 ) {
+                ksort( $value2 );
+              }
+
+              // schrijf de dag
+              $datastring .= '<h4>' . date_i18n( "j F", $member_group_term ) . '</h4>';
+
+              foreach ( $value2 as $productnaam => $value3 ) {
+
+                $datastring .= '<p>' . $productnaam . '</p><ul>';
+
+                // sortering op release ASC
+                if ( count( $value3['listitems'] ) > 1 ) {
+                  natcasesort( $value3['listitems'] );
+                }
+
+                foreach ( $value3['listitems'] as $listitem ) {
+                  $datastring .= '<li>' . $listitem . '</li>';
+                }
+                $datastring .= '</ul>';
               }
               
-              $datastring .= '<p>' . $member_group_term['titel'] . '</p><ul><li>' . $member_group_term['listitem'] . '</li></ul>';
               
               $previousdate = $currentdate;
               
@@ -1025,8 +1068,6 @@ class rijksreleasekalender_Public {
                       'operator' => 'IN'
                     ) ) ) );
 
-//dovardump($voorzieningen_query);
-
       $tempterms .= '<' . $titletag . '>' . $member_group_term->name . '</' . $titletag . '><p>Geen voorzieningen gevonden</p>';
 
       
@@ -1041,6 +1082,7 @@ class rijksreleasekalender_Public {
           $voorzieningen_query->the_post(); 
           $theslug    = $this->get_slug( get_the_permalink( get_the_ID() ) );
           $posturl    = $url . $this->releasekalender_queryvar_voorziening . '/' . $theslug . '/';
+          
 
           $arguments = array(
             'currenturl'        => $url,
@@ -1049,7 +1091,18 @@ class rijksreleasekalender_Public {
             'context'           => 'get_template_hoofdpagina_groepen'
           );
 
-          $content .= '<li><a href="' . $this->get_releaseurl( $arguments ) . '">' . get_the_title() . '</a></li>';
+          $extra = '';
+          
+          if ( function_exists( 'get_field' ) ) {
+            // ACF
+            $planningspagina    = get_field('releasekalender_link_voorziening_aan_planningspagina', get_the_ID() );
+            if ( $planningspagina ) {
+              $arguments['currenturl'] = get_the_permalink( $planningspagina[0] );
+            }
+          }
+
+
+          $content .= '<li><a href="' . $this->get_releaseurl( $arguments ) . '">' . get_the_title() . $extra . '</a></li>';
         endwhile; 
         
         $content .= '</ul>';
@@ -1366,7 +1419,77 @@ class rijksreleasekalender_Public {
       	'description' => '',
       ));
     
+      if ( defined( 'RHSWP_CT_DOSSIER' ) ) {
+      
+        $dossiers = array();
+      
+        $terms = get_terms( array(
+            'taxonomy'    => RHSWP_CT_DOSSIER,
+            'hide_empty'  => true,
+        ) );
+      
+        if ($terms && ! is_wp_error( $dossiers ) ) {       
+          foreach ( $dossiers as $term ) {
+            $dossiers[] = RHSWP_CT_DOSSIER . ':' . $term->slug;
+          }
+        }
+      
+      
+        acf_add_local_field_group(array (
+        	'key' => 'group_586d656ad468b',
+        	'title' => 'Link met dossier-planningspagina',
+        	'fields' => array (
+        		array (
+        			'post_type' => array (
+        				0 => 'page',
+        			),
+        			'taxonomy' => $dossiers,
+        			'min' => 1,
+        			'max' => 1,
+        			'filters' => array (
+        				0 => 'search',
+        				1 => 'taxonomy',
+        			),
+        			'elements' => '',
+        			'return_format' => 'id',
+        			'key' => 'field_586d658b4da11',
+        			'label' => 'Selecteer de pagina met planningsinformatie',
+        			'name' => 'releasekalender_link_voorziening_aan_planningspagina',
+        			'type' => 'relationship',
+        			'instructions' => 'Selecteer een pagina met planningsinformatie uit een dossier. 
+        Maximaal 1 pagina.',
+        			'required' => 1,
+        			'conditional_logic' => 0,
+        			'wrapper' => array (
+        				'width' => '',
+        				'class' => '',
+        				'id' => '',
+        			),
+        		),
+        	),
+        	'location' => array (
+        		array (
+        			array (
+        				'param' => 'post_type',
+        				'operator' => '==',
+        				'value' => 'voorzieningencpt',
+        			),
+        		),
+        	),
+        	'menu_order' => 0,
+        	'position' => 'normal',
+        	'style' => 'default',
+        	'label_placement' => 'top',
+        	'instruction_placement' => 'label',
+        	'hide_on_screen' => '',
+        	'active' => 1,
+        	'description' => '',
+        ));
+      
+      }
+    
     endif;
+
     
   }
     
@@ -1454,7 +1577,7 @@ class rijksreleasekalender_Public {
           $metadata         = get_post_meta( get_the_id() );    	
           $releasestatus    = maybe_unserialize( $metadata['release_release_status'][0] );
           $release_year     = date( 'Y', $metadata['release_releasedatum_translated'][0] );
-          $release_updated  = $metadata['release_releasedatum_translated'][0];
+          $release_updated  = $metadata['release_updated_translated'][0];
 
 
           if ( $release_updated > $args['global_last_update'] ) {
@@ -1498,7 +1621,7 @@ class rijksreleasekalender_Public {
               break;
           }
   
-          $args['programma']  .= '<li class="' . $releasestatus['naam'] . '"><a href="' . $theurl . '#' . $theid . '">' . get_the_title() . '</a>'  . $statusspan . '</li>';
+          $args['programma']  .= '<li class="' . $releasestatus['naam'] . '"><a href="' . $theurl . '#' . $theid . '" data-releasedatum="' . $metadata['release_releasedatum'][0] . '">' . get_the_title() . '</a>'  . $statusspan . '</li>';
         endwhile;
 
         $args['programma']  .= '</ul>';
@@ -1547,9 +1670,6 @@ class rijksreleasekalender_Public {
         $theurl =  get_permalink( $arguments['voorziening_id'] );
   		}
 
-//  		if ( isset( $arguments['context'] ) ) {
-//        $theurl .=  '?context=' . $arguments['context'];
-//  		}
   		if ( isset( $arguments['inpage_id'] ) ) {
         $theurl .=  '#' . $arguments['inpage_id'];
   		}
@@ -1827,7 +1947,15 @@ class rijksreleasekalender_Public {
                   $releases_table .= '<td>' . date_i18n( 'd-m-y', $metadata['release_releasedatum_translated'][0] ) . '</td>';
                   $releases_table .= '<td>' . $releasestatus['naam'] . '</td>';
                   $releases_table .= '<td>' . $release_release_marge . '</td>';
-                  $releases_table .= '<td>' . get_the_content() . '</td>';
+                  $releases_table .= '<td>' . wp_strip_all_tags( get_the_content() );
+
+                  $release_website = get_post_meta( $release_id, 'release_website', true );
+                  if ( $release_website ) {
+                    $releases_table .= '<p>Zie ook: <a class="external_link" href="' . $release_website . '">' . $release_title . '</a></p>';
+                  }
+                  $releases_table .= '</td>';
+
+                  
                   $releases_table .= '<td>' . $releaseafhankelijkheden . '</td>';
                   $releases_table .= '<td>' . $afspraken . '</td>';
                   $releases_table .= '</tr>';
@@ -1923,7 +2051,7 @@ class rijksreleasekalender_Public {
       if ( is_int( $postCount ) && $postCount > 0 ) {
       }
       else {
-        $postCount = 10;
+        $postCount = 20;
       }
 
       // ======= Selecteer voorzieningen =======================================================
