@@ -1057,16 +1057,16 @@ class rijksreleasekalender_Public {
       $voorzieningen_query = new WP_Query( array(
       'post_type'         => 'voorzieningencpt',
       'order'             => 'ASC',
-      'include_children'  => false,
       'orderby'           => 'title',
       'posts_per_page'    => '-1',
       'tax_query'         => array(
-                    array(
-                      'taxonomy' => 'voorziening-groep',
-                      'field' => 'slug',
-                      'terms' => array( $member_group_term->slug ),
-                      'operator' => 'IN'
-                    ) ) ) );
+          array(
+            'taxonomy'    => 'voorziening-groep',
+            'field'       => 'slug',
+            'include_children'  => false,
+            'terms'       => array( $member_group_term->slug ),
+            'operator'    => 'IN'
+          ) ) ) );
 
       $tempterms .= '<' . $titletag . '>' . $member_group_term->name . '</' . $titletag . '><p>Geen voorzieningen gevonden</p>';
 
@@ -1261,7 +1261,7 @@ class rijksreleasekalender_Public {
       $releases_query_args = array(
         'post_type'       => 'releases',
         'order'           => 'ASC',					
-        'orderby'         => 'meta_value',					
+        'orderby'         => 'meta_value title',					
         'posts_per_page'  => $max_items_in_widget,
         'meta_key'        => 'release_releasedatum_translated',
         'meta_query'      => array(
@@ -1280,8 +1280,7 @@ class rijksreleasekalender_Public {
           <h3 class="widgettitle">' . __('Aankomende releases', 'rijksreleasekalender' ) . '</h3>';
       
       if ( $releases_query->have_posts() ) {
-        
-//        echo '<p>' . sprintf( _n( 'Dit zijn de releases voor morgen.', 'Dit zijn de releases van de eerstkomende %s dagen.', $max_items_in_widget, 'rijksreleasekalender' ), $max_items_in_widget ) . '</p>';
+
         echo '<ul class="list">';
         
         while ($releases_query->have_posts()) : 
@@ -1289,6 +1288,7 @@ class rijksreleasekalender_Public {
         
           $release_voorziening_slug   = get_post_meta( get_the_id(), 'release_voorziening_real_id_slug', true );
           $release_product_slug       = get_post_meta( get_the_id(), 'release_product_real_id_slug', true );
+          $release_product_name       = maybe_unserialize( get_post_meta( get_the_id(), 'release_product', true ) );
           $release_product            = $this->releasekalender_queryvar_product . '/' . $release_product_slug . '/';
           $release_voorziening        = $this->releasekalender_queryvar_voorziening . '/' . $release_voorziening_slug . '/';
           $releasestatus              = maybe_unserialize( get_post_meta( get_the_id(), 'release_release_status', true ) );
@@ -1311,6 +1311,7 @@ class rijksreleasekalender_Public {
           echo '<li><h4><a href="' . $this->get_releaseurl( $arguments ) . '" data-releasestatus="' . $releasestatus['naam'] . '">';
           echo get_the_title();
           echo '</a></h4>';
+          echo '<p>' . $release_product_name['naam'] . '</p>'; 
           echo '<p class="details">' . $releasedatum . '</p>'; 
           echo '</li>';
 
