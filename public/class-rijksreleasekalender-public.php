@@ -222,6 +222,53 @@ class rijksreleasekalender_Public {
     }
 
   	//=================================================
+    if( ( is_single() && 'releases' == get_post_type() ) || 
+        ( is_single() && 'producten' == get_post_type() ) ||
+        ( is_single() && 'voorzieningencpt' == get_post_type() ) ) {
+
+      ob_clean();
+
+      /* Redirect to a different page in the current directory that was requested */
+
+  		$hoofdpagina = intval( get_option( $this->option_name . '_hoofdpagina' ) );
+      if ( is_int( $hoofdpagina ) && $hoofdpagina > 0 ) {
+      }
+      else {
+        $hoofdpagina = 73;
+      }
+
+      if ( is_single() && ( 'releases' == get_post_type() ) ) {
+        $arguments = array(
+          'currenturl'        => get_the_permalink( $hoofdpagina ),
+          'product_slug'      => get_post_meta( get_the_id(), 'release_product_real_id_slug', true ),
+          'voorziening_slug'  => get_post_meta( get_the_id(), 'release_voorziening_real_id_slug', true ),
+          'inpage_id'         => $this->get_slug( get_the_permalink() ),
+          'context'           => 'use_page_template'
+        );
+      } 
+      elseif ( is_single() && ( 'producten' == get_post_type() ) ) {
+        $arguments = array(
+          'currenturl'        => get_the_permalink( $hoofdpagina ),
+          'product_slug'      => $this->get_slug( get_the_permalink() ),
+          'voorziening_slug'  => get_post_meta( get_the_id(), 'product_voorziening_real_id_slug', true ),
+          'context'           => 'use_page_template'
+        );
+      } 
+      elseif ( is_single() && ( 'voorzieningencpt' == get_post_type() ) ) {
+        $arguments = array(
+          'currenturl'        => get_the_permalink( $hoofdpagina ),
+          'voorziening_slug'  => $this->get_slug( get_the_permalink() ),
+          'context'           => 'use_page_template'
+        );
+      } 
+
+      $url = $this->get_releaseurl( $arguments );
+      header("Location: $url",TRUE,301);
+      die();
+
+    }
+
+  	//=================================================
     if ( ( $this->releasekalender_template_hoofdpagina == $page_template ) ||
         ( $this->releasekalender_template_dossier == $page_template ) ||
         ( is_single() && ( 'releases' == get_post_type() ) ) ||
