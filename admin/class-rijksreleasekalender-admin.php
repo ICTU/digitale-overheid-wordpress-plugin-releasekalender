@@ -119,6 +119,14 @@ class rijksreleasekalender_Admin {
 			$this->plugin_name
 		);
 
+		//Add a CRON section
+		add_settings_section(
+			$this->option_name . '_cron',
+			__( 'CRON instellingen', 'rijksreleasekalender' ),
+			array( $this, $this->option_name . '_cron_cb' ),
+			$this->plugin_name
+		);
+
 		// General options
 
 		add_settings_field(
@@ -270,7 +278,31 @@ class rijksreleasekalender_Admin {
 		register_setting( $this->plugin_name, $this->option_name . '_proxy_host' );
 		register_setting( $this->plugin_name, $this->option_name . '_proxy_port' );
 
+		// Cron options
+
+		add_settings_field(
+			$this->option_name . '_cron_frequency',
+			__( 'CRON Frequentie', '' ),
+			array( $this, $this->option_name . '_cron_frequency_cb' ),
+			$this->plugin_name,
+			$this->option_name . '_cron',
+			array( 'label_for' => $this->option_name . '_cron_frequency' )
+		);
+
+		add_settings_field(
+			$this->option_name . '_cron_time',
+			__( 'CRON Tijd (uur)', '' ),
+			array( $this, $this->option_name . '_cron_time_cb' ),
+			$this->plugin_name,
+			$this->option_name . '_cron',
+			array( 'label_for' => $this->option_name . '_cron_time' )
+		);
+
+		// Register the cron options
+		register_setting( $this->plugin_name, $this->option_name . '_cron_frequency' );
+		register_setting( $this->plugin_name, $this->option_name . '_cron_time' );
 	}
+
 
 	/**
 	 * Render the REST API url input for this plugin
@@ -425,12 +457,12 @@ class rijksreleasekalender_Admin {
 			<fieldset>
 				<label>
 					<input type="radio" name="<?php echo $this->option_name . '_ignore_ssl' ?>" id="<?php echo $this->option_name . '_ignore_ssl' ?>" value="ja" <?php checked( $ignore_ssl, 'ja' ); ?>>
-			<?php _e( 'Ja', 'rijskreleasekalender' ); ?>
+			<?php _e( 'Ja', 'rijksreleasekalender' ); ?>
 				</label>
 				<br>
 				<label>
 					<input type="radio" name="<?php echo $this->option_name . '_ignore_ssl' ?>" value="nee" <?php checked( $ignore_ssl, 'nee' ); ?>>
-			<?php _e( 'Nee', 'rijskreleasekalender' ); ?>
+			<?php _e( 'Nee', 'rijksreleasekalender' ); ?>
 				</label>
 			</fieldset>
 		<?php
@@ -519,6 +551,51 @@ class rijksreleasekalender_Admin {
 		echo '<input class="code" type="text" name="' . $this->option_name . '_proxy_port' . '" id="' . $this->option_name . '_proxy_port' . '" value="' . $proxy_port . '"> ';
 	}
 
+	/**
+	 * Render the CRON frequency dropdown
+	 *
+	 * @since  1.0.0
+	 */
+	public function rijksreleasekalender_cron_frequency_cb() {
+		$cron_frequency = get_option( $this->option_name . '_cron_frequency' );
+		$selected       = selected( $cron_frequency, '', false );
+
+		$frequencies = Array(
+			__( 'Dagelijks', 'rijksreleasekalender' )         => 'daily',
+			__( 'Twee keer per dag', 'rijksreleasekalender' ) => 'twicedaily',
+			__( 'Elk uur', 'rijksreleasekalender' )           => 'hourly'
+		);
+
+		echo '<select name="' . $this->option_name . '_cron_frequency' . '">';
+		echo '<option value="" ' . $selected . '></option>';
+
+		foreach ( $frequencies as $frequency_name => $frequency_value ) {
+			$selected = selected( $cron_frequency, $frequency_value );
+			echo '<option value="' . $frequency_value . '" id="' . $frequency_value . '" ' . $selected . '>' . $frequency_name . '</option>';
+		}
+		echo '</select>';
+	}
+
+	/**
+	 * Render the CRON time dropdown
+	 *
+	 * @since  1.0.0
+	 */
+	public function rijksreleasekalender_cron_time_cb() {
+		$cron_time = get_option( $this->option_name . '_cron_time' );
+		$selected  = selected( $cron_time, '', false );
+
+		$hours = range( 0, 23 );
+
+		echo '<select name="' . $this->option_name . '_cron_time' . '">';
+		echo '<option value="" ' . $selected . '></option>';
+
+		foreach ( $hours as $hour ) {
+			$selected = selected( $cron_time, $hour );
+			echo '<option value="' . $hour . '" id="' . $hour . '" ' . $selected . '>' . $hour . '</option>';
+		}
+		echo '</select>';
+	}
 
 	/**
 	 * Register the options page
@@ -573,6 +650,16 @@ class rijksreleasekalender_Admin {
 	public function rijksreleasekalender_connection_cb() {
 		echo '<p>' . __( 'Verbindingsinstellingen', 'rijksreleasekalender' ) . '</p>';
 	}
+
+	/**
+	 * Render text for the CRON section
+	 *
+	 * @since  1.0.0
+	 */
+	public function rijksreleasekalender_cron_cb() {
+		echo '<p>' . __( 'CRON instellingen', 'rijksreleasekalender' ) . '</p>';
+	}
+
 
 	/**
 	 * Render the main page
@@ -780,7 +867,7 @@ class rijksreleasekalender_Admin {
 	 * @since    1.0.0
 	 */
 	public function rijksreleasekalender_do_sync() {
-		//TODO retrieve and store voorzieningen, producten, releases, set start and end of sync
+		// TODO check if doing_cron and mute output if so
 
 		$_step = array_key_exists( 'step', $_POST ) ? intval( $_POST[ 'step' ] ) : 0;
 
@@ -1560,8 +1647,6 @@ class rijksreleasekalender_Admin {
 				break;
 				
 		}
-
-
 		// todo bij fout stoppen en foutmelding
 		if ( 5 == $_step ) {
 			$_result    = 'done';
@@ -1570,12 +1655,12 @@ class rijksreleasekalender_Admin {
 			$_result = $_step;
 		}
 
-		// todo if we are doing a cron, do not do this :)
 		wp_send_json( array(
 			'result'   => $_result,
 			'step'     => $_step,
 			'messages' => $messages
 		) );
+
 		exit();
 
 
@@ -1823,5 +1908,43 @@ class rijksreleasekalender_Admin {
   
 	
 	
+
+	/**
+	 * Schedule Cron job for sync
+	 *
+	 * @since    1.0.0
+	 */
+	public function rijksreleasekalender_schedule_cron_job() {
+		// set default timezone
+		date_default_timezone_set( 'Europe/Amsterdam' );
+
+		// get time option
+		$hour = get_option( $this->option_name . '_cron_time' );
+
+		// get frequency
+		$frequency = get_option( $this->option_name . '_cron_frequency' );
+
+		$current_hour = date( 'G' ); // get hour of current time in 24H notation without leading zero
+		// check if it is already scheduled
+		if ( wp_next_scheduled( 'rijksreleasekalender_create_sync_schedule_hook' ) ) {
+			// it is scheduled, so unschedule it so we can reschedulte it according to the options
+			$timestamp = wp_next_scheduled( 'rijksreleasekalender_create_sync_schedule_hook' );
+			wp_unschedule_event( $timestamp, 'rijksreleasekalender_create_sync_schedule_hook' );
+		}
+
+		// compare if set hour is less than current hour
+		if ( $hour < $current_hour ) {
+			// set time on tomorrow and use hour set in options
+			$timestamp = mktime( $hour, 0, 0, date( "m" ), date( "d" ) + 1, date( "Y" ) );
+		} else {
+			// set time on today and use hour set in options
+			$timestamp = mktime( $hour, 0, 0, date( "m" ), date( "d" ), date( "Y" ) );
+		}
+
+		// schedule it
+		wp_schedule_event( $timestamp, $frequency, 'rijksreleasekalender_create_sync_schedule_hook' );
+
+	}
+
 
 } // end of class
