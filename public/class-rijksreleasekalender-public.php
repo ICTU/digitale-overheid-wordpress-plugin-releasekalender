@@ -1015,7 +1015,8 @@ class rijksreleasekalender_Public {
 
                 // sortering op release ASC
                 if ( count( $value3['listitems'] ) > 1 ) {
-                  natcasesort( $value3['listitems'] );
+//                  natcasesort( $value3['listitems'] );
+                  asort( $value3['listitems'] );
                 }
 
                 foreach ( $value3['listitems'] as $listitem ) {
