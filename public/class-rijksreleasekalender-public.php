@@ -853,7 +853,6 @@ class rijksreleasekalender_Public {
   		$content .= '<div class="programma">' . $programma . '</div>'; 
       $content .= $legenda_kalender;
       $content .= '<div id="kolom12" class="block"><h2 id="omschrijving">' . __('Omschrijving', 'rijksreleasekalender' ) . '</h2>';
-//      $content .= '<p>' . $omschrijving . '</p>';
       $content .= $omschrijving;
       $content .= '<p>' . __('Datum laatste wijziging', 'rijksreleasekalender' ) . ': ' . date_i18n( get_option( 'date_format' ), $programmaargs['global_last_update'] ) . '</p>';
   		$content .= '</div>'; 
@@ -933,8 +932,10 @@ class rijksreleasekalender_Public {
           'context'           => 'get_template_hoofdpagina_kalender'
         );
 
-        $titlekey             = get_the_title( $release_product_real_id );
+        $title                = get_the_title( $release_product_real_id );
+        $titlekey             = strtoupper($title);
         
+        $releases_by_month[$maandsleutel][$dagsleutel][$titlekey]['titel']            = $title;
         $releases_by_month[$maandsleutel][$dagsleutel][$titlekey]['datum']            = $releasedatum;
         $releases_by_month[$maandsleutel][$dagsleutel][$titlekey]['datum_translated'] = date_i18n( get_option( 'date_format' ) . " " . get_option( 'time_format' ), $releasedatum );
         $releases_by_month[$maandsleutel][$dagsleutel][$titlekey]['listitems'][]      = '<a href="' . $this->get_releaseurl($argsforreleaseurl) . '">' . get_the_title() . '</a>';  
@@ -948,9 +949,6 @@ class rijksreleasekalender_Public {
     $releases_query = null;
     wp_reset_postdata();
     //==
-
-//dovardump($releases_by_month);
-//die();
 
     $tijdbalk = '';
     $dejaren  = '';
@@ -1011,7 +1009,7 @@ class rijksreleasekalender_Public {
 
               foreach ( $value2 as $productnaam => $value3 ) {
 
-                $datastring .= '<p>' . $productnaam . '</p><ul>';
+                $datastring .= '<p>' . $value3['titel'] . '</p><ul>';
 
                 // sortering op release ASC
                 if ( count( $value3['listitems'] ) > 1 ) {
@@ -1304,12 +1302,12 @@ class rijksreleasekalender_Public {
       // start day is today
       $start  = strtotime( date('y:m:d') );
       
-      
-      // Select the upcoming releases for the x few days
+      // Select the upcoming x releases
       $releases_query_args = array(
         'post_type'       => 'releases',
         'order'           => 'ASC',					
-        'orderby'         => 'meta_value title',					
+//        'orderby'         => 'meta_value title',					
+        'orderby'         => 'meta_value',					
         'posts_per_page'  => $max_items_in_widget,
         'meta_key'        => 'release_releasedatum_translated',
         'meta_query'      => array(
