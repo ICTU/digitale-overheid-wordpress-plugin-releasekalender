@@ -1205,13 +1205,14 @@ class rijksreleasekalender_Admin {
 							);
 
 							$product_productmanager = array(
-								'id'          => $product->productmanager->id,
-								'naam'        => $product->productmanager->naam,
+								'id'        => isset( $product->productmanager->id ) ? $product->productmanager->id : '',
+								'naam'        => isset( $product->productmanager->naam ) ? $product->productmanager->naam : '',
 								'organisatie' => array(
-									'id'      => $product->productmanager->organisatie->id,
-									'naam'    => $product->productmanager->organisatie->naam,
-									'website' => $product->productmanager->organisatie->website,
-									'updated' => $product->productmanager->organisatie->updated
+  								'id'        => isset( $product->productmanager->organisatie->id ) ? $product->productmanager->organisatie->id : '',
+  								'naam'      => isset( $product->productmanager->organisatie->naam ) ? $product->productmanager->organisatie->naam : '',
+  								'website'   => isset( $product->productmanager->organisatie->website ) ? $product->productmanager->organisatie->website : '',
+  								'updated'   => isset( $product->productmanager->organisatie->updated ) ? $product->productmanager->organisatie->updated : '',
+
 								),
 							);
 
@@ -1226,17 +1227,17 @@ class rijksreleasekalender_Admin {
 								)
 							);
 							$product_opdrachtgever         = array(
-								'id'      => $product->opdrachtgever->id,
-								'naam'    => $product->opdrachtgever->naam,
-								'website' => $product->opdrachtgever->website,
-								'updated' => $product->opdrachtgever->updated
+								'id'      => isset( $product->opdrachtgever->id ) ? $product->opdrachtgever->id : '',
+								'naam'    => isset( $product->opdrachtgever->naam ) ? $product->opdrachtgever->naam : '',
+								'website' => isset( $product->opdrachtgever->website ) ? $product->opdrachtgever->website : '',
+								'updated' => isset( $product->opdrachtgever->updated ) ? $product->opdrachtgever->updated : '',
 							);
 
 							$product_aanbieder = array(
-								'id'      => $product->aanbieder->id,
-								'naam'    => $product->aanbieder->naam,
-								'website' => $product->aanbieder->website,
-								'updated' => $product->aanbieder->updated
+								'id'      => isset( $product->aanbieder->id ) ? $product->aanbieder->id : '',
+								'naam'    => isset( $product->aanbieder->naam ) ? $product->aanbieder->naam : '',
+								'website' => isset( $product->aanbieder->website ) ? $product->aanbieder->website : '',
+								'updated' => isset( $product->aanbieder->updated ) ? $product->aanbieder->updated : '',
 							);
 							// multiple producttypen may exist
 							$product_producttypen = array();
@@ -1392,9 +1393,9 @@ class rijksreleasekalender_Admin {
 								);
 
 								$release_release_marge = array(
-									'id'           => $release->releaseMarge->id,
-									'label'        => $release->releaseMarge->label,
-									'numericValue' => $release->releaseMarge->numericValue
+  								'id'            => isset( $release->releaseMarge->id ) ? $release->releaseMarge->id : '',
+  								'label'         => isset( $release->releaseMarge->label ) ? $release->releaseMarge->label : '',
+  								'numericValue'  => isset( $release->releaseMarge->numericValue ) ? $release->releaseMarge->numericValue : '',
 								);
 
 
@@ -1462,9 +1463,9 @@ class rijksreleasekalender_Admin {
 							);
 
 							$release_release_marge = array(
-								'id'           => $release->releaseMarge->id,
-								'label'        => $release->releaseMarge->label,
-								'numericValue' => $release->releaseMarge->numericValue
+								'id'            => isset( $release->releaseMarge->id ) ? $release->releaseMarge->id : '',
+								'label'         => isset( $release->releaseMarge->label ) ? $release->releaseMarge->label : '',
+								'numericValue'  => isset( $release->releaseMarge->numericValue ) ? $release->releaseMarge->numericValue : '',
 							);
 							
 							// add all fields to array
@@ -1651,6 +1652,8 @@ class rijksreleasekalender_Admin {
 		if ( 5 == $_step ) {
 			$_result    = 'done';
 			$messages[] = '<h2 style="background: green; color: white;">' . date('H:i:s') . ' - ' . __( 'Sync klaar!', 'rijksreleasekalender' ) . '</h2>';
+//			$messages[] = '<h2 style="background: green; color: white;">' . date('H:i:s') . ' - ' . __( 'Sync klaar!', 'rijksreleasekalender' ) . '</h2>' . '<p>CRON:</p><pre>' . print_r( _get_cron_array(), true )  . '</pre>';
+			
 		} else {
 			$_result = $_step;
 		}
@@ -1874,8 +1877,9 @@ class rijksreleasekalender_Admin {
 	 */
 	public function get_real_id_and_slug( $post_id = 0, $post_type = '', $key_id = '' ) {
 		
-		$arrreturn = array();
-		$arrreturn['id'] = '';
+		$arrreturn          = array();
+		$arrreturn['id']    = '';
+		$arrreturn['slug']  = '';
 		
 		if ( $post_id && $post_type && $key_id ) {
 			
