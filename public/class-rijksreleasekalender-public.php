@@ -1491,7 +1491,7 @@ class rijksreleasekalender_Public {
         				0 => 'page',
         			),
         			'taxonomy' => $dossiers,
-        			'min' => 1,
+        			'min' => 0,
         			'max' => 1,
         			'filters' => array (
         				0 => 'search',
@@ -1503,9 +1503,8 @@ class rijksreleasekalender_Public {
         			'label' => 'Selecteer de pagina met planningsinformatie',
         			'name' => 'releasekalender_link_voorziening_aan_planningspagina',
         			'type' => 'relationship',
-        			'instructions' => 'Selecteer een pagina met planningsinformatie uit een dossier. 
-        Maximaal 1 pagina.',
-        			'required' => 1,
+        			'instructions' => 'Selecteer een pagina met planningsinformatie uit een dossier. Maximaal 1 pagina.',
+        			'required' => 0,
         			'conditional_logic' => 0,
         			'wrapper' => array (
         				'width' => '',
