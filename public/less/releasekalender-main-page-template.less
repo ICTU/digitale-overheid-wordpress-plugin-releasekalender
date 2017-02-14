@@ -12,8 +12,47 @@
  * ----------------------------------------------------------------------------------
  */
 
+
+
 @import 'mixins.less';
 
-h2 {
-//  border-bottom: 2px solid yellow !important;
+
+@import 'releasekalender.less';
+@import 'rk-eoverheid.less';
+
+.rk-bouwsteen {
+  position: relative;
+}
+.programma,
+.tijdbalk {
+  overflow: hidden;
+}
+
+#releasekalenderoutput {
+  ul.legenda,
+  .tijdbalk ul,
+  .programma ul {
+    li:before {
+      content: '';
+      display: none;
+    }
+  }
+  .burp {
+    tralala: nada;
+  }
+}
+
+.releasekalender-kalender-widget {
+  overflow: hidden;
+  li {
+//    border: 1px solid red;
+    margin-bottom: 1em;
+  }
+  p {
+    margin: 0;
+    line-height: 1.4;
+    &.details {
+      color: @grijs_6;
+    }
+  }
 }

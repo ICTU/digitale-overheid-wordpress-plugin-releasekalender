@@ -1,1 +1,709 @@
+@charset "UTF-8";
+/*
+ * ----------------------------------------------------------------------------------
+ * ICTU / WP Stelselplaat plugin - releasekalender-main-page-template.less
+ * ----------------------------------------------------------------------------------
+ * Description:   CSS-file for releasekalender-main-page-template template
+ * Version:       1.0.1
+ * Version desc:  First version
+ * Author:        Paul van Buuren
+ * Author URI:    https://wbvb.nl
+ * License:       GPL-2.0+
+ * ----------------------------------------------------------------------------------
+ */
+/*
+ * ----------------------------------------------------------------------------------
+ * ICTU / WP Stelselplaat plugin - mixins.less
+ * ----------------------------------------------------------------------------------
+ * Description:   Mixins, settings, colors 
+ * Version:       1.0.1
+ * Version desc:  Oplevering. Dossierlink toegevoegd. 
+ * Author:        Paul van Buuren
+ * Author URI:    https://wbvb.nl
+ * License:       GPL-2.0+
+ * @link          http://wbvb.nl/themes/wp-rijkshuisstijl/
+ * ----------------------------------------------------------------------------------
+ */
+.page-template-releasekalender-main-page-template .entry-content h2 {
+  margin-top: 1em;
+}
+.page-template-releasekalender-main-page-template .entry-content h3 {
+  margin-top: .2em;
+}
+#releasekalenderoutput {
+  /* Tijdbalk */
+  /*
+   * Kalender
+   */
+  /* rss knop */
+  /* Social sharing */
+  /*
+   * Tijdbalk controls
+   */
+}
+#releasekalenderoutput .programma {
+  margin-bottom: 1px;
+  overflow: hidden;
+  background: #dfe6e1;
+  margin: 0 -25px 25px;
+}
+#releasekalenderoutput .unit .programma {
+  margin-right: 20px;
+}
+#releasekalenderoutput .thema .programma {
+  background: transparent;
+}
+#releasekalenderoutput .programma > h3 {
+  color: #fff;
+  padding: 10px;
+  position: relative;
+  margin: 0;
+}
+#releasekalenderoutput .programma > h3 .harmonica {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin: -5px 10px 0 0;
+  background-image: url('../images/back-and-forth.png');
+  vertical-align: bottom;
+  cursor: pointer;
+  float: none;
+}
+#releasekalenderoutput .programma > h3 a {
+  color: #fff;
+  font-size: .8em;
+  display: block;
+  float: right;
+  font-weight: normal;
+  margin-top: 2px;
+}
+#releasekalenderoutput .programma + * > p {
+  background: white;
+  z-index: 999;
+  position: relative;
+}
+#releasekalenderoutput abbr {
+  cursor: help;
+}
+#releasekalenderoutput a abbr {
+  cursor: pointer;
+}
+#releasekalenderoutput .programma > ul {
+  padding-top: 15px;
+  overflow: hidden;
+}
+#releasekalenderoutput .programma > ul > li {
+  padding: 0;
+  background: #becdc3;
+  margin: 0 -20px 20px 0;
+  height: 54px;
+  border-top: 1px solid #275937;
+}
+#releasekalenderoutput .programma > ul > li > a {
+  margin: -11px 0 0;
+  font-weight: bold;
+  color: white;
+  padding: 2px 10px;
+  height: 17px;
+  background: #275937;
+}
+#releasekalenderoutput .programma > ul > li > a:hover,
+#releasekalenderoutput .programma > ul > li > a:focus {
+  text-decoration: none;
+  color: #fff;
+  background: #000 !important;
+}
+#releasekalenderoutput .programma li li {
+  /* Fallback for web browsers that doesn't support RGBA */
+  background: #becdc3;
+  background: rgba(190, 205, 195, 0.8);
+  position: absolute;
+  display: block;
+  margin: 7px 0;
+  line-height: .95em;
+  padding: 2px 5px;
+  z-index: 99;
+  border-left: 14px solid #000;
+}
+#releasekalenderoutput .legenda {
+  position: absolute;
+  right: 10px;
+  margin-top: -80px;
+  background: #dfe6e1;
+  padding: 2px 10px;
+  border: 1px solid #275937;
+  z-index: 9999;
+}
+#releasekalenderoutput .legenda li {
+  margin: 7px 0;
+  line-height: .95em;
+  padding: 2px 5px;
+  border-left: 14px solid #000;
+  background: none;
+  font-size: .9em;
+}
+#releasekalenderoutput .programma li li:hover,
+#releasekalenderoutput .programma li li:focus {
+  z-index: 999;
+}
+#releasekalenderoutput .programma li li span,
+#releasekalenderoutput .programma li li em {
+  color: #333;
+  font-style: italic;
+  font-size: .8em;
+  padding: 2px 0;
+}
+#releasekalenderoutput .programma li li a:hover + span,
+#releasekalenderoutput .programma li li:hover span,
+#releasekalenderoutput .programma li li a:focus + span,
+#releasekalenderoutput .programma li li a:hover + span + em,
+#releasekalenderoutput .programma li li:hover em,
+#releasekalenderoutput .programma li li a:focus + span + em {
+  /*display: block !important;*/
+}
+#releasekalenderoutput .programma li li a {
+  color: #000;
+  white-space: pre;
+}
+#releasekalenderoutput .vervallen {
+  text-decoration: line-through !important;
+  border-color: #666 !important;
+  color: #333 !important;
+}
+#releasekalenderoutput .vervallen a {
+  color: #333 !important;
+}
+#releasekalenderoutput .gerealiseerd {
+  border-color: #39870C !important;
+}
+#releasekalenderoutput .waarschuwing {
+  border: none !important;
+}
+#releasekalenderoutput .waarschuwing a {
+  padding-left: 22px;
+  background: url('../images/message_info.png') left no-repeat !important;
+  margin-left: -10px;
+}
+#releasekalenderoutput .legenda .waarschuwing {
+  padding-left: 22px;
+  background: url('../images/message_info.png') left no-repeat !important;
+  margin-left: -3px;
+}
+#releasekalenderoutput .waarschuwing a + span,
+#releasekalenderoutput .waarschuwing a + span + em {
+  margin-left: 12px;
+}
+#releasekalenderoutput .tijdbalk {
+  background: #becdc3;
+  position: relative;
+  z-index: 9;
+  top: 10px;
+  left: 0;
+  height: 41px;
+  overflow: hidden;
+  margin: 0 -5px 10px -25px;
+}
+#releasekalenderoutput .unit .tijdbalk {
+  margin: 0 20px 10px 0;
+}
+#releasekalenderoutput .tijdbalk > ul {
+  width: 15000%;
+  position: absolute;
+  top: 4px;
+  padding: 0;
+  cursor: move;
+  left: 0;
+  margin-left: 34px;
+  text-align: center;
+}
+#releasekalenderoutput .tijdbalk li {
+  width: 206px;
+  float: left;
+  margin: 0;
+  padding: 0;
+  background: #fff none;
+  border-left: 2px solid #becdc3;
+}
+#releasekalenderoutput .tijdbalk li:first-child {
+  border-left: none;
+}
+#releasekalenderoutput .tijdbalk > ul > li {
+  border-left-width: 4px;
+}
+#releasekalenderoutput .tijdbalk ul ul {
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid #becdc3;
+}
+#releasekalenderoutput .tijdbalk li li {
+  width: 50px;
+  font-size: .75em;
+}
+#releasekalenderoutput .tijdbalk.sticky {
+  position: fixed;
+  top: 0;
+  margin: 0;
+  box-shadow: 0 0 25px #333;
+  z-index: 100;
+}
+#releasekalenderoutput .tijdbalk.sticky ul {
+  position: relative;
+}
+#releasekalenderoutput .nu {
+  width: 1px;
+  text-align: right;
+  background: #275937;
+  position: absolute;
+  top: 0;
+  box-shadow: 0 0 1px #000;
+  height: 100%;
+  z-index: 10;
+}
+#releasekalenderoutput .unit .nu {
+  margin-top: -35px;
+}
+#releasekalenderoutput .nu p {
+  position: absolute;
+  white-space: pre;
+  background: #275937;
+  padding: 2px 5px;
+  text-align: left;
+  color: white;
+  top: 100px;
+}
+#releasekalenderoutput .unit .nu p {
+  top: 0;
+}
+#releasekalenderoutput .kalender .unit {
+  width: 22.75%;
+  padding: 1%;
+  border: 1px solid #e5e5e5;
+  border-width: 0 1px;
+  margin-right: -1px;
+  /*min-height: 20em !important;*/
+}
+#releasekalenderoutput .kalender .unit p {
+  margin: 0;
+}
+#releasekalenderoutput .kalender .unit ul {
+  margin: 0 0 1em 0;
+}
+#releasekalenderoutput .kalender .unit ul li {
+  line-height: 1.2;
+  margin: .25em 0 .75em 0;
+}
+#releasekalenderoutput .kalender .unit ul li:before {
+  top: 5px;
+}
+#releasekalenderoutput .kalender .prev,
+#releasekalenderoutput .kalender .next {
+  float: left;
+  display: block;
+  width: 5%;
+  padding: 1%;
+}
+#releasekalenderoutput .kalender .unit h3 {
+  margin-bottom: 1.4em !important;
+}
+#releasekalenderoutput .more .rss,
+#releasekalenderoutput h2 + .rss {
+  background: url(skin/icons.png) 0 -73px no-repeat;
+  height: 11px;
+  padding-left: 13px;
+  float: right;
+  font-weight: normal;
+}
+#releasekalenderoutput h2 + .rss {
+  margin: -2.25em 20px 0 0;
+}
+#releasekalenderoutput .more .rss {
+  padding-right: 16px;
+  margin-top: 2px;
+  height: 16px;
+}
+#releasekalenderoutput .toolbox .rss {
+  background: url(skin/icons.png) 0 -73px no-repeat;
+}
+#releasekalenderoutput .social {
+  border: 1px solid #CCC;
+  float: right;
+  margin: 0;
+  padding: 4px 10px 0px 10px;
+  text-align: right;
+  width: auto;
+  line-height: 20px;
+}
+#releasekalenderoutput .social img {
+  margin: 0 0 -3px 0;
+}
+#releasekalenderoutput .tijdbalk > a {
+  position: absolute;
+  top: 5px;
+  z-index: 9;
+  width: 0;
+  padding: 0 0 0 15px;
+  overflow: hidden;
+  height: 30px;
+  background-image: url('../images/back-and-forth.png');
+}
+#releasekalenderoutput .tijdbalk .eerder {
+  left: 5px;
+  background-position: top left;
+  border-right: 5px solid #fff;
+}
+#releasekalenderoutput .tijdbalk .eerder:hover,
+#releasekalenderoutput .tijdbalk .eerder:focus {
+  background-position: bottom left;
+}
+#releasekalenderoutput .tijdbalk .later {
+  right: 5px;
+  background-position: top right;
+  border-left: 5px solid #fff;
+}
+#releasekalenderoutput .tijdbalk .later:hover,
+#releasekalenderoutput .tijdbalk .later:focus {
+  background-position: bottom right;
+}
+#releasekalenderoutput .back_to_top {
+  width: 100%;
+  clear: both;
+}
+/* CSS Document */
+/* Stylesheet to correct releasekalender.css for the eoverheidheid theme,
+since it is built for the Rijkshuisstijl theme */
+#releasekalenderoutput {
+  /* Overrides for releasekalender landing page */
+  /* Overrides for releasekalender bouwsteen detail page */
+  /** + selector is CSS2 but not supported by Chrome: http://css-tricks.com/webkit-sibling-bug/
+   * Therefore the ~ is also included, however this is CSS3 only, so + selector cannot be removed
+   */
+  /* Overrides for kalender page */
+  /* Toolbox with links */
+  /* External links */
+  /* Breadcrumb position */
+  /* Fix position absolute issue for the .moduletablesocial img */
+}
+#releasekalenderoutput .rk-overview #page ul,
+#releasekalenderoutput .rk-overview ul,
+#releasekalenderoutput .rk-bouwsteen ul,
+#releasekalenderoutput .rk-product ul,
+#releasekalenderoutput .rk-kalender ul {
+  line-height: 1.6;
+  list-style: none;
+  margin-left: 0;
+  margin-bottom: 1.5125em;
+  padding-bottom: 0;
+}
+#releasekalenderoutput .rk-bouwsteen ul a,
+#releasekalenderoutput .rk-bouwsteen ul a:link,
+#releasekalenderoutput .rk-overview ul a,
+#releasekalenderoutput .rk-overview ul a:link {
+  text-decoration: none;
+}
+#releasekalenderoutput .rk-bouwsteen ul a:hover,
+#releasekalenderoutput .rk-overview ul a:hover {
+  text-decoration: underline;
+}
+#releasekalenderoutput .unit {
+  float: left;
+}
+#releasekalenderoutput .last_unit {
+  float: none;
+  overflow: hidden;
+  width: auto;
+}
+#releasekalenderoutput .size12 {
+  width: 50%;
+}
+#releasekalenderoutput .rk-overview .moduletable-rk-links ul.list li {
+  background: none;
+  font-size: 1em;
+  padding-left: 0;
+}
+#releasekalenderoutput .rk-changes ul.list a,
+#releasekalenderoutput .rk-changes ul.list a:link .rk-changes ul.list a:visited,
+#releasekalenderoutput .rk-overview .moduletable-rk-links ul.list a,
+#releasekalenderoutput .rk-overview .moduletable-rk-links ul.list a:link .rk-overview .moduletable-rk-links ul.list a:visited {
+  text-decoration: underline;
+}
+#releasekalenderoutput .rk-changes ul.list a:hover,
+#releasekalenderoutput .rk-overview .moduletable-rk-links ul.list a:hover {
+  text-decoration: none;
+}
+#releasekalenderoutput .rk-overview .moduletable-rk-links h2 {
+  padding: 0;
+}
+#releasekalenderoutput .rk-changes .details,
+#releasekalenderoutput .rk-overview .details {
+  color: #535353;
+}
+#releasekalenderoutput .rk-overview ul li.more {
+  font-weight: bold;
+}
+#releasekalenderoutput .more .rss,
+#releasekalenderoutput h2 + .rss {
+  font-size: 0.625em;
+  line-height: 1.5;
+  text-decoration: none;
+}
+#releasekalenderoutput .more .rss:hover,
+#releasekalenderoutput h2 + .rss:hover {
+  text-decoration: underline;
+}
+#releasekalenderoutput .more .rss {
+  font-size: 0.9em;
+}
+#releasekalenderoutput .nu {
+  display: none;
+}
+#releasekalenderoutput .rk-bouwsteen .tijdbalk {
+  display: none;
+  /* Will be revealed with script-styles */
+  margin-left: 0;
+  /* correct for margin in shadow divs */
+  margin-right: 0;
+}
+#releasekalenderoutput .tijdbalk.sticky {
+  width: 940px;
+}
+#releasekalenderoutput .rk-bouwsteen .tijdbalk ul {
+  list-style: none;
+  font-size: 1.1em;
+}
+#releasekalenderoutput .rk-bouwsteen .tijdbalk ul li {
+  font-size: 0.625em;
+}
+#releasekalenderoutput .rk-bouwsteen .tijdbalk ul li li {
+  font-size: 0.75em;
+}
+#releasekalenderoutput .rk-bouwsteen .tijdbalk .eerder {
+  border-right: none;
+}
+#releasekalenderoutput .rk-bouwsteen .tijdbalk .later {
+  border-left: none;
+}
+#releasekalenderoutput .rk-bouwsteen .programma {
+  font-size: 0.625em;
+  margin-left: 0;
+  /* correct for margin in shadow divs */
+  margin-right: 0;
+  margin-bottom: 10em;
+  overflow: visible;
+}
+#releasekalenderoutput .rk-bouwsteen .programma ul {
+  font-size: 1.1em;
+  list-style: none;
+  margin-bottom: 2.2em;
+  padding-left: 0;
+  position: relative;
+  /* With this property the overflow hidden still seems to be buggy when tabbing */
+  line-height: 1.5;
+  padding-right: 0px;
+}
+#releasekalenderoutput .rk-bouwsteen .programma ul li {
+  font-size: 1em;
+}
+#releasekalenderoutput .rk-bouwsteen .programma > ul > li {
+  height: auto;
+  margin-right: 0;
+}
+#releasekalenderoutput .rk-bouwsteen .programma ul li li {
+  position: static;
+  /* pos absolute with script-styles */
+}
+#releasekalenderoutput em.afhankelijkheid,
+#releasekalenderoutput span.status {
+  display: block;
+}
+#releasekalenderoutput .programma li li span.status span {
+  font-size: 1em;
+}
+#releasekalenderoutput em.afhankelijkheid,
+#releasekalenderoutput span.status {
+  position: absolute;
+  left: -1000em;
+  top: -1000em;
+}
+#releasekalenderoutput .programma li li a:hover + span,
+#releasekalenderoutput .programma li li a:focus + span,
+#releasekalenderoutput .programma li li:hover span,
+#releasekalenderoutput .programma li li a:hover + span + em,
+#releasekalenderoutput .programma li li a:focus + span + em,
+#releasekalenderoutput .programma li li:hover em {
+  position: static;
+}
+#releasekalenderoutput .programma li li em {
+  margin-left: 12px;
+}
+#releasekalenderoutput .rk-bouwsteen .legenda li {
+  font-size: 0.625em;
+  line-height: 0.95em;
+}
+#releasekalenderoutput .rk-product ul li p {
+  font-size: 1em;
+}
+#releasekalenderoutput #container .rk-product .moduletablelinks.gridblocktwee ul li {
+  margin-left: 0;
+}
+#releasekalenderoutput .rk-kalender p,
+#releasekalenderoutput .rk-kalender li,
+#releasekalenderoutput .rk-kalender h3,
+#releasekalenderoutput .rk-kalender h4 {
+  font-size: 0.75rem;
+}
+#releasekalenderoutput .rk-kalender h3.sticky {
+  background: #ffffff;
+  position: fixed;
+  top: 0;
+  margin: 0 -9px;
+  padding: 5px 19px;
+}
+#releasekalenderoutput .visual {
+  background-color: #dfe6e1;
+}
+#releasekalenderoutput .rk-kalender .row {
+  margin-bottom: 2.2em;
+  clear: both;
+  overflow: hidden;
+}
+#releasekalenderoutput .rk-kalender .prev,
+#releasekalenderoutput .rk-kalender .next {
+  font-size: 0.625em;
+  text-decoration: none;
+}
+#releasekalenderoutput .rk-kalender .next {
+  float: right;
+}
+#releasekalenderoutput .rk-kalender ul a {
+  text-decoration: none;
+}
+#releasekalenderoutput .rk-kalender ul a:hover,
+#releasekalenderoutput .rk-kalender .prev:hover,
+#releasekalenderoutput .rk-kalender .next:hover {
+  text-decoration: underline;
+}
+#releasekalenderoutput .rk-kalender .months {
+  float: left;
+  min-height: 20em;
+  overflow: hidden;
+  position: relative;
+}
+#releasekalenderoutput .rk-kalender .unitcontainer {
+  position: absolute;
+  width: 99999%;
+}
+#releasekalenderoutput a.disabled,
+#releasekalenderoutput a.disabled:link,
+#releasekalenderoutput a.disabled:visited {
+  color: #cccccc;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+#releasekalenderoutput .rk-kalender a.disabled:hover,
+#releasekalenderoutput a.disabled:hover {
+  text-decoration: none;
+}
+#releasekalenderoutput .rk-bouwsteen .moduletablesocial img,
+#releasekalenderoutput .rk-product .moduletablesocial img {
+  position: static;
+}
+#releasekalenderoutput #page .toolbox,
+#releasekalenderoutput .toolbox {
+  border: 1px solid #cccccc;
+  margin-right: 20px;
+  padding: 4px 10px 2px;
+}
+#releasekalenderoutput .toolbox a,
+#releasekalenderoutput .toolbox a:link {
+  background-image: url("skin/icons.png");
+  background-repeat: no-repeat;
+  height: 11px;
+  padding-left: 16px;
+  width: 12px;
+}
+#releasekalenderoutput .toolbox a:hover {
+  text-decoration: none;
+}
+#releasekalenderoutput .toolbox a.document {
+  background-position: left -221px;
+}
+#releasekalenderoutput .external li {
+  background: url('../images/directpijl.gif') no-repeat scroll -1px -3px transparent;
+  margin-bottom: 0.5em;
+  padding-left: 11px;
+}
+#releasekalenderoutput .rk-product #breadcrumb,
+#releasekalenderoutput .rk-bouwsteen #breadcrumb,
+#releasekalenderoutput .rk-kalender #breadcrumb {
+  width: auto;
+}
+#releasekalenderoutput .rk-kalender .moduletablesocial img {
+  position: static;
+}
+#releasekalenderoutput .legenda {
+  margin-top: -110px;
+}
+#releasekalenderoutput .rk-overview #breadcrumb,
+#releasekalenderoutput .rk-bouwsteen #breadcrumb,
+#releasekalenderoutput .rk-product #breadcrumb,
+#releasekalenderoutput .rk-kalender #breadcrumb {
+  margin-left: 0;
+}
+#releasekalenderoutput .kalender .prev,
+#releasekalenderoutput .kalender .next {
+  width: 12%;
+}
+@media (min-width: 600px) {
+  #releasekalenderoutput .kalender .prev,
+  #releasekalenderoutput .kalender .next {
+    width: 5%;
+  }
+  #releasekalenderoutput .gridblocktwee {
+    width: 49%;
+    padding-right: 1em;
+    float: left;
+  }
+}
+@media (min-width: 768px) {
+  #releasekalenderoutput .legenda {
+    margin-top: -5em;
+  }
+  #releasekalenderoutput .rk-bouwsteen .programma {
+    margin-bottom: 7em;
+  }
+}
+@media print {
+  #releasekalenderoutput .rk-overview #kolom3 {
+    display: block;
+  }
+}
+.rk-bouwsteen {
+  position: relative;
+}
+.programma,
+.tijdbalk {
+  overflow: hidden;
+}
+#releasekalenderoutput ul.legenda li:before,
+#releasekalenderoutput .tijdbalk ul li:before,
+#releasekalenderoutput .programma ul li:before {
+  content: '';
+  display: none;
+}
+#releasekalenderoutput .burp {
+  tralala: nada;
+}
+.releasekalender-kalender-widget {
+  overflow: hidden;
+}
+.releasekalender-kalender-widget li {
+  margin-bottom: 1em;
+}
+.releasekalender-kalender-widget p {
+  margin: 0;
+  line-height: 1.4;
+}
+.releasekalender-kalender-widget p.details {
+  color: #696969;
+}
 /*# sourceMappingURL=releasekalender-main-page-template.css.map */
