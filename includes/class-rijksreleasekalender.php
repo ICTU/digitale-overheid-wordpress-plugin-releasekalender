@@ -168,6 +168,8 @@ class rijksreleasekalender {
 		$this->loader->add_action( 'wp_ajax_rrk_do_sync', $plugin_admin, 'rijksreleasekalender_do_sync' );
 
 
+		// Add new cron schedule
+		$this->loader->add_filter('cron_schedules', $plugin_admin, 'rijksreleasekalender_add_cron_schedule');
 		// Register Cron job according to settings.
 		$this->loader->add_action( 'init', $plugin_admin, 'rijksreleasekalender_schedule_cron_job' );
 		// Hook the sync method, into the action rijksreleasekalender_create_sync_schedule_hook
