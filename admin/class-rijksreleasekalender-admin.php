@@ -1687,7 +1687,7 @@ class rijksreleasekalender_Admin {
 				// todo save log as CPT / and or email
 				// now just email as test
 				$body = implode( '<br />', $messages );
-				wp_mail( $to, $subject, $body, $headers );
+				// wp_mail( $to, $subject, $body, $headers );
 
 				// if we're done, we're done
 				if ( 5 == $_step ) {
