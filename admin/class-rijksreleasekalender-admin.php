@@ -625,8 +625,8 @@ class rijksreleasekalender_Admin {
 
 		add_submenu_page(
 			$this->plugin_name,
-			__( 'Releasekalender', 'rijksreleasekalender' ),
-			__( 'Releasekalender', 'rijksreleasekalender' ),
+			__( 'Releasekalender - synchroniseren', 'rijksreleasekalender' ),
+			__( 'Synchroniseren', 'rijksreleasekalender' ),
 			'manage_options',
 			$this->plugin_name,
 			array( $this, 'rijksreleasekalender_main_page' )
@@ -634,7 +634,7 @@ class rijksreleasekalender_Admin {
 
 		add_submenu_page(
 			$this->plugin_name,
-			__( 'Releasekalender instellingen', 'rijksreleasekalender' ),
+			__( 'Releasekalender - instellingen', 'rijksreleasekalender' ),
 			__( 'Instellingen', 'rijksreleasekalender' ),
 			'manage_options',
 			$this->plugin_name . '-instellingen',
@@ -881,6 +881,9 @@ class rijksreleasekalender_Admin {
 			$_step = intval( $_POST[ 'step' ] );
 		}
 
+		// check these post statuses when checking if post exists
+		$check_post_status = array( 'publish', 'pending', 'draft', 'future', 'private' );
+
 		if ( defined( 'DOING_CRON' ) ) {
 			// get email from settings
 			$email = get_option( $this->option_name . '_cron_email' );
@@ -922,23 +925,26 @@ class rijksreleasekalender_Admin {
 							'comment_status' => 'closed',
 							'ping_status'    => 'closed'
 						);
+
 						// check if post already exists
 						// check for voorziening ID, since this is (or should be) fixed.
 
-						// todo make a function of this
 						$voorz_query_args = array(
-							'post_type'  => $post_type,
-							'meta_key'   => 'voorziening_id',
-							'meta_value' => $voorziening->id
+							'post_type'   => $post_type,
+							'post_status' => $check_post_status,
+							'meta_key'    => 'voorziening_id',
+							'meta_value'  => $voorziening->id
 						);
-						$voorz_query      = new WP_Query( $voorz_query_args );
+
+						$voorz_query = new WP_Query( $voorz_query_args );
 
 						if ( $voorz_query->have_posts() ) {
+
 							// post exists
 							$voorz_query->the_post();
 							// store ID for future use
 							$voorziening_post_id = get_the_ID();
-							$messages[]          = date( 'H:i:s' ) . ' - ' . __( 'Voorziening gevonden met id: ', 'rijksreleasekalender' ) .
+							$messages[]          = date( 'H:i:s' ) . ' - ' . __( 'Voorziening gevonden met voorziening_id: ', 'rijksreleasekalender' ) .
 							                       $voorziening->id .
 							                       ' (post_id: ' . $voorziening_post_id . ') ' .
 							                       __( 'en titel: ', 'rijksreleasekalender' ) .
@@ -1045,21 +1051,25 @@ class rijksreleasekalender_Admin {
 								$messages[] = date( 'H:i:s' ) . ' - ' . __( 'FOUT - Voorziening niet tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $voorziening_post_id;
 								$continue   = false;
 							}
-						}
-						if ( $continue ) {
-							// we may save the new data.
-							$result = $this->rijksreleasekalender_update_post( $voorziening_post_id, $post_type, $post_array );
-							if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
-								$messages[] = date( 'H:i:s' ) . ' - ' . __( 'Voorziening bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
-								// remove temp meta fields
+							if ( $continue ) {
+								// we may save the new data.
+								$result = $this->rijksreleasekalender_update_post( $voorziening_post_id, $post_type, $post_array );
+								if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
+									$messages[] = date( 'H:i:s' ) . ' - ' . __( 'Voorziening bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
+									// remove temp meta fields
+									$messages[] = $this->rijksreleasekalender_delete_post_meta( $voorziening_post_id, 'temp_post_array' );
+								} else {
+									$messages[] = $result->get_error_message();
+								}
+
+
+							} else {
+								// only remove the temp meta fields
 								$messages[] = $this->rijksreleasekalender_delete_post_meta( $voorziening_post_id, 'temp_post_array' );
-
 							}
-
-						} else {
-							// only remove the temp meta fields
-							$messages[] = $this->rijksreleasekalender_delete_post_meta( $voorziening_post_id, 'temp_post_array' );
 						}
+
+
 					}
 				} else {
 					$messages[] = date( 'H:i:s' ) . ' - ' . __( 'Geen voorzieningen gevonden...', 'rijksreleasekalender' );
@@ -1091,16 +1101,18 @@ class rijksreleasekalender_Admin {
 							'comment_status' => 'closed',
 							'ping_status'    => 'closed'
 						);
+
 						// check if post already exists
 						// check for product ID, since this is (or should be) fixed.
 
-						// todo make a function of this
 						$product_query_args = array(
-							'post_type'  => $post_type,
-							'meta_key'   => 'product_id',
-							'meta_value' => $product->id
+							'post_type'   => $post_type,
+							'post_status' => $check_post_status,
+							'meta_key'    => 'product_id',
+							'meta_value'  => $product->id
 						);
-						$prod_query         = new WP_Query( $product_query_args );
+
+						$prod_query = new WP_Query( $product_query_args );
 
 						if ( $prod_query->have_posts() ) {
 							// post exists
@@ -1311,21 +1323,22 @@ class rijksreleasekalender_Admin {
 								$messages[] = date( 'H:i:s' ) . ' - ' . __( 'FOUT - Product niet tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $product_post_id;
 								$continue   = false;
 							}
-						}
-						if ( $continue ) {
-							// we may save the new data.
-							$result = $this->rijksreleasekalender_update_post( $product_post_id, $post_type, $product_post_array );
-							if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
-								$messages[] = date( 'H:i:s' ) . ' - ' . __( 'Product bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
-								// remove temp meta fields
+							if ( $continue ) {
+								// we may save the new data.
+								$result = $this->rijksreleasekalender_update_post( $product_post_id, $post_type, $product_post_array );
+								if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
+									$messages[] = date( 'H:i:s' ) . ' - ' . __( 'Product bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
+									// remove temp meta fields
+									$messages[] = $this->rijksreleasekalender_delete_post_meta( $product_post_id, 'temp_post_array' );
+
+								}
+
+							} else {
+								// only remove the temp meta fields
 								$messages[] = $this->rijksreleasekalender_delete_post_meta( $product_post_id, 'temp_post_array' );
-
 							}
-
-						} else {
-							// only remove the temp meta fields
-							$messages[] = $this->rijksreleasekalender_delete_post_meta( $product_post_id, 'temp_post_array' );
 						}
+
 					}
 				} else {
 					$messages[] = date( 'H:i:s' ) . ' - ' . __( 'Geen producten gevonden...', 'rijksreleasekalender' );
@@ -1365,14 +1378,15 @@ class rijksreleasekalender_Admin {
 							'post_date'      => $postdate,
 							'post_date_gmt'  => get_date_from_gmt( $postdate )
 						);
+
 						// check if post already exists
 						// check for release ID, since this is (or should be) fixed.
 
-						// todo make a function of this
 						$release_query_args = array(
-							'post_type'  => $post_type,
-							'meta_key'   => 'release_id',
-							'meta_value' => $release->id
+							'post_type'   => $post_type,
+							'post_status' => $check_post_status,
+							'meta_key'    => 'release_id',
+							'meta_value'  => $release->id
 						);
 						$rel_query          = new WP_Query( $release_query_args );
 
@@ -1541,21 +1555,22 @@ class rijksreleasekalender_Admin {
 								$messages[] = date( 'H:i:s' ) . ' - ' . __( 'FOUT - Product niet tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $release_post_id;
 								$continue   = false;
 							}
-						}
-						if ( $continue ) {
-							// we may save the new data.
-							$result = $this->rijksreleasekalender_update_post( $release_post_id, $post_type, $release_post_array );
-							if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
-								$messages[] = date( 'H:i:s' ) . ' - ' . __( 'Product bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
-								// remove temp meta fields
+							if ( $continue ) {
+								// we may save the new data.
+								$result = $this->rijksreleasekalender_update_post( $release_post_id, $post_type, $release_post_array );
+								if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
+									$messages[] = date( 'H:i:s' ) . ' - ' . __( 'Product bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
+									// remove temp meta fields
+									$messages[] = $this->rijksreleasekalender_delete_post_meta( $release_post_id, 'temp_post_array' );
+
+								}
+
+							} else {
+								// only remove the temp meta fields
 								$messages[] = $this->rijksreleasekalender_delete_post_meta( $release_post_id, 'temp_post_array' );
-
 							}
-
-						} else {
-							// only remove the temp meta fields
-							$messages[] = $this->rijksreleasekalender_delete_post_meta( $release_post_id, 'temp_post_array' );
 						}
+
 					}
 				} else {
 					$messages[] = date( 'H:i:s' ) . ' - ' . __( 'Geen releases gevonden...', 'rijksreleasekalender' );
@@ -1580,18 +1595,20 @@ class rijksreleasekalender_Admin {
 
 							// check if we can find a release with the data provided
 							$product_query_args = array(
-								'post_type'  => 'releases',
-								'meta_key'   => 'release_id',
-								'meta_value' => $release->release->id
+								'post_type'   => 'releases',
+								'meta_key'    => 'release_id',
+								'post_status' => $check_post_status,
+								'meta_value'  => $release->release->id
 							);
-							$prod_query         = new WP_Query( $product_query_args );
+
+							$prod_query = new WP_Query( $product_query_args );
 
 							if ( $prod_query->have_posts() ) {
 								// release does exist
 								$prod_query->the_post();
 								// store ID for future use
 								$product_post_id = get_the_ID();
-								$messages[]      = date( 'H:i:s' ) . ' - ' . __( '<strong>Afhankelijkheden</strong> Release voor release_id: ', 'rijksreleasekalender' ) .
+								$messages[]      = date( 'H:i:s' ) . ' - ' . __( '<strong>Afspraken</strong> Release voor release_id: ', 'rijksreleasekalender' ) .
 								                   $release->release->id .
 								                   ' (post_id: ' . $product_post_id . ') ' .
 								                   __( 'en titel: ', 'rijksreleasekalender' ) .
@@ -1632,9 +1649,10 @@ class rijksreleasekalender_Admin {
 
 							// check if we can find a release with the data provided
 							$product_query_args = array(
-								'post_type'  => 'releases',
-								'meta_key'   => 'release_id',
-								'meta_value' => $release->release->id
+								'post_type'   => 'releases',
+								'post_status' => $check_post_status,
+								'meta_key'    => 'release_id',
+								'meta_value'  => $release->release->id
 							);
 							$prod_query         = new WP_Query( $product_query_args );
 
@@ -1684,9 +1702,9 @@ class rijksreleasekalender_Admin {
 		if ( defined( 'DOING_CRON' ) ) {
 
 			if ( 5 >= $_step ) {
-				// todo save log as CPT / and or email
+				// todo save log somewhere/somehow
 				// now just email as test
-				$body = implode( '<br />', $messages );
+				// $body = implode( '<br />', $messages );
 				// wp_mail( $to, $subject, $body, $headers );
 
 				// if we're done, we're done
@@ -1718,10 +1736,7 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public
-	function rijksreleasekalender_api_get(
-		$api_parameters
-	) {
+	public function rijksreleasekalender_api_get( $api_parameters ) {
 		$api_url   = get_option( $this->option_name . '_restapi_url' );
 		$username  = get_option( $this->option_name . '_restapi_user' );
 		$password  = get_option( $this->option_name . '_restapi_pwd' );
@@ -1754,10 +1769,7 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public
-	function rijksreleasekalender_count_api_objects(
-		$json_object
-	) {
+	public function rijksreleasekalender_count_api_objects( $json_object ) {
 		$totalcount = $json_object->totalCount;
 
 		return $totalcount;
@@ -1775,16 +1787,13 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public
-	function rijksreleasekalender_update_post(
-		$post_id, $post_type, $all_args
-	) {
+	public function rijksreleasekalender_update_post( $post_id, $post_type, $all_args ) {
 		$post_args = array(
 			'ID'             => $all_args[ 'args' ][ 'ID' ],
 			'post_author'    => $all_args[ 'args' ][ 'post_author' ],
 			'post_content'   => $all_args[ 'args' ][ 'post_content' ],
 			'post_title'     => $all_args[ 'args' ][ 'post_title' ],
-			'post_status'    => get_post_status(),
+			'post_status'    => get_post_status( $post_id ),
 			'post_type'      => $post_type,
 			'comment_status' => 'closed',
 			'ping_status'    => 'closed'
@@ -1880,10 +1889,7 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public
-	function rijksreleasekalender_format_a_date(
-		$datestring = ''
-	) {
+	public function rijksreleasekalender_format_a_date( $datestring = '' ) {
 
 		if ( $datestring ) {
 			$datestring = date( 'Y-m-d H:i:s', strtotime( $datestring ) );
@@ -1904,10 +1910,7 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public
-	function rijksreleasekalender_delete_post_meta(
-		$post_id, $meta_key
-	) {
+	public function rijksreleasekalender_delete_post_meta( $post_id, $meta_key ) {
 		$delete_result = delete_post_meta( $post_id, $meta_key );
 
 		if ( $delete_result ) {
@@ -1929,10 +1932,7 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public
-	function get_real_id_and_slug(
-		$post_id = 0, $post_type = '', $key_id = ''
-	) {
+	public function get_real_id_and_slug( $post_id = 0, $post_type = '', $key_id = '' ) {
 
 		$arrreturn           = array();
 		$arrreturn[ 'id' ]   = '';
@@ -1971,10 +1971,7 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.2
 	 */
-	public
-	function rijksreleasekalender_add_cron_schedule(
-		$schedules
-	) {
+	public function rijksreleasekalender_add_cron_schedule( $schedules ) {
 		$new_schedules = [ 'perminute' => [ 'interval' => 60 ] ];
 
 		return array_merge( $schedules, $new_schedules );
