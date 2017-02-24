@@ -935,6 +935,7 @@ class rijksreleasekalender_Public {
         $title                = get_the_title( $release_product_real_id );
         $titlekey             = strtoupper($title);
         
+        $releases_by_month[$maandsleutel][$dagsleutel]['sortkeys'][$titlekey]         = $titlekey;
         $releases_by_month[$maandsleutel][$dagsleutel][$titlekey]['titel']            = $title;
         $releases_by_month[$maandsleutel][$dagsleutel][$titlekey]['datum']            = $releasedatum;
         $releases_by_month[$maandsleutel][$dagsleutel][$titlekey]['datum_translated'] = date_i18n( get_option( 'date_format' ) . " " . get_option( 'time_format' ), $releasedatum );
@@ -996,22 +997,27 @@ class rijksreleasekalender_Public {
               ksort( $releases_by_month[$maandsleutel] );
             }
 
-            foreach ( $releases_by_month[$maandsleutel] as $member_group_term => $value2 ) {
+            foreach ( $releases_by_month[$maandsleutel] as $member_group_term => $producten_per_datum ) {
               // we lopen nu alle dagen af
+
+              // sortering op productnaam, alfabetisch ASC
+              $sortkeys = $producten_per_datum['sortkeys'];
+              natcasesort( $sortkeys );
 
               // schrijf de dag
               $datastring .= '<h4>' . date_i18n( "j F", $member_group_term ) . '</h4>';
 
-              foreach ( $value2 as $productnaam => $value3 ) {
 
-                $datastring .= '<p>' . $value3['titel'] . '</p><ul>';
+              foreach ( $sortkeys as $sortedkey ) {
 
-                // sortering op release ASC
-                if ( count( $value3['listitems'] ) > 1 ) {
-                  asort( $value3['listitems'] );
+                $datastring .= '<p>' . $producten_per_datum[$sortedkey]['titel'] . '</p><ul>';
+
+                // binnen dit product, sortering op release 
+                if ( count( $producten_per_datum[$sortedkey]['listitems'] ) > 1 ) {
+                  asort( $producten_per_datum[$sortedkey]['listitems'] );
                 }
   
-                foreach ( $value3['listitems'] as $listitem ) {
+                foreach ( $producten_per_datum[$sortedkey]['listitems'] as $listitem ) {
                   $datastring .= '<li>' . $listitem . '</li>';
                 }
                 $datastring .= '</ul>';
