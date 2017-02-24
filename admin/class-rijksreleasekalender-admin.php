@@ -1704,8 +1704,8 @@ class rijksreleasekalender_Admin {
 			if ( 5 >= $_step ) {
 				// todo save log somewhere/somehow
 				// now just email as test
-				// $body = implode( '<br />', $messages );
-				// wp_mail( $to, $subject, $body, $headers );
+        $body = implode( '<br />', $messages );
+        wp_mail( $to, $subject, $body, $headers );
 
 				// if we're done, we're done
 				if ( 5 == $_step ) {
