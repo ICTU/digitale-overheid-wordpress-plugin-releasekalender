@@ -999,11 +999,6 @@ class rijksreleasekalender_Public {
             foreach ( $releases_by_month[$maandsleutel] as $member_group_term => $value2 ) {
               // we lopen nu alle dagen af
 
-              // sortering op productnaam ASC
-              if ( count( $value2 ) > 1 ) {
-                ksort( $value2 );
-              }
-
               // schrijf de dag
               $datastring .= '<h4>' . date_i18n( "j F", $member_group_term ) . '</h4>';
 
@@ -1013,19 +1008,18 @@ class rijksreleasekalender_Public {
 
                 // sortering op release ASC
                 if ( count( $value3['listitems'] ) > 1 ) {
-//                  natcasesort( $value3['listitems'] );
                   asort( $value3['listitems'] );
                 }
-
+  
                 foreach ( $value3['listitems'] as $listitem ) {
                   $datastring .= '<li>' . $listitem . '</li>';
                 }
                 $datastring .= '</ul>';
+
               }
-              
-              
+
               $previousdate = $currentdate;
-              
+
             }
           }
 
@@ -1301,12 +1295,11 @@ class rijksreleasekalender_Public {
       
       // start day is today
       $start  = strtotime( date('y:m:d') );
-      
+
       // Select the upcoming x releases
       $releases_query_args = array(
         'post_type'       => 'releases',
         'order'           => 'ASC',					
-//        'orderby'         => 'meta_value title',					
         'orderby'         => 'meta_value',					
         'posts_per_page'  => $max_items_in_widget,
         'meta_key'        => 'release_releasedatum_translated',
@@ -1327,8 +1320,8 @@ class rijksreleasekalender_Public {
       
       if ( $releases_query->have_posts() ) {
 
-        echo '<ul class="list">';
-        
+        $aankomendereleases = array();
+
         while ($releases_query->have_posts()) : 
           $releases_query->the_post();
         
@@ -1343,7 +1336,14 @@ class rijksreleasekalender_Public {
           $releasedatum               = date_i18n( get_option( 'date_format' ), $releasedatum[0] );
           
           $posturl                    = $url . $release_voorziening . $release_product;
+        
+          $datumstring = '';
+          
+          // array maken met als key: datum en als value een array met als key de naam en value de bijbehorende 
+          // HTML. We gaan deze array later sorteren op value.
+          $huidigearray = array();
 
+          $separator = '__/|\__';
 
           $arguments = array(
             'currenturl'        => $url,
@@ -1354,15 +1354,46 @@ class rijksreleasekalender_Public {
             'context'           => 'write_sidebar_context_widget'
           );
 
-          echo '<li><h4><a href="' . $this->get_releaseurl( $arguments ) . '" data-releasestatus="' . $releasestatus['naam'] . '">';
-          echo get_the_title();
-          echo '</a></h4>';
-          echo '<p>' . $release_product_name['naam'] . '</p>'; 
-          echo '<p class="details">' . $releasedatum . '</p>'; 
-          echo '</li>';
+          $valuehtml = '<li><h4><a href="' . $this->get_releaseurl( $arguments ) . '" data-releasestatus="' . $releasestatus['naam'] . '">';
+          $valuehtml .= get_the_title();
+          $valuehtml .= '</a></h4>';
+          $valuehtml .= '<p>' . $release_product_name['naam'] . '</p>'; 
+          $valuehtml .= '<p class="details">' . $releasedatum . '</p>'; 
+          $valuehtml .= '</li>';
+
+          $value      = get_the_title() . $separator . $valuehtml;
+
+          $key        = get_post_meta( get_the_id(), 'release_releasedatum_translated' )[0]; 
+          $huidigearray[$release_product_name['naam']] = $value;
+          $aankomendereleases[$key][$release_product_name['naam']] = $value;
 
         endwhile;
+
+
+        ksort($aankomendereleases);
+
+        $vorigedatum = '';
         
+        echo '<ul>';
+        foreach ($aankomendereleases as $key => $subarray) {
+
+          // Subarray sorteren naar een logische volgorde. 
+          // Zie ik iets over het hoofd voor het sorteren van keys? Want values kan ik wel logisch sorteren
+          natcasesort($subarray);
+          
+          foreach ($subarray as $subkey => $subvalue) {
+
+            // ik vermoed dat we binnenkort willen groeperen op datum, dus vandaar deze nu ongebruikte code
+            $datumstring    = '';
+//            $releasedatum   = date_i18n( get_option( 'date_format' ), $key );
+//            if ( $vorigedatum != $releasedatum ) {
+//              $datumstring = '<h3><strong style="background: black; color: white;">' . $releasedatum . '</strong></h3>';
+//              $vorigedatum = $releasedatum;
+//            }
+            $htmloutput = explode($separator, $subvalue);
+            echo '<li>' . $datumstring . '' . $htmloutput[1] . '</li>';
+          }
+        }
         echo '</ul>';
 
       }
@@ -1371,6 +1402,7 @@ class rijksreleasekalender_Public {
         echo '<p>' . __( 'Geen releases gevonden.', 'rijksreleasekalender' ) . '</p>';
       
       }
+
       wp_reset_postdata();
 
       echo '<div class="category-link more"><a href="' . $url . $this->releasekalender_queryvar_kalender . '/">' . __( 'Bekijk de kalender','' ) . '</a></div>';
@@ -2414,6 +2446,5 @@ class rijksreleasekalender_Public {
 		return $content;
 		
 	}
-
 
 }
