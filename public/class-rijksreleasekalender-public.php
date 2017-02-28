@@ -10,7 +10,7 @@ if ( ! defined( 'WPINC' ) ) {
  * The public-facing functionality of the plugin.
  *
  * @link       http://wbvb.nl/
- * @since      1.0.0
+ * @since      1.0.5
  *
  * @package    rijksreleasekalender
  * @subpackage rijksreleasekalender/public

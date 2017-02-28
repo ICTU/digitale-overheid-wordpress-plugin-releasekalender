@@ -4,7 +4,7 @@
  * The admin-specific functionality of the plugin.
  *
  * @link       http://nostromo.nl
- * @since      1.0.0
+ * @since      1.0.5
  *
  * @package    rijksreleasekalender
  * @subpackage rijksreleasekalender/admin
@@ -884,18 +884,18 @@ class rijksreleasekalender_Admin {
 		// check these post statuses when checking if post exists
 		$check_post_status = array( 'publish', 'pending', 'draft', 'future', 'private' );
 
-		if ( defined( 'DOING_CRON' ) ) {
-			// get email from settings
-			$email = get_option( $this->option_name . '_cron_email' );
-			if ( '' == $email ) {
-				//get admin email as fallback
-				$to = get_bloginfo( 'admin_email' );
-			} else {
-				$to = $email;
-			}
+		// mailheaders, for both CRON and manual sync
+		$subject    = 'Releasekalender sync [step: ' . $_step . ']';
+		$headers    = array( 'Content-Type: text/html; charset=UTF-8' );
+		$headers[]  = 'From: ' . get_bloginfo( 'admin_email' );	// from addresss		
 
-			$subject = 'Sync started (step: ' . $_step . ')';
-			$headers = array( 'Content-Type: text/html; charset=UTF-8' );
+		// get email from settings
+		$email = get_option( $this->option_name . '_cron_email' );
+		if ( '' == $email ) {
+			//get admin email as fallback
+			$to = get_bloginfo( 'admin_email' );
+		} else {
+			$to = $email;
 		}
 
 
@@ -1691,8 +1691,24 @@ class rijksreleasekalender_Admin {
 		}
 
 		if ( 5 == $_step ) {
+
+			$body		= date( 'H:i:s' ) . ' - ' . __( 'Releasekalender: sync klaar!', 'rijksreleasekalender' );
+			$body		.= "<br>\n" . __( 'URL:', 'rijksreleasekalender' );
+			$body		.= "<br>\n" . $_SERVER["HTTP_HOST"];
+
+			// send mail
+			if ( defined( 'DOING_CRON' ) ) {
+				$subject		= date( 'H:i:s' ) . ' - ' . __( 'Releasekalender: CRON sync klaar!', 'rijksreleasekalender' );
+			}
+			else {
+				$messages[]	= date( 'H:i:s' ) . ' - ' . __( 'Mail sturen', 'rijksreleasekalender' );
+				$subject		= date( 'H:i:s' ) . ' - ' . __( 'Releasekalender: handmatige sync klaar!', 'rijksreleasekalender' );
+			}
+
+			wp_mail( $to, $subject, $body, $headers );
+			
 			$_result    = 'done';
-			$messages[] = '<h2 style="background: green; color: white;">' . date( 'H:i:s' ) . ' - ' . __( 'Sync klaar!', 'rijksreleasekalender' ) . '</h2>';
+			$messages[]	= '<h2 style="background: green; color: white;">' . date( 'H:i:s' ) . ' - ' . __( 'Sync klaar!', 'rijksreleasekalender' ) . '</h2>';
 
 		} else {
 			$_result = $_step;
@@ -1703,9 +1719,6 @@ class rijksreleasekalender_Admin {
 
 			if ( 5 >= $_step ) {
 				// todo save log somewhere/somehow
-				// now just email as test
-        $body = implode( '<br />', $messages );
-        wp_mail( $to, $subject, $body, $headers );
 
 				// if we're done, we're done
 				if ( 5 == $_step ) {
@@ -1722,9 +1735,13 @@ class rijksreleasekalender_Admin {
 				'step'     => $_step,
 				'messages' => $messages
 			) );
+
+
+			
 		}
 
 		// we're done, leave this place. Now. And never look back. Ever. Really ;)
+		// have an aspirin or a beer
 		exit();
 
 	}
