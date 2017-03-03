@@ -31,6 +31,9 @@ class rijksreleasekalender_Deactivator {
 	 */
 	public static function deactivate() {
 
+		// clear event hook when deactivating
+		wp_clear_scheduled_hook('rijksreleasekalender_create_sync_schedule_hook');
+
 	}
 
 }

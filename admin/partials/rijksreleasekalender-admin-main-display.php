@@ -66,7 +66,6 @@
 		var _jobResult = function (response) {
 			if (response.messages.length > 0) {
 				for (var i = 0; i < response.messages.length; i++) {
-					// console.log( response.messages[ i ] );
 					// new messages appear on top. .append() can be used to have new entries at the bottom
 					jQuery('#log').prepend(response.messages[i] + '<br />');
 

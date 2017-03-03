@@ -290,15 +290,6 @@ class rijksreleasekalender_Admin {
 		);
 
 		add_settings_field(
-			$this->option_name . '_cron_time',
-			__( 'CRON Tijd (uur)', '' ),
-			array( $this, $this->option_name . '_cron_time_cb' ),
-			$this->plugin_name,
-			$this->option_name . '_cron',
-			array( 'label_for' => $this->option_name . '_cron_time' )
-		);
-
-		add_settings_field(
 			$this->option_name . '_cron_email',
 			__( 'E-mailadres voor log', 'rijksreleasekalender' ),
 			array( $this, $this->option_name . '_cron_email_cb' ),
@@ -306,9 +297,9 @@ class rijksreleasekalender_Admin {
 			$this->option_name . '_cron',
 			array( 'label_for' => $this->option_name . '_cron_email' )
 		);
+
 		// Register the cron options
 		register_setting( $this->plugin_name, $this->option_name . '_cron_frequency' );
-		register_setting( $this->plugin_name, $this->option_name . '_cron_time' );
 		register_setting( $this->plugin_name, $this->option_name . '_cron_email' );
 	}
 
@@ -563,10 +554,10 @@ class rijksreleasekalender_Admin {
 		$selected       = selected( $cron_frequency, '', false );
 
 		$frequencies = Array(
-			__( 'Dagelijks', 'rijksreleasekalender' )         => 'daily',
-			__( 'Twee keer per dag', 'rijksreleasekalender' ) => 'twicedaily',
-			__( 'Elk uur', 'rijksreleasekalender' )           => 'hourly',
-			__( 'Elke minuut', 'rijksreleasekalender' )       => 'perminute'
+			__( 'Dagelijks', 'rijksreleasekalender' )                       => 'daily',
+			__( 'Twee keer per dag', 'rijksreleasekalender' )               => 'twicedaily',
+			__( 'Elk uur', 'rijksreleasekalender' )                         => 'hourly',
+			__( 'Elke minuut - ALLEEN VOOR TESTS', 'rijksreleasekalender' ) => 'perminute'
 
 		);
 
@@ -583,27 +574,6 @@ class rijksreleasekalender_Admin {
 	public function rijksreleasekalender_cron_email_cb() {
 		$cron_email = get_option( $this->option_name . '_cron_email' );
 		echo '<input class="code" type="text" name="' . $this->option_name . '_cron_email' . '" id="' . $this->option_name . '_cron_email' . '" value="' . $cron_email . '"> ';
-	}
-
-	/**
-	 * Render the CRON time dropdown
-	 *
-	 * @since  1.0.0
-	 */
-	public function rijksreleasekalender_cron_time_cb() {
-		$cron_time = get_option( $this->option_name . '_cron_time' );
-		$selected  = selected( $cron_time, '', false );
-
-		$hours = range( 0, 23 );
-
-		echo '<select name="' . $this->option_name . '_cron_time' . '">';
-		echo '<option value="" ' . $selected . '></option>';
-
-		foreach ( $hours as $hour ) {
-			$selected = selected( $cron_time, $hour );
-			echo '<option value="' . $hour . '" id="' . $hour . '" ' . $selected . '>' . $hour . '</option>';
-		}
-		echo '</select>';
 	}
 
 	/**
@@ -883,11 +853,11 @@ class rijksreleasekalender_Admin {
 
 		// check these post statuses when checking if post exists
 		$check_post_status = array( 'publish', 'pending', 'draft', 'future', 'private' );
-
+		$body              = '';
 		// mailheaders, for both CRON and manual sync
-		$subject    = 'Releasekalender sync [step: ' . $_step . ']';
-		$headers    = array( 'Content-Type: text/html; charset=UTF-8' );
-		$headers[]  = 'From: ' . get_bloginfo( 'admin_email' );	// from addresss		
+		$subject   = 'Releasekalender sync [step: ' . $_step . ']';
+		$headers   = array( 'Content-Type: text/html; charset=UTF-8' );
+		$headers[] = 'From: ' . get_bloginfo( 'admin_email' );  // from addresss
 
 		// get email from settings
 		$email = get_option( $this->option_name . '_cron_email' );
@@ -1076,6 +1046,8 @@ class rijksreleasekalender_Admin {
 				}
 
 				$_step ++; // next step
+				// store messages in a transient
+				set_transient( 'messages', $messages );
 				break;
 
 			case 1:
@@ -1344,6 +1316,11 @@ class rijksreleasekalender_Admin {
 					$messages[] = date( 'H:i:s' ) . ' - ' . __( 'Geen producten gevonden...', 'rijksreleasekalender' );
 				}
 				$_step ++; // next step
+
+				// store messages in a transient
+				if ( $trans_messages = get_transient( 'messages' ) ) {
+					set_transient( 'messages', array_merge( $trans_messages, $messages ) );
+				}
 				break;
 
 			case 2:
@@ -1577,6 +1554,10 @@ class rijksreleasekalender_Admin {
 				}
 
 				$_step ++; // next step
+				// store messages in a transient
+				if ( $trans_messages = get_transient( 'messages' ) ) {
+					set_transient( 'messages', array_merge( $trans_messages, $messages ) );
+				}
 				break;
 
 			case 3:
@@ -1631,6 +1612,10 @@ class rijksreleasekalender_Admin {
 				}
 
 				$_step ++; // next step
+				// store messages in a transient
+				if ( $trans_messages = get_transient( 'messages' ) ) {
+					set_transient( 'messages', array_merge( $trans_messages, $messages ) );
+				}
 				break;
 
 			case 4:
@@ -1686,29 +1671,42 @@ class rijksreleasekalender_Admin {
 				}
 
 				$_step ++; // next step
+				// store messages in a transient
+				if ( $trans_messages = get_transient( 'messages' ) ) {
+					set_transient( 'messages', array_merge( $trans_messages, $messages ) );
+				}
 				break;
 
 		}
 
+
 		if ( 5 == $_step ) {
 
-			$body		= date( 'H:i:s' ) . ' - ' . __( 'Releasekalender: sync klaar!', 'rijksreleasekalender' );
-			$body		.= "<br>\n" . __( 'URL:', 'rijksreleasekalender' );
-			$body		.= "<br>\n" . $_SERVER["HTTP_HOST"];
+			$body = date( 'H:i:s' ) . ' - ' . __( 'Releasekalender: sync klaar!', 'rijksreleasekalender' );
+			$body .= "<br>\n" . __( 'URL:', 'rijksreleasekalender' );
+			$body .= " " . $_SERVER[ "HTTP_HOST" ];
 
 			// send mail
 			if ( defined( 'DOING_CRON' ) ) {
-				$subject		= date( 'H:i:s' ) . ' - ' . __( 'Releasekalender: CRON sync klaar!', 'rijksreleasekalender' );
-			}
-			else {
-				$messages[]	= date( 'H:i:s' ) . ' - ' . __( 'Mail sturen', 'rijksreleasekalender' );
-				$subject		= date( 'H:i:s' ) . ' - ' . __( 'Releasekalender: handmatige sync klaar!', 'rijksreleasekalender' );
+				$subject = date( 'H:i:s' ) . ' - ' . __( 'Releasekalender: CRON sync klaar!', 'rijksreleasekalender' );
+				$body .= "<br/><br/> Complete log:<br /";
+				$body .= "<br/>" . implode( '<br/>', get_transient( 'messages' ) );
+
+
+			} else {
+				$messages[] = date( 'H:i:s' ) . ' - ' . __( 'Mail sturen', 'rijksreleasekalender' );
+				$subject    = date( 'H:i:s' ) . ' - ' . __( 'Releasekalender: handmatige sync klaar!', 'rijksreleasekalender' );
+				$body .= "<br/><br/> Complete log:<br /";
+				$body .= "<br/>" . implode( '<br/>', get_transient( 'messages' ) );
+
 			}
 
+			// clean up
+			delete_transient( 'messages' );
 			wp_mail( $to, $subject, $body, $headers );
-			
+
 			$_result    = 'done';
-			$messages[]	= '<h2 style="background: green; color: white;">' . date( 'H:i:s' ) . ' - ' . __( 'Sync klaar!', 'rijksreleasekalender' ) . '</h2>';
+			$messages[] = '<h2 style="background: green; color: white;">' . date( 'H:i:s' ) . ' - ' . __( 'Sync klaar!', 'rijksreleasekalender' ) . '</h2>';
 
 		} else {
 			$_result = $_step;
@@ -1737,7 +1735,6 @@ class rijksreleasekalender_Admin {
 			) );
 
 
-			
 		}
 
 		// we're done, leave this place. Now. And never look back. Ever. Really ;)
@@ -1753,7 +1750,10 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function rijksreleasekalender_api_get( $api_parameters ) {
+	public
+	function rijksreleasekalender_api_get(
+		$api_parameters
+	) {
 		$api_url   = get_option( $this->option_name . '_restapi_url' );
 		$username  = get_option( $this->option_name . '_restapi_user' );
 		$password  = get_option( $this->option_name . '_restapi_pwd' );
@@ -1786,7 +1786,10 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function rijksreleasekalender_count_api_objects( $json_object ) {
+	public
+	function rijksreleasekalender_count_api_objects(
+		$json_object
+	) {
 		$totalcount = $json_object->totalCount;
 
 		return $totalcount;
@@ -1804,7 +1807,10 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function rijksreleasekalender_update_post( $post_id, $post_type, $all_args ) {
+	public
+	function rijksreleasekalender_update_post(
+		$post_id, $post_type, $all_args
+	) {
 		$post_args = array(
 			'ID'             => $all_args[ 'args' ][ 'ID' ],
 			'post_author'    => $all_args[ 'args' ][ 'post_author' ],
@@ -1906,7 +1912,10 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function rijksreleasekalender_format_a_date( $datestring = '' ) {
+	public
+	function rijksreleasekalender_format_a_date(
+		$datestring = ''
+	) {
 
 		if ( $datestring ) {
 			$datestring = date( 'Y-m-d H:i:s', strtotime( $datestring ) );
@@ -1927,7 +1936,10 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function rijksreleasekalender_delete_post_meta( $post_id, $meta_key ) {
+	public
+	function rijksreleasekalender_delete_post_meta(
+		$post_id, $meta_key
+	) {
 		$delete_result = delete_post_meta( $post_id, $meta_key );
 
 		if ( $delete_result ) {
@@ -1949,7 +1961,10 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function get_real_id_and_slug( $post_id = 0, $post_type = '', $key_id = '' ) {
+	public
+	function get_real_id_and_slug(
+		$post_id = 0, $post_type = '', $key_id = ''
+	) {
 
 		$arrreturn           = array();
 		$arrreturn[ 'id' ]   = '';
@@ -1988,7 +2003,10 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.2
 	 */
-	public function rijksreleasekalender_add_cron_schedule( $schedules ) {
+	public
+	function rijksreleasekalender_add_cron_schedule(
+		$schedules
+	) {
 		$new_schedules = [ 'perminute' => [ 'interval' => 60 ] ];
 
 		return array_merge( $schedules, $new_schedules );
@@ -1999,16 +2017,10 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function rijksreleasekalender_schedule_cron_job() {
-		// set default timezone
-		date_default_timezone_set( 'Europe/Amsterdam' );
-
-		// get time option
-		$hour = get_option( $this->option_name . '_cron_time' );
-
+	public
+	function rijksreleasekalender_schedule_cron_job() {
 		// get frequency
 		$frequency = get_option( $this->option_name . '_cron_frequency' );
-
 
 		// check if it is already scheduled
 		if ( wp_next_scheduled( 'rijksreleasekalender_create_sync_schedule_hook' ) ) {
@@ -2017,12 +2029,11 @@ class rijksreleasekalender_Admin {
 			wp_unschedule_event( $timestamp, 'rijksreleasekalender_create_sync_schedule_hook' );
 		}
 
-
-		$timestamp = mktime( $hour, 0, 0, date( "m" ), date( "d" ), date( "Y" ) );
-
-
 		// schedule it
-		wp_schedule_event( $timestamp, $frequency, 'rijksreleasekalender_create_sync_schedule_hook' );
+		if ( ! wp_next_scheduled( 'rijksreleasekalender_create_sync_schedule_hook' ) ) {
+			wp_schedule_event( time(), $frequency, 'rijksreleasekalender_create_sync_schedule_hook' );
+
+		}
 
 	}
 

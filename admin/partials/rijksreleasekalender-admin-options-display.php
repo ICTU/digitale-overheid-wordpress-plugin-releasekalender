@@ -9,6 +9,16 @@
  * @package    rijksreleasekalender
  * @subpackage rijksreleasekalender/admin/partials
  */
+
+
+// Call the schedule cron job method, $this is the _admin object
+
+// But only do this when we have updated the settings
+if ( isset( $_REQUEST[ 'settings-updated' ] ) && ($_REQUEST[ 'settings-updated' ] ) ) {
+	$this->rijksreleasekalender_schedule_cron_job();
+}
+
+
 ?>
 
 <!-- This file should primarily consist of HTML with a little bit of PHP. -->
