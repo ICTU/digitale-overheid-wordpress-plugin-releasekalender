@@ -1370,8 +1370,8 @@ class rijksreleasekalender_Public {
           $value      = get_the_title() . $separator . $valuehtml;
 
           $key        = get_post_meta( get_the_id(), 'release_releasedatum_translated' )[0]; 
-          $huidigearray[$release_product_name['naam']] = $value;
-          $aankomendereleases[$key][$release_product_name['naam']] = $value;
+          $huidigearray[$release_product_name['naam'] . '_' . get_the_id()] = $value;
+          $aankomendereleases[$key][$release_product_name['naam'] . '_' . get_the_id()] = $value;
 
         endwhile;
 

@@ -7,9 +7,9 @@
  *
  * @wordpress-plugin
  * Plugin Name:       ICTU / WP Rijksreleasekalender plugin
- * Plugin URI:        http://nostromo.nl
+ * Plugin URI:        https://github.com/ICTU/digitale-overheid-wordpress-plugin-releasekalender
  * Description:       Synchroniseert met Rijksrelease REST API en zorgt voor weergave. Cron. Verstuurt bevestigingsmail.
- * Version:           1.0.5
+ * Version:           1.0.6
  * Author:            Marcel Bootsman / Paul van Buuren
  * Author URI:        http://nostromo.nl/
  * License:           GPL-2.0+
