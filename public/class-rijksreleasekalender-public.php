@@ -581,8 +581,6 @@ class rijksreleasekalender_Public {
           $theurl = $thepage . $this->releasekalender_queryvar_voorziening . '/' . $args['voorzieningslug'] . '/' . $this->releasekalender_queryvar_product . '/' . $args['productslug'];
           $theid  = $releases_query->post->post_name;
 
-//        $args['programma'] .=  '<h3 id="' . $theid . '">DEBUG: ' . get_the_title() . ' (' . $releasestatus['naam'] . ')</h3>';
-
           // diversify for release status
           if ( $releasestatus['naam'] == 'gerealiseerd' ) {
             $args['gerealiseerd']  .= '<h3 id="' . $theid . '">' . get_the_title() . '</h3>';
@@ -1063,7 +1061,7 @@ class rijksreleasekalender_Public {
 
     $url = get_permalink( get_the_ID() );
     
-    return $content . '<div class="block"><h3>' . __( "Extra's", 'rijksreleasekalender' ) . '</h3><ul><li class="rss"><a href="/feed/' . $this->feed_name . '/">' . __( 'RSS Recente wijzigingen', 'rijksreleasekalender' ) . '</a></li><li><a href="' . $url . $this->releasekalender_queryvar_plainhtml . '/">' . __( 'Releasekalender als herbruikbare tabel', 'rijksreleasekalender' ) . '</a></li></ul></div>';  
+    return $content . '<div class="block"><h2>' . __( "Extra's", 'rijksreleasekalender' ) . '</h2><ul class="links"><li class="rss"><a href="/feed/' . $this->feed_name . '/">' . __( 'RSS Recente wijzigingen', 'rijksreleasekalender' ) . '</a></li><li><a href="' . $url . $this->releasekalender_queryvar_plainhtml . '/">' . __( 'Releasekalender als herbruikbare tabel', 'rijksreleasekalender' ) . '</a></li></ul></div>';  
 	}
 
 	//========================================================================================================
@@ -1088,15 +1086,17 @@ class rijksreleasekalender_Public {
     
     $member_group_terms = get_terms( $groepargs );
 
-    $tempterms = '';
+    $tempterms      = '';
     
     foreach ( $member_group_terms as $member_group_term ) {
       
       $geengegevensgevonden = true;      
       
-      $titletag = 'h2';
+      $titletag     = 'h2';
+      $blockclass   = 'block';
       if ( $member_group_term->parent > 0 ) {
-        $titletag = 'h3';
+        $titletag     = 'h3';
+        $blockclass   = 'block no-top';
       }
       
       
@@ -1121,8 +1121,9 @@ class rijksreleasekalender_Public {
         
         $geengegevensgevonden = false;
         
+        $content .= '<div class="' . $blockclass . '">';
         $content .= '<' . $titletag . '>' . $member_group_term->name . '</' . $titletag . '>';
-        $content .= '<ul>';
+        $content .= '<ul class="links">';
         
         while ( $voorzieningen_query->have_posts() ) : 
           $voorzieningen_query->the_post(); 
@@ -1152,6 +1153,7 @@ class rijksreleasekalender_Public {
         endwhile; 
         
         $content .= '</ul>';
+        $content .= '</div>';
       
       }
       else {
