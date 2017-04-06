@@ -548,6 +548,7 @@ class rijksreleasekalender_Public {
         'order'       => 'ASC',					
         'posts_per_page'  => '-1',
         'orderby'     => 'meta_value',					
+        'ignore_custom_sort'    => TRUE,
         'meta_key'    => 'release_releasedatum_translated',
         
         'meta_query' => array(
@@ -760,6 +761,7 @@ class rijksreleasekalender_Public {
         'order'       => 'ASC',					
         'posts_per_page'  => '-1',
         'orderby'     => 'title',					
+        'ignore_custom_sort'    => TRUE,
         'meta_query' => array(
         	array(
         		'key'     => 'product_voorziening_real_id_slug',
@@ -777,6 +779,7 @@ class rijksreleasekalender_Public {
         'order'       => 'ASC',					
         'posts_per_page'  => '-1',
         'orderby'     => 'title',					
+        'ignore_custom_sort'    => TRUE,
         'meta_query' => array(
         	array(
         		'key'     => 'product_voorziening_real_id',
@@ -881,6 +884,7 @@ class rijksreleasekalender_Public {
       'posts_per_page'  => '-1',
       'order'           => 'ASC',					
       'orderby'         => 'meta_value',					
+      'ignore_custom_sort'    => TRUE,
       'meta_key'        => 'release_releasedatum_translated',
 		);
     $releases_query = new WP_Query($releases_args);
@@ -1081,6 +1085,7 @@ class rijksreleasekalender_Public {
       'taxonomy'    => 'voorziening-groep',
       'order'       => 'ASC',
       'orderby'     => 'slug',
+      'ignore_custom_sort'    => TRUE,
       'hide_empty'  => true
     ); 
     
@@ -1104,6 +1109,7 @@ class rijksreleasekalender_Public {
       'post_type'         => 'voorzieningencpt',
       'order'             => 'ASC',
       'orderby'           => 'title',
+      'ignore_custom_sort'    => TRUE,
       'posts_per_page'    => '-1',
       'tax_query'         => array(
           array(
@@ -1304,12 +1310,14 @@ class rijksreleasekalender_Public {
       // start day is today
       $start  = strtotime( date('y:m:d') );
 
-      // Select the upcoming x releases
+
+        // Select the upcoming x releases
       $releases_query_args = array(
         'post_type'       => 'releases',
         'order'           => 'ASC',					
-        'orderby'         => 'meta_value',					
-        'posts_per_page'  => $max_items_in_widget,
+        'orderby'             => 'meta_value',					
+        'ignore_custom_sort'  => TRUE,
+        'posts_per_page'      => $max_items_in_widget,
         'meta_key'        => 'release_releasedatum_translated',
         'meta_query'      => array(
                         array(
@@ -1319,6 +1327,7 @@ class rijksreleasekalender_Public {
                         )
         )				
       );
+      
       $releases_query = new WP_Query( $releases_query_args );
       
       echo '<div id="releasekalender_kalender-widget_' . get_the_ID() . '" class="widget releasekalender releasekalender-kalender-widget">
@@ -1332,15 +1341,17 @@ class rijksreleasekalender_Public {
 
         while ($releases_query->have_posts()) : 
           $releases_query->the_post();
+
+          $theID = get_the_id();
         
-          $release_voorziening_slug   = get_post_meta( get_the_id(), 'release_voorziening_real_id_slug', true );
-          $release_product_slug       = get_post_meta( get_the_id(), 'release_product_real_id_slug', true );
-          $release_product_name       = maybe_unserialize( get_post_meta( get_the_id(), 'release_product', true ) );
+          $release_voorziening_slug   = get_post_meta( $theID, 'release_voorziening_real_id_slug', true );
+          $release_product_slug       = get_post_meta( $theID, 'release_product_real_id_slug', true );
+          $release_product_name       = maybe_unserialize( get_post_meta( $theID, 'release_product', true ) );
           $release_product            = $this->releasekalender_queryvar_product . '/' . $release_product_slug . '/';
           $release_voorziening        = $this->releasekalender_queryvar_voorziening . '/' . $release_voorziening_slug . '/';
-          $releasestatus              = maybe_unserialize( get_post_meta( get_the_id(), 'release_release_status', true ) );
+          $releasestatus              = maybe_unserialize( get_post_meta( $theID, 'release_release_status', true ) );
   
-          $releasedatum               = get_post_meta( get_the_id(), 'release_releasedatum_translated' );
+          $releasedatum               = get_post_meta( $theID, 'release_releasedatum_translated' );
           $releasedatum               = date_i18n( get_option( 'date_format' ), $releasedatum[0] );
           
           $posturl                    = $url . $release_voorziening . $release_product;
@@ -1355,7 +1366,7 @@ class rijksreleasekalender_Public {
 
           $arguments = array(
             'currenturl'        => $url,
-            'voorziening_id'    => get_the_id(),
+            'voorziening_id'    => $theID,
             'product_slug'      => $release_product_slug,
             'voorziening_slug'  => $release_voorziening_slug,
             'inpage_id'         => $this->get_slug( get_the_permalink() ),
@@ -1371,9 +1382,9 @@ class rijksreleasekalender_Public {
 
           $value      = get_the_title() . $separator . $valuehtml;
 
-          $key        = get_post_meta( get_the_id(), 'release_releasedatum_translated' )[0]; 
-          $huidigearray[$release_product_name['naam'] . '_' . get_the_id()] = $value;
-          $aankomendereleases[$key][$release_product_name['naam'] . '_' . get_the_id()] = $value;
+          $key        = get_post_meta( $theID, 'release_releasedatum_translated' )[0]; 
+          $huidigearray[$release_product_name['naam'] . '_' . $theID ] = $value;
+          $aankomendereleases[$key][$release_product_name['naam'] . '_' . $theID ] = $value;
 
         endwhile;
 
@@ -1411,6 +1422,7 @@ class rijksreleasekalender_Public {
       
       }
 
+
       wp_reset_postdata();
 
       echo '<div class="category-link more"><a href="' . $url . $this->releasekalender_queryvar_kalender . '/">' . __( 'Bekijk de kalender','' ) . '</a></div>';
@@ -1443,6 +1455,7 @@ class rijksreleasekalender_Public {
       'posts_status'    => 'publish',
       'posts_per_page'  => '-1',
       'order'           => 'ASC',					
+      'ignore_custom_sort'    => TRUE,
       'orderby'         => 'title',
 		);
     $voorzieningen_query = new WP_Query($voorzieningen_args);
@@ -1638,6 +1651,7 @@ class rijksreleasekalender_Public {
         'post_type'   => $pagetype,
         'order'       => 'ASC',					
         'orderby'     => 'meta_value',					
+        'ignore_custom_sort'    => TRUE,
         'posts_per_page'  => '-1',
         'meta_key'    => 'release_releasedatum_translated',
         'meta_query' => array(
@@ -1900,6 +1914,7 @@ class rijksreleasekalender_Public {
         'post_type'         => 'voorzieningencpt',
         'order'             => 'ASC',
         'orderby'           => 'title',
+        'ignore_custom_sort'    => TRUE,
         'include_children'  => false,
         'posts_per_page'    => '-1',
         'post_status'       => 'publish'  ) );
@@ -1940,6 +1955,7 @@ class rijksreleasekalender_Public {
             'posts_per_page'  => '-1',
             'order'       => 'ASC',
             'orderby'     => 'title',
+            'ignore_custom_sort'    => TRUE,
             'meta_key'    => 'product_voorziening_real_id',
             'meta_query'  => array(
             	array(
@@ -1978,6 +1994,7 @@ class rijksreleasekalender_Public {
                 'post_type'   => 'releases',
                 'order'       => 'DESC',					
                 'orderby'     => 'meta_value',					
+                'ignore_custom_sort'    => TRUE,
                 'posts_per_page'  => '-1',
                 'meta_key'    => 'release_releasedatum_translated',
                 'meta_query' => array(
@@ -2149,6 +2166,7 @@ class rijksreleasekalender_Public {
         'post_status'     => 'publish',
         'order'           => 'DESC',					
         'orderby'         => 'meta_value',					
+        'ignore_custom_sort'    => TRUE,
         'meta_key'        => 'product_updated',
 
     	);
@@ -2193,6 +2211,7 @@ class rijksreleasekalender_Public {
         'post_status'     => 'publish',
         'order'           => 'DESC',					
         'orderby'         => 'meta_value',					
+        'ignore_custom_sort'    => TRUE,
         'meta_key'        => 'product_updated',
 
     	);
@@ -2235,6 +2254,7 @@ class rijksreleasekalender_Public {
         'post_status'     => 'publish',
         'order'           => 'DESC',					
         'orderby'         => 'meta_value',					
+        'ignore_custom_sort'    => TRUE,
         'meta_key'        => 'release_updated_translated',
 
     	);
