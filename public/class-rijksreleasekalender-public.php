@@ -548,6 +548,7 @@ class rijksreleasekalender_Public {
         'order'       => 'ASC',					
         'posts_per_page'  => '-1',
         'orderby'     => 'meta_value',					
+        'post_status' => 'publish',					
         'ignore_custom_sort'    => TRUE,
         'meta_key'    => 'release_releasedatum_translated',
         
@@ -736,6 +737,7 @@ class rijksreleasekalender_Public {
 		if ( $voorzieningslug ) {
     	$get_producten_args = array(
         'post_type'   => 'voorzieningencpt',
+        'post_status' => 'publish',					
         'name'        => $voorzieningslug,
         'posts_per_page'  => '-1',
         'post_status' => 'publish',
@@ -760,8 +762,9 @@ class rijksreleasekalender_Public {
         'post_type'   => 'producten',
         'order'       => 'ASC',					
         'posts_per_page'  => '-1',
+        'post_status' => 'publish',					
         'orderby'     => 'title',					
-        'ignore_custom_sort'    => TRUE,
+//        'ignore_custom_sort'    => TRUE,
         'meta_query' => array(
         	array(
         		'key'     => 'product_voorziening_real_id_slug',
@@ -777,9 +780,10 @@ class rijksreleasekalender_Public {
 			$releases_query_args = array(
         'post_type'   => 'producten',
         'order'       => 'ASC',					
+        'post_status' => 'publish',					
         'posts_per_page'  => '-1',
         'orderby'     => 'title',					
-        'ignore_custom_sort'    => TRUE,
+//        'ignore_custom_sort'    => TRUE,
         'meta_query' => array(
         	array(
         		'key'     => 'product_voorziening_real_id',
@@ -861,8 +865,7 @@ class rijksreleasekalender_Public {
   		$content .= '</div>'; 
   		
     }      
-    else {
-    }
+
     wp_reset_query();      
     return $content;
   	
@@ -884,6 +887,7 @@ class rijksreleasekalender_Public {
       'posts_per_page'  => '-1',
       'order'           => 'ASC',					
       'orderby'         => 'meta_value',					
+      'post_status' => 'publish',					
       'ignore_custom_sort'    => TRUE,
       'meta_key'        => 'release_releasedatum_translated',
 		);
@@ -1109,6 +1113,7 @@ class rijksreleasekalender_Public {
       'post_type'         => 'voorzieningencpt',
       'order'             => 'ASC',
       'orderby'           => 'title',
+      'post_status' => 'publish',					
       'ignore_custom_sort'    => TRUE,
       'posts_per_page'    => '-1',
       'tax_query'         => array(
@@ -1296,7 +1301,6 @@ class rijksreleasekalender_Public {
     if ( $this->releasekalender_template_hoofdpagina == $page_template ) {
       
       $max_items_in_widget           = intval( get_option( $this->option_name . '_max_items_in_widget' ) );
-      
       // set the max number of days to look ahead under
       // [admin] > 'Rijksreleasekalender' > 'Instellingen' > 'Widget: toon releases van de komende
       if ( is_int( $max_items_in_widget ) && $max_items_in_widget > 0 ) {
@@ -1317,7 +1321,7 @@ class rijksreleasekalender_Public {
         'order'           => 'ASC',					
         'orderby'             => 'meta_value',					
         'ignore_custom_sort'  => TRUE,
-        'posts_per_page'      => $max_items_in_widget,
+        'posts_per_page'      => ( $max_items_in_widget + 5 ),
         'meta_key'        => 'release_releasedatum_translated',
         'meta_query'      => array(
                         array(
@@ -1392,24 +1396,30 @@ class rijksreleasekalender_Public {
         ksort($aankomendereleases);
 
         $vorigedatum = '';
+        $tellertje = 0;
         
         echo '<ul>';
         foreach ($aankomendereleases as $key => $subarray) {
 
+
           // Subarray sorteren naar een logische volgorde. 
           // Zie ik iets over het hoofd voor het sorteren van keys? Want values kan ik wel logisch sorteren
           natcasesort($subarray);
-          
           foreach ($subarray as $subkey => $subvalue) {
-
             // ik vermoed dat we binnenkort willen groeperen op datum, dus vandaar deze nu ongebruikte code
             $datumstring    = '';
+            $tellertje ++;
 //            $releasedatum   = date_i18n( get_option( 'date_format' ), $key );
 //            if ( $vorigedatum != $releasedatum ) {
 //              $datumstring = '<h3><strong style="background: black; color: white;">' . $releasedatum . '</strong></h3>';
 //              $vorigedatum = $releasedatum;
 //            }
             $htmloutput = explode($separator, $subvalue);
+
+            if ( $tellertje > $max_items_in_widget ) {
+              break;
+            }
+            
             echo '<li>' . $datumstring . '' . $htmloutput[1] . '</li>';
           }
         }
@@ -1651,6 +1661,7 @@ class rijksreleasekalender_Public {
         'post_type'   => $pagetype,
         'order'       => 'ASC',					
         'orderby'     => 'meta_value',					
+        'post_status' => 'publish',					
         'ignore_custom_sort'    => TRUE,
         'posts_per_page'  => '-1',
         'meta_key'    => 'release_releasedatum_translated',
@@ -1955,6 +1966,7 @@ class rijksreleasekalender_Public {
             'posts_per_page'  => '-1',
             'order'       => 'ASC',
             'orderby'     => 'title',
+            'post_status' => 'publish',					
             'ignore_custom_sort'    => TRUE,
             'meta_key'    => 'product_voorziening_real_id',
             'meta_query'  => array(
@@ -1995,6 +2007,7 @@ class rijksreleasekalender_Public {
                 'order'       => 'DESC',					
                 'orderby'     => 'meta_value',					
                 'ignore_custom_sort'    => TRUE,
+                'post_status' => 'publish',					
                 'posts_per_page'  => '-1',
                 'meta_key'    => 'release_releasedatum_translated',
                 'meta_query' => array(

@@ -1059,6 +1059,28 @@ class rijksreleasekalender_Admin {
 
 				if ( 0 < $producten_count ) {
 					$num = 0;
+
+					// Alle releases even verbergen (status: concept). Selecteer de IDs
+					$args_for_concepting = array(
+						'nopaging'    => true,
+						'fields'      => 'ids',
+						'post_type'   => $post_type
+					);
+					$all_products = get_posts( $args_for_concepting );
+					
+					if ( $all_products ) {
+						foreach ( $all_products as $concept_post ) {
+							
+							$concept_post_args = array(
+								'ID'          => $concept_post,
+								'post_status' => 'private',
+							);
+							
+							// Update the post into the database
+							wp_update_post( $concept_post_args );
+						}
+					}
+					
 					foreach ( $producten->records as $product ) {
 						$num ++;
 						$messages[] = '<strong>' . $num . '. ' . $product->naam . '</strong>';
@@ -1287,6 +1309,15 @@ class rijksreleasekalender_Admin {
 							$product_post_array[ 'args' ]          = $product_post_args;
 							$product_post_array[ 'custom_fields' ] = $product_custom_field_array;
 
+							// post status weer op 'publish' zetten, was eerst 'private'
+							$my_post = array(
+								'ID'          => $product_post_id,
+								'post_status' => 'publish',
+							);
+							
+							// Update the post into the database
+							wp_update_post( $my_post );
+
 							// store new values in temp meta field.
 							$meta_result = update_post_meta( $product_post_id, 'temp_post_array', $product_post_array );
 							if ( $meta_result ) {
@@ -1330,6 +1361,28 @@ class rijksreleasekalender_Admin {
 				$messages[]     = current_time( 'mysql' ) . ' - ' . __( 'Aantal releases: ', 'rijksreleasekalender' ) . $releases_count;
 
 				if ( 0 < $releases_count ) {
+
+					// Alle releases even verbergen (status: concept). Selecteer de IDs
+					$args_for_concepting = array(
+						'nopaging'    => true,
+						'fields'      => 'ids',
+						'post_type'   => $post_type
+					);
+					$all_releases = get_posts( $args_for_concepting );
+					
+					if ( $all_releases ) {
+						foreach ( $all_releases as $concept_post ) {
+							
+							$concept_post_args = array(
+								'ID'          => $concept_post,
+								'post_status' => 'private',
+							);
+							
+							// Update the post into the database
+							wp_update_post( $concept_post_args );
+						}
+					}
+					
 					$num = 0;
 					foreach ( $releases->records as $release ) {
 						$num ++;
@@ -1421,8 +1474,8 @@ class rijksreleasekalender_Admin {
 								$arr_voorziening = $this->get_real_id_and_slug( $release->product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
 								$arr_productinfo = $this->get_real_id_and_slug( $release->product->id, 'producten', 'product_id' );
 
-								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Zoeken naar ID voor voorziening ', 'rijksreleasekalender' ) . $release->product->bouwsteen->id . 'resultaat: ' . implode( ',', $arr_voorziening );
-								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Zoeken naar ID voor product ', 'rijksreleasekalender' ) . $release->product->id . 'resultaat: ' . implode( ',', $arr_productinfo );
+//								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Zoeken naar ID voor voorziening ', 'rijksreleasekalender' ) . $release->product->bouwsteen->id . 'resultaat: ' . implode( ',', $arr_voorziening );
+//								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Zoeken naar ID voor product ', 'rijksreleasekalender' ) . $release->product->id . 'resultaat: ' . implode( ',', $arr_productinfo );
 
 								$release_custom_field_array = array(
 									'release_id'                       => $release->id,
@@ -1489,8 +1542,8 @@ class rijksreleasekalender_Admin {
 							$arr_voorziening = $this->get_real_id_and_slug( $release->product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
 							$arr_productinfo = $this->get_real_id_and_slug( $release->product->id, 'producten', 'product_id' );
 
-							$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Zoeken naar ID voor voorziening ', 'rijksreleasekalender' ) . $release->product->bouwsteen->id . 'resultaat: ' . implode( ',', $arr_voorziening );
-							$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Zoeken naar ID voor product ', 'rijksreleasekalender' ) . $release->product->id . 'resultaat: ' . implode( ',', $arr_productinfo );
+//							$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Zoeken naar ID voor voorziening ', 'rijksreleasekalender' ) . $release->product->bouwsteen->id . 'resultaat: ' . implode( ',', $arr_voorziening );
+//							$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Zoeken naar ID voor product ', 'rijksreleasekalender' ) . $release->product->id . 'resultaat: ' . implode( ',', $arr_productinfo );
 
 
 							$release_custom_field_array = array(
@@ -1512,6 +1565,14 @@ class rijksreleasekalender_Admin {
 
 							);
 
+							// post status weer op 'publish' zetten, was eerst 'private'
+							$my_post = array(
+								'ID'          => $release_post_id,
+								'post_status' => 'publish',
+							);
+							
+							// Update the post into the database
+							wp_update_post( $my_post );
 
 							$messages[] = current_time( 'mysql' ) . ' - ' . $release_post_id . __( ' bestaat al; publish date gezet op' ) . date( 'Y-m-d H:i:s', strtotime( $release->updated ) );
 
@@ -1526,17 +1587,19 @@ class rijksreleasekalender_Admin {
 
 							// store new values in temp meta field.
 							$meta_result = update_post_meta( $release_post_id, 'temp_post_array', $release_post_array );
+							
 							if ( $meta_result ) {
 								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Release tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $release_post_id;
 							} else {
-								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'FOUT - Product niet tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $release_post_id;
+								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'FOUT - release niet tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $release_post_id;
 								$continue   = false;
 							}
 							if ( $continue ) {
 								// we may save the new data.
 								$result = $this->rijksreleasekalender_update_post( $release_post_id, $post_type, $release_post_array );
+								
 								if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
-									$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Product bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
+									$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Release bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
 									// remove temp meta fields
 									$messages[] = $this->rijksreleasekalender_delete_post_meta( $release_post_id, 'temp_post_array' );
 
