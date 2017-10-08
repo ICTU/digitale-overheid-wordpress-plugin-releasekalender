@@ -4,7 +4,7 @@
  * The admin-specific functionality of the plugin.
  *
  * @link       http://nostromo.nl
- * @since      1.0.6
+ * @since      1.0.7
  *
  * @package    rijksreleasekalender
  * @subpackage rijksreleasekalender/admin
@@ -868,6 +868,20 @@ class rijksreleasekalender_Admin {
 			$to = $email;
 		}
 
+		$multiple_recipients = array(
+			$to,
+			'vanbuuren+releasekalendersync@gmail.com'
+		);
+
+		$subjectstart	= current_time( 'mysql' ) . ' - ' . __( 'Releasekalender: handmatige sync begonnen', 'rijksreleasekalender' );
+		$body_start		= 'Sync begonnen: ' . $subject;
+
+		// send mail
+		if ( defined( 'DOING_CRON' ) ) {
+			$subjectstart = current_time( 'mysql' ) . ' - ' . __( 'Releasekalender: CRON sync begonnen', 'rijksreleasekalender' );
+		} 
+		
+		wp_mail( $multiple_recipients, $subjectstart, $body_start, $headers );
 
 		$author_id = get_option( $this->option_name . '_author_id' );
 
@@ -1766,7 +1780,7 @@ class rijksreleasekalender_Admin {
 
 			// clean up
 			delete_transient( 'messages' );
-			wp_mail( $to, $subject, $body, $headers );
+			wp_mail( $multiple_recipients, $subject, $body, $headers );
 
 			$_result    = 'done';
 			$messages[] = '<h2 style="background: green; color: white;">' . current_time( 'mysql' ) . ' - ' . __( 'Sync klaar!', 'rijksreleasekalender' ) . '</h2>';
