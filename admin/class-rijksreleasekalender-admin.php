@@ -1073,7 +1073,7 @@ class rijksreleasekalender_Admin {
 							
 							$concept_post_args = array(
 								'ID'          => $concept_post,
-								'post_status' => 'private',
+								'post_status' => 'draft',
 							);
 							
 							// Update the post into the database
@@ -1309,7 +1309,7 @@ class rijksreleasekalender_Admin {
 							$product_post_array[ 'args' ]          = $product_post_args;
 							$product_post_array[ 'custom_fields' ] = $product_custom_field_array;
 
-							// post status weer op 'publish' zetten, was eerst 'private'
+							// post status weer op 'publish' zetten, was eerst 'draft'
 							$my_post = array(
 								'ID'          => $product_post_id,
 								'post_status' => 'publish',
@@ -1375,7 +1375,7 @@ class rijksreleasekalender_Admin {
 							
 							$concept_post_args = array(
 								'ID'          => $concept_post,
-								'post_status' => 'private',
+								'post_status' => 'draft',
 							);
 							
 							// Update the post into the database
@@ -1565,7 +1565,7 @@ class rijksreleasekalender_Admin {
 
 							);
 
-							// post status weer op 'publish' zetten, was eerst 'private'
+							// post status weer op 'publish' zetten, was eerst 'draft'
 							$my_post = array(
 								'ID'          => $release_post_id,
 								'post_status' => 'publish',
