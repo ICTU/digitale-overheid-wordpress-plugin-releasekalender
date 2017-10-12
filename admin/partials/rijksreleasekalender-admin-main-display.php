@@ -35,6 +35,8 @@
 		var _button = jQuery('input#startsync');
 		var _clearbutton = jQuery('input#clearlog');
 		var _lastrow = jQuery('#progress tr:last');
+		var maxrecordsinbatch = 25;
+		var startrec = 1;
 
 		var setProgress = function (_message) {
 			_lastrow.append(_message);
@@ -45,10 +47,12 @@
 			_button.click(function (e) {
 
 				e.preventDefault();
+				
+				
 
 				jQuery(this).val('<?php _e( 'Sync gestart...', 'rijksreleasekalender' );?>').prop('disabled', true);
 				jQuery( '#log' ).empty();
-				_requestJob(0);
+				_requestJob(0, startrec, maxrecordsinbatch );
 
 			});
 
@@ -59,8 +63,8 @@
 
 		})
 
-		var _requestJob = function (_start) {
-			jQuery.post(ajaxurl, {'action': 'rrk_do_sync', 'step': _start}, _jobResult);
+		var _requestJob = function (_start, _startrec, _maxrecordsinbatch ) {
+			jQuery.post(ajaxurl, {'action': 'rrk_do_sync', 'step': _start, 'startrec': _startrec, 'maxrecordsinbatch': _maxrecordsinbatch}, _jobResult);
 		}
 
 		var _jobResult = function (response) {
@@ -68,11 +72,8 @@
 				for (var i = 0; i < response.messages.length; i++) {
 					// new messages appear on top. .append() can be used to have new entries at the bottom
 					jQuery('#log').prepend(response.messages[i] + '<br />');
-
 				}
 			}
-
-      console.log('Het resultaat: ' + response.result);
 
       switch (response.result) {
         case 0:
@@ -86,7 +87,7 @@
         case 4:
           // De releaseafhankelijkheden
         case 5:
-          _requestJob(response.step);
+          _requestJob(response.step, response.startrec, response.maxrecordsinbatch);
           break;
         case 'done':
           _button.val('<?php _e( 'Start Synchronisatie', 'rijksreleasekalender' );?>').prop('disabled', false);

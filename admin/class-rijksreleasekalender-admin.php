@@ -557,6 +557,7 @@ class rijksreleasekalender_Admin {
 			__( 'Dagelijks', 'rijksreleasekalender' )                       => 'daily',
 			__( 'Twee keer per dag', 'rijksreleasekalender' )               => 'twicedaily',
 			__( 'Elk uur', 'rijksreleasekalender' )                         => 'hourly',
+			__( 'Elke 10 minuten', 'rijksreleasekalender' )                 => 'tenminutes',
 			__( 'Elke minuut - ALLEEN VOOR TESTS', 'rijksreleasekalender' ) => 'perminute'
 
 		);
@@ -845,10 +846,16 @@ class rijksreleasekalender_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function rijksreleasekalender_do_sync( $_step = 0 ) {
+	public function rijksreleasekalender_do_sync( $_step = 0,  $startrec = 1,  $maxrecordsinbatch = 15 ) {
 		// Check if we are doing this sync triggered by ajax POST (manual sync)
 		if ( array_key_exists( 'step', $_POST ) ) {
 			$_step = intval( $_POST[ 'step' ] );
+		}
+		if ( array_key_exists( 'startrec', $_POST ) ) {
+			$startrec = intval( $_POST[ 'startrec' ] );
+		}
+		if ( array_key_exists( 'maxrecordsinbatch', $_POST ) ) {
+			$maxrecordsinbatch = intval( $_POST[ 'maxrecordsinbatch' ] );
 		}
 
 		// check these post statuses when checking if post exists
@@ -858,6 +865,7 @@ class rijksreleasekalender_Admin {
 		$subject   = 'Releasekalender sync [step: ' . $_step . ']';
 		$headers   = array( 'Content-Type: text/html; charset=UTF-8' );
 		$headers[] = 'From: ' . get_bloginfo( 'admin_email' );  // from addresss
+		$confirmationmailadddress = 'vanbuuren+releasekalendersync@gmail.com';
 
 		// get email from settings
 		$email = get_option( $this->option_name . '_cron_email' );
@@ -870,7 +878,7 @@ class rijksreleasekalender_Admin {
 
 		$multiple_recipients = array(
 			$to,
-			'vanbuuren+releasekalendersync@gmail.com'
+			$confirmationmailadddress
 		);
 
 		$subjectstart	= current_time( 'mysql' ) . ' - ' . __( 'Releasekalender: handmatige sync begonnen', 'rijksreleasekalender' );
@@ -878,10 +886,14 @@ class rijksreleasekalender_Admin {
 
 		// send mail
 		if ( defined( 'DOING_CRON' ) ) {
-			$subjectstart = current_time( 'mysql' ) . ' - ' . __( 'Releasekalender: CRON sync begonnen', 'rijksreleasekalender' );
+			$subject .= ' CRON JOB STARTED';
 		} 
-		
-		wp_mail( $multiple_recipients, $subjectstart, $body_start, $headers );
+		else {
+			$subject .= ' MANUALLY STARTED';
+		}
+		$subject .= ' ' . $_SERVER["HTTP_HOST"];
+
+		$this->rijksreleasekalender_writedebug( 'Stepping into step "' . $_step . '" (@' . $startrec . ', batch: ' . $maxrecordsinbatch . ')'  );
 
 		$author_id = get_option( $this->option_name . '_author_id' );
 
@@ -891,14 +903,52 @@ class rijksreleasekalender_Admin {
 				$post_type           = 'voorzieningencpt';
 				$voorzieningen       = $this->rijksreleasekalender_api_get( 'bouwstenen' );
 				$voorzieningen_count = $this->rijksreleasekalender_count_api_objects( $voorzieningen );
-				$messages[]          = current_time( 'mysql' ) . ' - ' . __( 'Aantal voorzieningen: ', 'rijksreleasekalender' ) . $voorzieningen_count;
 
 				if ( 0 < $voorzieningen_count ) {
 
 					$num = 0;
 					foreach ( $voorzieningen->records as $voorziening ) {
 						$num ++;
-						$messages[] = '<strong>' . $num . '. ' . $voorziening->naam . '</strong>';
+
+						if ( ( $startrec == 1 ) && ( $num == 1 ) ) {
+							// first record, prepare
+							$messages[]          = current_time( 'mysql' ) . ' - ' . __( 'Aantal voorzieningen: ', 'rijksreleasekalender' ) . $voorzieningen_count;
+							$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+
+							wp_mail( $confirmationmailadddress, $subject, $body_start, $headers );
+
+						}
+						elseif ( $num < $startrec ) {
+							// skip these, already processed
+							continue;
+						}
+						else {
+							// num >= startrec
+							if ( $num >= ( $startrec + $maxrecordsinbatch ) ) {
+								// jump to next batch
+								if ( defined( 'DOING_CRON' ) ) {
+									// call again for next step
+									$this->rijksreleasekalender_do_sync( $_step, ( $startrec + $maxrecordsinbatch ), $maxrecordsinbatch );
+								}
+								else {
+									
+									wp_send_json( array(
+										'result'   						=> $_step,
+										'step'     						=> $_step,
+										'startrec' 						=> ( $startrec + $maxrecordsinbatch ),
+										'maxrecordsinbatch'		=> $maxrecordsinbatch,
+										'messages' 						=> $messages
+									) );
+								}
+								
+							}	
+						}
+
+
+						
+//						$messages[] = '<strong>' . $num . '. ' . $voorziening->naam . '</strong>';
+						$messages[] = current_time( 'mysql' ) . ' - voorziening ' . $num . '/' . $voorzieningen_count . ' - ' . $voorziening->naam;
+						$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
 
 						$voorz_post_args = array(
 							'post_author'    => $author_id,
@@ -928,11 +978,13 @@ class rijksreleasekalender_Admin {
 							$voorz_query->the_post();
 							// store ID for future use
 							$voorziening_post_id = get_the_ID();
+/*							
 							$messages[]          = current_time( 'mysql' ) . ' - ' . __( 'Voorziening gevonden met voorziening_id: ', 'rijksreleasekalender' ) .
 							                       $voorziening->id .
 							                       ' (post_id: ' . $voorziening_post_id . ') ' .
 							                       __( 'en titel: ', 'rijksreleasekalender' ) .
 							                       get_the_title();
+*/							                       
 							$voorziening_exists  = true;
 						} else {
 							$voorziening_exists = false;
@@ -1030,18 +1082,18 @@ class rijksreleasekalender_Admin {
 							// store new values in temp meta field.
 							$meta_result = update_post_meta( $voorziening_post_id, 'temp_post_array', $post_array );
 							if ( $meta_result ) {
-								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Voorziening tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $voorziening_post_id;
+//								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Voorziening tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $voorziening_post_id;
 							} else {
-								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'FOUT - Voorziening niet tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $voorziening_post_id;
+//								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'FOUT - Voorziening niet tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $voorziening_post_id;
 								$continue   = false;
 							}
 							if ( $continue ) {
 								// we may save the new data.
 								$result = $this->rijksreleasekalender_update_post( $voorziening_post_id, $post_type, $post_array );
 								if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
-									$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Voorziening bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
+//									$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Voorziening bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
 									// remove temp meta fields
-									$messages[] = $this->rijksreleasekalender_delete_post_meta( $voorziening_post_id, 'temp_post_array' );
+//									$messages[] = $this->rijksreleasekalender_delete_post_meta( $voorziening_post_id, 'temp_post_array' );
 								} else {
 									$messages[] = $result->get_error_message();
 								}
@@ -1049,7 +1101,7 @@ class rijksreleasekalender_Admin {
 
 							} else {
 								// only remove the temp meta fields
-								$messages[] = $this->rijksreleasekalender_delete_post_meta( $voorziening_post_id, 'temp_post_array' );
+//								$messages[] = $this->rijksreleasekalender_delete_post_meta( $voorziening_post_id, 'temp_post_array' );
 							}
 						}
 
@@ -1069,35 +1121,70 @@ class rijksreleasekalender_Admin {
 				$producten       = $this->rijksreleasekalender_api_get( 'producten' );
 				$producten_count = $this->rijksreleasekalender_count_api_objects( $producten );
 
-				$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Aantal producten: ', 'rijksreleasekalender' ) . $producten_count;
-
 				if ( 0 < $producten_count ) {
 					$num = 0;
 
-					// Alle releases even verbergen (status: concept). Selecteer de IDs
-					$args_for_concepting = array(
-						'nopaging'    => true,
-						'fields'      => 'ids',
-						'post_type'   => $post_type
-					);
-					$all_products = get_posts( $args_for_concepting );
-					
-					if ( $all_products ) {
-						foreach ( $all_products as $concept_post ) {
-							
-							$concept_post_args = array(
-								'ID'          => $concept_post,
-								'post_status' => 'draft',
-							);
-							
-							// Update the post into the database
-							wp_update_post( $concept_post_args );
-						}
-					}
 					
 					foreach ( $producten->records as $product ) {
 						$num ++;
-						$messages[] = '<strong>' . $num . '. ' . $product->naam . '</strong>';
+
+						if ( ( $startrec == 1 ) && ( $num == 1 ) ) {
+							// first record, prepare
+
+							// Alle producten even verbergen (status: concept). Selecteer de IDs
+							$args_for_concepting = array(
+								'nopaging'    => true,
+								'fields'      => 'ids',
+								'post_type'   => $post_type
+							);
+							$all_products = get_posts( $args_for_concepting );
+							
+							if ( $all_products ) {
+								foreach ( $all_products as $concept_post ) {
+									
+									$concept_post_args = array(
+										'ID'          => $concept_post,
+										'post_status' => 'draft',
+									);
+									
+									// Update the post into the database
+									wp_update_post( $concept_post_args );
+		
+		//wp_delete_post( $concept_post, TRUE );
+		
+								}
+							}
+							
+							$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Aantal producten: ', 'rijksreleasekalender' ) . $producten_count;
+							$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+						}
+						elseif ( $num < $startrec ) {
+							// skip these, already processed
+							continue;
+						}
+						else {
+							// num >= startrec
+							if ( $num >= ( $startrec + $maxrecordsinbatch ) ) {
+								if ( defined( 'DOING_CRON' ) ) {
+									// call again for next step
+									$this->rijksreleasekalender_do_sync( $_step, ( $startrec + $maxrecordsinbatch ), $maxrecordsinbatch );
+								}
+								else {
+									wp_send_json( array(
+										'result'   						=> $_step,
+										'step'     						=> $_step,
+										'startrec' 						=> ( $startrec + $maxrecordsinbatch ),
+										'maxrecordsinbatch'		=> $maxrecordsinbatch,
+										'messages' 						=> $messages
+									) );
+								}
+							}	
+						}
+
+//						$messages[] = '<strong>' . $num . '. ' . $product->naam . '</strong>';
+						$messages[] = current_time( 'mysql' ) . ' - product ' . $num . '/' . $producten_count . ' - ' . $product->naam;
+
+						$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
 
 						// set publish for product to 'publish'
 						$product_post_args = array(
@@ -1113,11 +1200,18 @@ class rijksreleasekalender_Admin {
 						// check if post already exists
 						// check for product ID, since this is (or should be) fixed.
 
+						$postdate = date( 'Y-m-d H:i:s', strtotime( $product->updated ) );
+
+//						$this->rijksreleasekalender_writedebug( 'Product date = ' . $postdate );
+
+
 						$product_query_args = array(
-							'post_type'   => $post_type,
-							'post_status' => $check_post_status,
-							'meta_key'    => 'product_id',
-							'meta_value'  => $product->id
+							'post_type'   	=> $post_type,
+							'post_status' 	=> $check_post_status,
+							'post_date'     => $postdate,
+							'post_date_gmt' => get_date_from_gmt( $postdate ),
+							'meta_key'    	=> 'product_id',
+							'meta_value'  	=> $product->id,
 						);
 
 						$prod_query = new WP_Query( $product_query_args );
@@ -1127,11 +1221,13 @@ class rijksreleasekalender_Admin {
 							$prod_query->the_post();
 							// store ID for future use
 							$product_post_id = get_the_ID();
+/*							
 							$messages[]      = current_time( 'mysql' ) . ' - ' . __( 'Product gevonden met id: ', 'rijksreleasekalender' ) .
 							                   $product->id .
 							                   ' (post_id: ' . $product_post_id . ') ' .
 							                   __( 'en titel: ', 'rijksreleasekalender' ) .
 							                   get_the_title();
+*/							                   
 							$product_exists  = true;
 						} else {
 							$product_exists = false;
@@ -1141,8 +1237,12 @@ class rijksreleasekalender_Admin {
 
 							// post does not exist - so let's create it.
 							$product_post_id = wp_insert_post( $product_post_args, true );
+
 							if ( $product_post_id > 0 ) {
+
 								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Product aangemaakt: ', 'rijksreleasekalender' ) . $product->naam . '(post_id: ' . $product_post_id . ')';
+
+								$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
 
 								// add custom fields
 								// todo make a function for this
@@ -1153,38 +1253,38 @@ class rijksreleasekalender_Admin {
 								);
 
 								$product_productmanager = array(
-									'id'          => $product->productmanager->id,
-									'naam'        => $product->productmanager->naam,
+									'id' 					=> isset( $product->productmanager->id ) ? $product->productmanager->id : '',
+									'naam' 				=> isset( $product->productmanager->naam ) ? $product->productmanager->naam : '',
 									'organisatie' => array(
-										'id'      => $product->productmanager->organisatie->id,
-										'naam'    => $product->productmanager->organisatie->naam,
-										'website' => $product->productmanager->organisatie->website,
-										'updated' => $product->productmanager->organisatie->updated
+										'id' 			=> isset( $product->productmanager->organisatie->id ) ? $product->productmanager->organisatie->id : '',
+										'naam' 		=> isset( $product->productmanager->organisatie->naam ) ? $product->productmanager->organisatie->naam : '',
+										'website' => isset( $product->productmanager->organisatie->website ) ? $product->productmanager->organisatie->website : '',
+										'updated' 		=> isset( $product->productmanager->organisatie->updated ) ? $product->productmanager->organisatie->updated : ''
 									),
 								);
 
 								$product_contact_opdrachtgever = array(
-									'id'          => $product->contactOpdrachtgever->id,
-									'naam'        => $product->contactOpdrachtgever->naam,
+									'id'          => isset( $product->contactOpdrachtgever->id ) ? $product->contactOpdrachtgever->id : '',
+									'naam'        => isset( $product->contactOpdrachtgever->naam ) ? $product->contactOpdrachtgever->naam : '',
 									'organisatie' => array(
-										'id'      => $product->contactOpdrachtgever->organisatie->id,
-										'naam'    => $product->contactOpdrachtgever->organisatie->naam,
-										'website' => $product->contactOpdrachtgever->organisatie->website,
-										'updated' => $product->contactOpdrachtgever->organisatie->updated
+										'id'        => isset( $product->contactOpdrachtgever->organisatie->id ) ? $product->contactOpdrachtgever->organisatie->id : '',
+										'naam'      => isset( $product->contactOpdrachtgever->organisatie->naam ) ? $product->contactOpdrachtgever->organisatie->naam : '',
+										'website'   => isset( $product->contactOpdrachtgever->organisatie->website ) ? $product->contactOpdrachtgever->organisatie->website : '',
+										'updated'   => isset( $product->contactOpdrachtgever->organisatie->updated ) ? $product->contactOpdrachtgever->organisatie->updated : ''
 									)
 								);
 								$product_opdrachtgever         = array(
-									'id'      => $product->opdrachtgever->id,
-									'naam'    => $product->opdrachtgever->naam,
-									'website' => $product->opdrachtgever->website,
-									'updated' => $product->opdrachtgever->updated
+									'id'      => isset( $product->opdrachtgever->id ) ? $product->opdrachtgever->id : '',
+									'naam'    => isset( $product->opdrachtgever->naam ) ? $product->opdrachtgever->naam : '',
+									'website' => isset( $product->opdrachtgever->website ) ? $product->opdrachtgever->website : '',
+									'updated' => isset( $product->opdrachtgever->updated ) ? $product->opdrachtgever->updated : '',
 								);
 
 								$product_aanbieder = array(
-									'id'      => $product->aanbieder->id,
-									'naam'    => $product->aanbieder->naam,
-									'website' => $product->aanbieder->website,
-									'updated' => $product->aanbieder->updated
+									'id' 			=> isset( $product->aanbieder->id ) ? $product->aanbieder->id : '',
+									'naam' 		=> isset( $product->aanbieder->naam ) ? $product->aanbieder->naam : '',
+									'website'	=> isset( $product->aanbieder->website ) ? $product->aanbieder->website : '',
+									'updated'	=> isset( $product->aanbieder->updated ) ? $product->aanbieder->updated : ''
 								);
 
 								// multiple producttypen may exist
@@ -1201,7 +1301,7 @@ class rijksreleasekalender_Admin {
 
 								// add all fields to array
 								// get the real ID and slug of the related voorziening
-								$arr_voorziening = $this->get_real_id_and_slug( $product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
+								$arr_voorziening = $this->rijksreleasekalender_get_real_id_and_slug( $product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
 
 								$product_custom_field_array = array(
 									'product_id'                       => $product->id,
@@ -1225,10 +1325,21 @@ class rijksreleasekalender_Admin {
 								);
 
 								foreach ( $product_custom_field_array as $key => $value ) {
+//									if ( 'product_producttypen' == $key ) {
+										if ( is_array( $value ) || is_object( $value ) ) {
+//											$this->rijksreleasekalender_writedebug( 'Updating post ' . $product_post_id . ' ' . $key );
+										}
+										else {
+//											$this->rijksreleasekalender_writedebug( 'Updating post ' . $product_post_id . ' ' . $key . '=' . $value );
+										}
+//									}
 									update_post_meta( $product_post_id, $key, $value );
 								}
 							} else {
+/*								
 								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Fout bij aanmaken product: ', 'rijksreleasekalender' ) . $product->naam . '(WP_Error: ' . $product_post_id->get_error_message() . ')';
+								$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+*/								
 							}
 
 
@@ -1298,7 +1409,7 @@ class rijksreleasekalender_Admin {
 
 							// add all fields to array
 							// get the real ID and slug of the related voorziening
-							$arr_voorziening = $this->get_real_id_and_slug( $product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
+							$arr_voorziening = $this->rijksreleasekalender_get_real_id_and_slug( $product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
 
 							$product_custom_field_array = array(
 								'product_id'                       => $product->id,
@@ -1322,11 +1433,15 @@ class rijksreleasekalender_Admin {
 
 							$product_post_array[ 'args' ]          = $product_post_args;
 							$product_post_array[ 'custom_fields' ] = $product_custom_field_array;
+							
+							$postdate = date( 'Y-m-d H:i:s', strtotime( $product->updated ) );
 
 							// post status weer op 'publish' zetten, was eerst 'draft'
 							$my_post = array(
-								'ID'          => $product_post_id,
-								'post_status' => 'publish',
+								'ID'          	=> $product_post_id,
+								'post_status' 	=> 'publish',
+								'post_date'     => $postdate,
+								'post_date_gmt' => get_date_from_gmt( $postdate )
 							);
 							
 							// Update the post into the database
@@ -1334,31 +1449,49 @@ class rijksreleasekalender_Admin {
 
 							// store new values in temp meta field.
 							$meta_result = update_post_meta( $product_post_id, 'temp_post_array', $product_post_array );
+							
 							if ( $meta_result ) {
+/*								
 								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Product tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $product_post_id;
+*/								
 							} else {
+/*								
 								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'FOUT - Product niet tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $product_post_id;
+*/								
 								$continue   = false;
 							}
+
+//							$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+
+							
 							if ( $continue ) {
 								// we may save the new data.
 								$result = $this->rijksreleasekalender_update_post( $product_post_id, $post_type, $product_post_array );
 								if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
+/*									
 									$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Product bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
+									$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
 									// remove temp meta fields
 									$messages[] = $this->rijksreleasekalender_delete_post_meta( $product_post_id, 'temp_post_array' );
-
+*/									
 								}
-
-							} else {
-								// only remove the temp meta fields
-								$messages[] = $this->rijksreleasekalender_delete_post_meta( $product_post_id, 'temp_post_array' );
 							}
-						}
+							else {
+								// only remove the temp meta fields
+/*								
+								$messages[] = $this->rijksreleasekalender_delete_post_meta( $product_post_id, 'temp_post_array' );
+*/								
+							}
 
+//							$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+
+						}
 					}
-				} else {
+					
+				}
+				else {
 					$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Geen producten gevonden...', 'rijksreleasekalender' );
+					$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
 				}
 				$_step ++; // next step
 
@@ -1372,35 +1505,70 @@ class rijksreleasekalender_Admin {
 				$post_type      = 'releases';
 				$releases       = $this->rijksreleasekalender_api_get( 'releases' );
 				$releases_count = $this->rijksreleasekalender_count_api_objects( $releases );
-				$messages[]     = current_time( 'mysql' ) . ' - ' . __( 'Aantal releases: ', 'rijksreleasekalender' ) . $releases_count;
 
 				if ( 0 < $releases_count ) {
 
-					// Alle releases even verbergen (status: concept). Selecteer de IDs
-					$args_for_concepting = array(
-						'nopaging'    => true,
-						'fields'      => 'ids',
-						'post_type'   => $post_type
-					);
-					$all_releases = get_posts( $args_for_concepting );
-					
-					if ( $all_releases ) {
-						foreach ( $all_releases as $concept_post ) {
-							
-							$concept_post_args = array(
-								'ID'          => $concept_post,
-								'post_status' => 'draft',
-							);
-							
-							// Update the post into the database
-							wp_update_post( $concept_post_args );
-						}
-					}
-					
 					$num = 0;
 					foreach ( $releases->records as $release ) {
 						$num ++;
-						$messages[]           = '<strong>' . $num . '. ' . $release->naam . '</strong>';
+
+						if ( ( $startrec == 1 ) && ( $num == 1 ) ) {
+							// first record, prepare
+
+							// Alle releases even verbergen (status: concept). Selecteer de IDs
+							$args_for_concepting = array(
+								'nopaging'    => true,
+								'fields'      => 'ids',
+								'post_type'   => $post_type
+							);
+							$all_releases = get_posts( $args_for_concepting );
+							
+							if ( $all_releases ) {
+								foreach ( $all_releases as $concept_post ) {
+									
+									$concept_post_args = array(
+										'ID'          => $concept_post,
+										'post_status' => 'draft',
+									);
+									
+									// Update the post into the database
+									wp_update_post( $concept_post_args );
+		
+									//wp_delete_post( $concept_post, TRUE );
+									
+								}
+							}
+							
+							$messages[]     = current_time( 'mysql' ) . ' - ' . __( 'Aantal releases: ', 'rijksreleasekalender' ) . $releases_count;
+							$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+						}
+						elseif ( $num < $startrec ) {
+							// skip these, already processed
+							continue;
+						}
+						else {
+							// num >= startrec
+							if ( $num >= ( $startrec + $maxrecordsinbatch ) ) {
+								if ( defined( 'DOING_CRON' ) ) {
+									// call again for next step
+									$this->rijksreleasekalender_do_sync( $_step, ( $startrec + $maxrecordsinbatch ), $maxrecordsinbatch );
+								}
+								else {
+										wp_send_json( array(
+										'result'   						=> $_step,
+										'step'     						=> $_step,
+										'startrec' 						=> ( $startrec + $maxrecordsinbatch ),
+										'maxrecordsinbatch'		=> $maxrecordsinbatch,
+										'messages' 						=> $messages
+									) );
+								}
+							}	
+						}
+
+//						$messages[]           = '<strong>' . $num . '. ' . $release->naam . '</strong>';
+						$messages[] = current_time( 'mysql' ) . ' - release ' . $num . '/' . $releases_count . ' - ' . $release->naam;
+
+						$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
 						$release_post_content = $release->nieuweFunctionaliteiten;
 						// some releases don't have a value, so set it to an empty string
 						if ( $release_post_content === null ) {
@@ -1439,11 +1607,14 @@ class rijksreleasekalender_Admin {
 							$rel_query->the_post();
 							// store ID for future use
 							$release_post_id = get_the_ID();
+/*							
 							$messages[]      = current_time( 'mysql' ) . ' - ' . __( 'Release gevonden met id: ', 'rijksreleasekalender' ) .
 							                   $release->id .
 							                   ' (post_id: ' . $release_post_id . ') ' .
 							                   __( 'en titel: ', 'rijksreleasekalender' ) .
 							                   get_the_title();
+							$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+*/							
 							$release_exists  = true;
 						} else {
 							$release_exists = false;
@@ -1456,6 +1627,7 @@ class rijksreleasekalender_Admin {
 
 							if ( $release_post_id > 0 ) {
 								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Release aangemaakt: ', 'rijksreleasekalender' ) . $release->naam . '(post_id: ' . $release_post_id . ')';
+								$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
 
 								// add custom fields
 								// todo make a function for this
@@ -1485,11 +1657,9 @@ class rijksreleasekalender_Admin {
 								// add all fields to array
 
 								// get the real ID and slug of the related product and voorziening
-								$arr_voorziening = $this->get_real_id_and_slug( $release->product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
-								$arr_productinfo = $this->get_real_id_and_slug( $release->product->id, 'producten', 'product_id' );
+								$arr_voorziening = $this->rijksreleasekalender_get_real_id_and_slug( $release->product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
+								$arr_productinfo = $this->rijksreleasekalender_get_real_id_and_slug( $release->product->id, 'producten', 'product_id' );
 
-//								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Zoeken naar ID voor voorziening ', 'rijksreleasekalender' ) . $release->product->bouwsteen->id . 'resultaat: ' . implode( ',', $arr_voorziening );
-//								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Zoeken naar ID voor product ', 'rijksreleasekalender' ) . $release->product->id . 'resultaat: ' . implode( ',', $arr_productinfo );
 
 								$release_custom_field_array = array(
 									'release_id'                       => $release->id,
@@ -1514,6 +1684,7 @@ class rijksreleasekalender_Admin {
 								}
 							} else {
 								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Fout bij aanmaken release: ', 'rijksreleasekalender' ) . $release->naam . '(WP_Error: ' . $release_post_id->get_error_message() . ')';
+								$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
 							}
 
 
@@ -1553,12 +1724,8 @@ class rijksreleasekalender_Admin {
 							// add all fields to array
 
 							// get the real ID and slug of the related product and voorziening
-							$arr_voorziening = $this->get_real_id_and_slug( $release->product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
-							$arr_productinfo = $this->get_real_id_and_slug( $release->product->id, 'producten', 'product_id' );
-
-//							$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Zoeken naar ID voor voorziening ', 'rijksreleasekalender' ) . $release->product->bouwsteen->id . 'resultaat: ' . implode( ',', $arr_voorziening );
-//							$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Zoeken naar ID voor product ', 'rijksreleasekalender' ) . $release->product->id . 'resultaat: ' . implode( ',', $arr_productinfo );
-
+							$arr_voorziening = $this->rijksreleasekalender_get_real_id_and_slug( $release->product->bouwsteen->id, 'voorzieningencpt', 'voorziening_id' );
+							$arr_productinfo = $this->rijksreleasekalender_get_real_id_and_slug( $release->product->id, 'producten', 'product_id' );
 
 							$release_custom_field_array = array(
 								'release_id'                       => $release->id,
@@ -1587,9 +1754,10 @@ class rijksreleasekalender_Admin {
 							
 							// Update the post into the database
 							wp_update_post( $my_post );
-
+/*
 							$messages[] = current_time( 'mysql' ) . ' - ' . $release_post_id . __( ' bestaat al; publish date gezet op' ) . date( 'Y-m-d H:i:s', strtotime( $release->updated ) );
-
+							$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+*/
 
 							// set post publish date to date last updated
 							$postdate                             = date( 'Y-m-d H:i:s', strtotime( $release->updated ) );
@@ -1603,9 +1771,15 @@ class rijksreleasekalender_Admin {
 							$meta_result = update_post_meta( $release_post_id, 'temp_post_array', $release_post_array );
 							
 							if ( $meta_result ) {
+/*								
 								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Release tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $release_post_id;
+								$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+*/								
 							} else {
+/*								
 								$messages[] = current_time( 'mysql' ) . ' - ' . __( 'FOUT - release niet tijdelijk opgeslagen, post_id: ', 'rijksreleasekalender' ) . $release_post_id;
+								$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+*/								
 								$continue   = false;
 							}
 							if ( $continue ) {
@@ -1613,21 +1787,30 @@ class rijksreleasekalender_Admin {
 								$result = $this->rijksreleasekalender_update_post( $release_post_id, $post_type, $release_post_array );
 								
 								if ( ( $result ) && ( ! is_wp_error( $result ) ) ) {
+/*									
 									$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Release bijgewerkt, post_id: ', 'rijksreleasekalender' ) . $result;
+									$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+*/									
 									// remove temp meta fields
+/*									
 									$messages[] = $this->rijksreleasekalender_delete_post_meta( $release_post_id, 'temp_post_array' );
-
+									$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+*/									
 								}
 
 							} else {
 								// only remove the temp meta fields
+/*								
 								$messages[] = $this->rijksreleasekalender_delete_post_meta( $release_post_id, 'temp_post_array' );
+								$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+*/								
 							}
 						}
 
 					}
 				} else {
 					$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Geen releases gevonden...', 'rijksreleasekalender' );
+					$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
 				}
 
 				$_step ++; // next step
@@ -1641,12 +1824,42 @@ class rijksreleasekalender_Admin {
 				// Add releaseafspraken to releases, if any
 				$releases       = $this->rijksreleasekalender_api_get( 'releaseafspraken' );
 				$releases_count = $this->rijksreleasekalender_count_api_objects( $releases );
-				$messages[]     = current_time( 'mysql' ) . ' - ' . __( 'Aantal releaseafspraken: ', 'rijksreleasekalender' ) . $releases_count;
 
 				if ( 0 < $releases_count ) {
 					$num = 0;
 					foreach ( $releases->records as $release ) {
 						$num ++;
+
+						if ( ( $startrec == 1 ) && ( $num == 1 ) ) {
+							// first record, prepare
+
+							$messages[]     = current_time( 'mysql' ) . ' - ' . __( 'Aantal releaseafspraken: ', 'rijksreleasekalender' ) . $releases_count;
+							$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+						}
+						elseif ( $num < $startrec ) {
+							// skip these, already processed
+							continue;
+						}
+						else {
+							// num >= startrec
+							if ( $num >= ( $startrec + $maxrecordsinbatch ) ) {
+								// jump to next batch
+								if ( defined( 'DOING_CRON' ) ) {
+									// call again for next step
+									$this->rijksreleasekalender_do_sync( $_step, ( $startrec + $maxrecordsinbatch ), $maxrecordsinbatch );
+								}
+								else {
+										wp_send_json( array(
+										'result'   						=> $_step,
+										'step'     						=> $_step,
+										'startrec' 						=> ( $startrec + $maxrecordsinbatch ),
+										'maxrecordsinbatch'		=> $maxrecordsinbatch,
+										'messages' 						=> $messages
+									) );
+								}
+							}	
+						}
+
 
 						if ( $release->afspraken ) {
 							// only update releases with afspraken if any exist
@@ -1666,11 +1879,14 @@ class rijksreleasekalender_Admin {
 								$prod_query->the_post();
 								// store ID for future use
 								$product_post_id = get_the_ID();
+/*								
 								$messages[]      = current_time( 'mysql' ) . ' - ' . __( '<strong>Afspraken</strong> Release voor release_id: ', 'rijksreleasekalender' ) .
 								                   $release->release->id .
 								                   ' (post_id: ' . $product_post_id . ') ' .
 								                   __( 'en titel: ', 'rijksreleasekalender' ) .
 								                   get_the_title();
+								$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+*/								
 								$product_exists  = true;
 
 								// multiple producttypen may exist
@@ -1699,12 +1915,42 @@ class rijksreleasekalender_Admin {
 				// Add releaseafhankelijkheden to releases, if any
 				$releases       = $this->rijksreleasekalender_api_get( 'releaseafhankelijkheden' );
 				$releases_count = $this->rijksreleasekalender_count_api_objects( $releases );
-				$messages[]     = current_time( 'mysql' ) . ' - ' . __( 'Aantal releaseafhankelijkheden: ', 'rijksreleasekalender' ) . $releases_count;
 
 				if ( 0 < $releases_count ) {
 					$num = 0;
 					foreach ( $releases->records as $release ) {
 						$num ++;
+
+						if ( ( $startrec == 1 ) && ( $num == 1 ) ) {
+							// first record, prepare
+
+							$messages[]     = current_time( 'mysql' ) . ' - ' . __( 'Aantal releaseafhankelijkheden: ', 'rijksreleasekalender' ) . $releases_count;
+							$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+						}
+						elseif ( $num < $startrec ) {
+							// skip these, already processed
+							continue;
+						}
+						else {
+							// num >= startrec
+							if ( $num >= ( $startrec + $maxrecordsinbatch ) ) {
+								// jump to next batch
+								if ( defined( 'DOING_CRON' ) ) {
+									// call again for next step
+									$this->rijksreleasekalender_do_sync( $_step, ( $startrec + $maxrecordsinbatch ), $maxrecordsinbatch );
+								}
+								else {
+									wp_send_json( array(
+										'result'   						=> $_step,
+										'step'     						=> $_step,
+										'startrec' 						=> ( $startrec + $maxrecordsinbatch ),
+										'maxrecordsinbatch'		=> $maxrecordsinbatch,
+										'messages' 						=> $messages
+									) );
+								}								
+							}	
+						}
+
 
 						if ( $release->afhankelijkheden ) {
 							// only update releases with afspraken if any exist
@@ -1728,6 +1974,7 @@ class rijksreleasekalender_Admin {
 								                   ' (post_id: ' . $product_post_id . ') ' .
 								                   __( 'en titel: ', 'rijksreleasekalender' ) .
 								                   get_the_title();
+								$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
 								$product_exists  = true;
 
 								// multiple producttypen may exist
@@ -1762,21 +2009,22 @@ class rijksreleasekalender_Admin {
 			$body = current_time( 'mysql' ) . ' - ' . __( 'Releasekalender: sync klaar!', 'rijksreleasekalender' );
 			$body .= "<br>\n" . __( 'URL:', 'rijksreleasekalender' );
 			$body .= " " . $_SERVER[ "HTTP_HOST" ];
+			$body .= "<br/><br/> Complete log:<br /";
+			$body .= "<br/>" . implode( '<br/>', get_transient( 'messages' ) );
+
+			$subject    = current_time( 'mysql' ) . ' - ' . __( 'Releasekalender: handmatige sync klaar!', 'rijksreleasekalender' );
+
 
 			// send mail
 			if ( defined( 'DOING_CRON' ) ) {
 				$subject = current_time( 'mysql' ) . ' - ' . __( 'Releasekalender: CRON sync klaar!', 'rijksreleasekalender' );
-				$body .= "<br/><br/> Complete log:<br /";
-				$body .= "<br/>" . implode( '<br/>', get_transient( 'messages' ) );
-
-
-			} else {
-				$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Mail sturen', 'rijksreleasekalender' );
-				$subject    = current_time( 'mysql' ) . ' - ' . __( 'Releasekalender: handmatige sync klaar!', 'rijksreleasekalender' );
-				$body .= "<br/><br/> Complete log:<br /";
-				$body .= "<br/>" . implode( '<br/>', get_transient( 'messages' ) );
-
 			}
+			else {
+				$messages[] = current_time( 'mysql' ) . ' - ' . __( 'Mail sturen', 'rijksreleasekalender' );
+				$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
+			}
+
+			$subject .= ' ' . $_SERVER["HTTP_HOST"];
 
 			// clean up
 			delete_transient( 'messages' );
@@ -1784,10 +2032,19 @@ class rijksreleasekalender_Admin {
 
 			$_result    = 'done';
 			$messages[] = '<h2 style="background: green; color: white;">' . current_time( 'mysql' ) . ' - ' . __( 'Sync klaar!', 'rijksreleasekalender' ) . '</h2>';
+			$this->rijksreleasekalender_writedebug( current_time( 'mysql' ) . ' - ' . __( 'Sync klaar!', 'rijksreleasekalender' ) );
 
-		} else {
+		} 
+		else {
 			$_result = $_step;
 		}
+
+		
+		if ( $_step >= 3 ) {
+			// skip the subtleties for the last 2 steps
+			$maxrecordsinbatch = 1000;
+		}
+
 
 		// check if we're called by WP CRON
 		if ( defined( 'DOING_CRON' ) ) {
@@ -1798,20 +2055,24 @@ class rijksreleasekalender_Admin {
 				// if we're done, we're done
 				if ( 5 == $_step ) {
 					exit;
-				} else {
+				}
+				else {
 					// call again for next step
-					$this->rijksreleasekalender_do_sync( $_step );
+					$this->rijksreleasekalender_do_sync( $_step, $startrec, $maxrecordsinbatch );
 				}
 			}
-		} else {
+		} 
+		else {
+			
+			
 			// not called by WP Cron, so send results back
 			wp_send_json( array(
-				'result'   => $_result,
-				'step'     => $_step,
-				'messages' => $messages
+				'result'   					=> $_result,
+				'step'     					=> $_step,
+				'startrec' 					=> 1,
+				'maxrecordsinbatch'	=> $maxrecordsinbatch,
+				'messages' 					=> $messages
 			) );
-
-
 		}
 
 		// we're done, leave this place. Now. And never look back. Ever. Really ;)
@@ -1888,6 +2149,9 @@ class rijksreleasekalender_Admin {
 	function rijksreleasekalender_update_post(
 		$post_id, $post_type, $all_args
 	) {
+
+//				$this->rijksreleasekalender_writedebug( 'rijksreleasekalender_update_post post_id: ' . $post_id . ', post_type: ' . $post_type );
+
 		$post_args = array(
 			'ID'             => $all_args[ 'args' ][ 'ID' ],
 			'post_author'    => $all_args[ 'args' ][ 'post_author' ],
@@ -1904,6 +2168,7 @@ class rijksreleasekalender_Admin {
 			$errors = $post_id->get_error_messages();
 			foreach ( $errors as $error ) {
 				$messages[] = $error;
+				$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
 			}
 
 			return $messages;
@@ -1972,9 +2237,11 @@ class rijksreleasekalender_Admin {
 
 
 			foreach ( $meta_fields as $meta_key => $meta_value ) {
-
+//				$this->rijksreleasekalender_writedebug( 'update_post_meta postID: ' . $post_id . ', key: ' . $meta_key );
 				update_post_meta( $post_id, $meta_key, $meta_value );
 			}
+
+
 
 			return $post_id;
 		}
@@ -2039,7 +2306,7 @@ class rijksreleasekalender_Admin {
 	 * @since    1.0.0
 	 */
 	public
-	function get_real_id_and_slug(
+	function rijksreleasekalender_get_real_id_and_slug(
 		$post_id = 0, $post_type = '', $key_id = ''
 	) {
 
@@ -2084,7 +2351,10 @@ class rijksreleasekalender_Admin {
 	function rijksreleasekalender_add_cron_schedule(
 		$schedules
 	) {
-		$new_schedules = [ 'perminute' => [ 'interval' => 60 ] ];
+		$new_schedules = [
+			 'perminute' => [ 'interval' => 60 ],
+			 'tenminutes' => [ 'interval' => ( 10 * 60 ) ],
+			 ];
 
 		return array_merge( $schedules, $new_schedules );
 	}
@@ -2113,6 +2383,81 @@ class rijksreleasekalender_Admin {
 		}
 
 	}
+
+
+	//========================================================================================================
+	
+	public
+	function wbvb_modernista_human_filesize($bytes, $decimals = 2) {
+	  $sz = 'BKMGTP';
+	  $factor = floor((strlen($bytes) - 1) / 3);
+	  return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . @$sz[$factor] . 'B';
+	}
+	
+	//========================================================================================================
+
+	/**
+	 * Check if we need to start the flow again
+	 *
+	 * @since    1.0.7
+	 */
+	public
+	function rijksreleasekalender_loopcounter( $_result = 0, $_step = 0, $currentnum = 0, $startrec = 0, $maxrecordsinbatch = 0 ) {
+
+
+//		$messages[] = 'Num=' . $num . ', startrec=' . $startrec . ', maxrecordsinbatch=' . $maxrecordsinbatch;
+
+		$this->rijksreleasekalender_writedebug( 'currentnum="' . $currentnum . '", startrec="' . $startrec . '", maxrecordsinbatch="' . $maxrecordsinbatch . '"' );
+						
+		if ( $currentnum < ( $startrec + $maxrecordsinbatch ) ) {
+		}
+		else {
+		}
+
+
+
+	}
+
+	//========================================================================================================
+
+
+
+	/**
+	 * Append a line to debug.log
+	 *
+	 * @since    1.0.6
+	 */
+	public
+	function rijksreleasekalender_writedebug( $log ) {
+		
+		$subject = 'rijksreleasekalender_MANUAL';
+		
+		if ( defined( 'DOING_CRON' ) ) {
+			$subject = 'rijksreleasekalender_CRON';
+		} 
+
+		$subject .= ' (mem = ' . $this->wbvb_modernista_human_filesize( memory_get_usage(), 1) . ')';
+
+
+		if ( defined( 'RRK_ID' ) ) {
+			$subject .= ' (ID = ' . RRK_ID . '-a)';
+		} 
+		else {
+			$subject .= ' (ID = ' . getmypid() . '-b)';
+		}
+		
+		
+		if ( true === WP_DEBUG ) {
+			if ( is_array( $log ) || is_object( $log ) ) {
+				error_log( $subject . ' - ' .  print_r( $log, true ) );
+			}
+			else {
+				error_log( $subject . ' - ' .  $log );
+			}
+		}
+	}
+	
+	
 
 
 } // end of class
