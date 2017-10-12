@@ -931,13 +931,14 @@ class rijksreleasekalender_Admin {
 									$this->rijksreleasekalender_do_sync( $_step, ( $startrec + $maxrecordsinbatch ), $maxrecordsinbatch );
 								}
 								else {
-									
+									$percentage =  ( round( ( $num / $voorzieningen_count ), 2) * 100 ) . '%';
 									wp_send_json( array(
 										'result'   						=> $_step,
 										'step'     						=> $_step,
 										'startrec' 						=> ( $startrec + $maxrecordsinbatch ),
 										'maxrecordsinbatch'		=> $maxrecordsinbatch,
-										'messages' 						=> $messages
+										'messages' 						=> $messages,
+										'items' 							=> '<ul><li><strong>&gt; Stap 1: voorzieningen (' . $percentage . ')</strong></li><li>Stap 2: producten</li><li>Stap 3: releases</li><li>Stap 4: afspraken</li><li>Stap 5: afhankelijkheden</li></ul>'
 									) );
 								}
 								
@@ -1170,12 +1171,14 @@ class rijksreleasekalender_Admin {
 									$this->rijksreleasekalender_do_sync( $_step, ( $startrec + $maxrecordsinbatch ), $maxrecordsinbatch );
 								}
 								else {
+									$percentage =  ( round( ( $num / $producten_count ), 2) * 100 ) . '%';
 									wp_send_json( array(
 										'result'   						=> $_step,
 										'step'     						=> $_step,
 										'startrec' 						=> ( $startrec + $maxrecordsinbatch ),
 										'maxrecordsinbatch'		=> $maxrecordsinbatch,
-										'messages' 						=> $messages
+										'messages' 						=> $messages,
+										'items' 							=> '<ul><li>Stap 1: voorzieningen</li><li><strong>&gt; Stap 2: producten (' . $percentage . ')</strong></li><li>Stap 3: releases</li><li>Stap 4: afspraken</li><li>Stap 5: afhankelijkheden</li></ul>'
 									) );
 								}
 							}	
@@ -1554,12 +1557,14 @@ class rijksreleasekalender_Admin {
 									$this->rijksreleasekalender_do_sync( $_step, ( $startrec + $maxrecordsinbatch ), $maxrecordsinbatch );
 								}
 								else {
+									$percentage =  ( round( ( $num / $releases_count ), 2) * 100 ) . '%';
 										wp_send_json( array(
 										'result'   						=> $_step,
 										'step'     						=> $_step,
 										'startrec' 						=> ( $startrec + $maxrecordsinbatch ),
 										'maxrecordsinbatch'		=> $maxrecordsinbatch,
-										'messages' 						=> $messages
+										'messages' 						=> $messages,
+										'items' 							=> '<ul><li>Stap 1: voorzieningen</li><li>Stap 2: producten</li><li><strong>&gt; Stap 3: releases (' . $percentage . ')</strong></li><li>Stap 4: afspraken</li><li>Stap 5: afhankelijkheden</li></ul>'
 									) );
 								}
 							}	
@@ -1849,12 +1854,14 @@ class rijksreleasekalender_Admin {
 									$this->rijksreleasekalender_do_sync( $_step, ( $startrec + $maxrecordsinbatch ), $maxrecordsinbatch );
 								}
 								else {
+									$percentage =  ( round( ( $num / $releases_count ), 2) * 100 ) . '%';
 										wp_send_json( array(
 										'result'   						=> $_step,
 										'step'     						=> $_step,
 										'startrec' 						=> ( $startrec + $maxrecordsinbatch ),
 										'maxrecordsinbatch'		=> $maxrecordsinbatch,
-										'messages' 						=> $messages
+										'messages' 						=> $messages,
+										'items' 							=> '<ul><li>Stap 1: voorzieningen</li><li>Stap 2: producten</li><li>Stap 3: releases</li><li><strong>&gt; Stap 4: afspraken (' . $percentage . ')</strong></li><li>Stap 5: afhankelijkheden</li></ul>'
 									) );
 								}
 							}	
@@ -1879,14 +1886,14 @@ class rijksreleasekalender_Admin {
 								$prod_query->the_post();
 								// store ID for future use
 								$product_post_id = get_the_ID();
-/*								
+
 								$messages[]      = current_time( 'mysql' ) . ' - ' . __( '<strong>Afspraken</strong> Release voor release_id: ', 'rijksreleasekalender' ) .
 								                   $release->release->id .
 								                   ' (post_id: ' . $product_post_id . ') ' .
 								                   __( 'en titel: ', 'rijksreleasekalender' ) .
 								                   get_the_title();
 								$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
-*/								
+
 								$product_exists  = true;
 
 								// multiple producttypen may exist
@@ -1940,12 +1947,14 @@ class rijksreleasekalender_Admin {
 									$this->rijksreleasekalender_do_sync( $_step, ( $startrec + $maxrecordsinbatch ), $maxrecordsinbatch );
 								}
 								else {
+									$percentage =  ( round( ( $num / $releases_count ), 2) * 100 ) . '%';
 									wp_send_json( array(
 										'result'   						=> $_step,
 										'step'     						=> $_step,
 										'startrec' 						=> ( $startrec + $maxrecordsinbatch ),
 										'maxrecordsinbatch'		=> $maxrecordsinbatch,
-										'messages' 						=> $messages
+										'messages' 						=> $messages,
+										'items' 							=> '<ul><li>Stap 1: voorzieningen</li><li>Stap 2: producten</li><li>Stap 3: releases</li><li>Stap 4: afspraken</li><li><strong>&gt; Stap 5: afhankelijkheden (' . $percentage . ')</strong></li></ul>'
 									) );
 								}								
 							}	
@@ -2006,12 +2015,18 @@ class rijksreleasekalender_Admin {
 
 		if ( 5 == $_step ) {
 
+			$messages = get_transient( 'messages' );			
+
 			$body = current_time( 'mysql' ) . ' - ' . __( 'Releasekalender: sync klaar!', 'rijksreleasekalender' );
 			$body .= "<br>\n" . __( 'URL:', 'rijksreleasekalender' );
 			$body .= " " . $_SERVER[ "HTTP_HOST" ];
-			$body .= "<br/><br/> Complete log:<br /";
-			$body .= "<br/>" . implode( '<br/>', get_transient( 'messages' ) );
+			if ( $messages ) {
+				
+				$body .= "<br/><br/> Complete log:<br /";
+				$body .= "<br/>" . implode( '<br/>', $messages );
 
+			}
+			
 			$subject    = current_time( 'mysql' ) . ' - ' . __( 'Releasekalender: handmatige sync klaar!', 'rijksreleasekalender' );
 
 
@@ -2071,7 +2086,9 @@ class rijksreleasekalender_Admin {
 				'step'     					=> $_step,
 				'startrec' 					=> 1,
 				'maxrecordsinbatch'	=> $maxrecordsinbatch,
-				'messages' 					=> $messages
+				'messages' 					=> $messages,
+				'items' 						=> '<ul><li>Stap 1: voorzieningen</li><li>Stap 2: producten</li><li>Stap 3: releases</li><li>Stap 4: afspraken</li><li>Stap 5: afhankelijkheden</li></ul>'
+
 			) );
 		}
 

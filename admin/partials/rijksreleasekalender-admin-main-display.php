@@ -25,6 +25,7 @@
 		</tr>
 	</table>
 	<noscript style="background: red; padding: .5em; font-size: 120%;display: block; margin-top: 1em !important; color: white;"><strong><?php _e( 'Dit werkt alleen als je JavaScript hebt aangezet.', 'rijksreleasekalender' );?></strong></noscript>
+	<div style="width: 100%; padding-top: 16px;" id="items">&nbsp;</div>
 	<div style="width: 100%; padding-top: 16px; font-style: italic;" id="log"><?php _e( 'Druk op de knop!', 'rijksreleasekalender' );?></div>
 
 		<?php //todo this needs to be moved to an external script. ?>
@@ -35,7 +36,7 @@
 		var _button = jQuery('input#startsync');
 		var _clearbutton = jQuery('input#clearlog');
 		var _lastrow = jQuery('#progress tr:last');
-		var maxrecordsinbatch = 25;
+		var maxrecordsinbatch = 20;
 		var startrec = 1;
 
 		var setProgress = function (_message) {
@@ -68,11 +69,16 @@
 		}
 
 		var _jobResult = function (response) {
+  		
 			if (response.messages.length > 0) {
 				for (var i = 0; i < response.messages.length; i++) {
 					// new messages appear on top. .append() can be used to have new entries at the bottom
 					jQuery('#log').prepend(response.messages[i] + '<br />');
 				}
+			}
+			if (response.items.length > 0) {
+				// new messages appear on top. .append() can be used to have new entries at the bottom
+				jQuery('#items').html('<p>Synchronisatie kan ongeveer 10 minuten duren. We zijn nu bij:</p>' + response.items);
 			}
 
       switch (response.result) {
