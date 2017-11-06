@@ -2174,23 +2174,23 @@ class rijksreleasekalender_Public {
       $countertje = 0;
       
     	$get_voorzieningen_args = array(
-        'post_type'       => 'producten',
+        'post_type'       => 'voorzieningencpt',
         'posts_per_page'  => $postCount,
         'post_status'     => 'publish',
         'order'           => 'DESC',					
         'orderby'         => 'meta_value',					
         'ignore_custom_sort'    => TRUE,
-        'meta_key'        => 'product_updated',
-
+        'meta_key'        => 'voorziening_updated',
     	);
+    	
       $voorzieningquery = new WP_Query( $get_voorzieningen_args );
 
       if ( $voorzieningquery->have_posts() ) {
         while ($voorzieningquery->have_posts()) : 
           $voorzieningquery->the_post();
           $countertje++;
-          $product_updated            = get_post_meta( get_the_ID(), 'product_updated', true );
-          $product_updated2            = strtotime( $product_updated );
+          $product_updated            = get_post_meta( get_the_ID(), 'voorziening_updated', true );
+          $product_updated_datetime   = strtotime( $product_updated );
 
           $key = strtotime( $product_updated );
 
@@ -2235,7 +2235,7 @@ class rijksreleasekalender_Public {
           $productquery->the_post();
           $countertje++;
           $product_updated            = get_post_meta( get_the_ID(), 'product_updated', true );
-          $product_updated2            = strtotime( $product_updated );
+          $product_updated_datetime   = strtotime( $product_updated );
 
           $key = strtotime( $product_updated );
 
@@ -2278,7 +2278,7 @@ class rijksreleasekalender_Public {
           $releasequery->the_post();
           $countertje++;
           $release_updated            = get_post_meta( get_the_ID(), 'release_updated', true );
-          $product_updated2            = strtotime( $product_updated );
+          $product_updated_datetime   = strtotime( $product_updated );
 
           $key = strtotime( $release_updated );
 

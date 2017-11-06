@@ -36,7 +36,7 @@
 		var _button = jQuery('input#startsync');
 		var _clearbutton = jQuery('input#clearlog');
 		var _lastrow = jQuery('#progress tr:last');
-		var maxrecordsinbatch = 20;
+		var maxrecordsinbatch = 35;
 		var startrec = 1;
 
 		var setProgress = function (_message) {

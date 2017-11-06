@@ -767,7 +767,6 @@ class rijksreleasekalender_Admin {
 				'author',
 				'thumbnail',
 				'custom-fields',
-				'revisions',
 				'page-attributes'
 			),
 			'public'              => true,
@@ -820,7 +819,6 @@ class rijksreleasekalender_Admin {
 				'author',
 				'thumbnail',
 				'custom-fields',
-				'revisions',
 				'page-attributes'
 			),
 			'public'              => true,
@@ -915,7 +913,7 @@ class rijksreleasekalender_Admin {
 							$messages[]          = current_time( 'mysql' ) . ' - ' . __( 'Aantal voorzieningen: ', 'rijksreleasekalender' ) . $voorzieningen_count;
 							$this->rijksreleasekalender_writedebug( array_values(array_slice($messages, -1))[0] );
 
-							wp_mail( $confirmationmailadddress, $subject, $body_start, $headers );
+							wp_mail( $multiple_recipients, $subject, $body_start, $headers );
 
 						}
 						elseif ( $num < $startrec ) {
@@ -1139,7 +1137,7 @@ class rijksreleasekalender_Admin {
 								'post_type'   => $post_type
 							);
 							$all_products = get_posts( $args_for_concepting );
-							
+
 							if ( $all_products ) {
 								foreach ( $all_products as $concept_post ) {
 									
@@ -1525,7 +1523,7 @@ class rijksreleasekalender_Admin {
 								'post_type'   => $post_type
 							);
 							$all_releases = get_posts( $args_for_concepting );
-							
+
 							if ( $all_releases ) {
 								foreach ( $all_releases as $concept_post ) {
 									
