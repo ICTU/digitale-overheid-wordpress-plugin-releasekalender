@@ -89,21 +89,18 @@
     border-left: 14px solid #000;
   }
   .legenda {
-    position: absolute;
-    right: 10px;
-    margin-top: -80px;
     background: #dfe6e1;
     padding: 2px 10px;
     border: 1px solid #275937;
     z-index: 9999;
-  }
-  .legenda li {
-    margin: 7px 0;
-    line-height: .95em;
-    padding: 2px 5px;
-    border-left: 14px solid #000;
-    background: none;
-    font-size: .9em;
+    li {
+      margin: 7px 0;
+      line-height: .95em;
+      padding: 2px 5px;
+      border-left: 14px solid #000;
+      background: none;
+      font-size: .9em;
+    }
   }
   .programma li li:hover, .programma li li:focus {
     z-index: 999;
@@ -163,49 +160,89 @@
   .unit .tijdbalk {
     margin: 0 20px 10px 0;
   }
-  .tijdbalk>ul {
-    width: 15000%;
-    position: absolute;
-    top: 4px;
-    padding: 0;
-    cursor: move;
-    left: 0;
-    margin-left: 34px;
-    text-align: center;
+  .tijdbalk {
+    & > ul {
+      width: 15000%;
+      position: absolute;
+      top: 4px;
+      padding: 0;
+      cursor: move;
+      left: 0;
+      margin-left: 34px;
+      text-align: center;
+    }
+    li {
+      width: 206px;
+      float: left;
+      margin: 0;
+      padding: 0;
+      background: #fff none;
+      border-left: 2px solid #becdc3;
+    }
+    li:first-child {
+      border-left: none;
+    }
+    & > ul > li {
+      border-left-width: 4px;
+    }
+    ul ul {
+      margin: 0;
+      padding: 0;
+      border-top: 1px solid #becdc3;
+    }
+    li li {
+      width: 50px;
+      font-size: .75em;
+    }
+    &.sticky {
+      position: fixed;
+      top: 0;
+      margin: 0;
+      box-shadow: 0 0 25px #333;
+      z-index: 100;
+      ul {
+        position: relative;
+      }
+    }
   }
-  .tijdbalk li {
-    width: 206px;
-    float: left;
-    margin: 0;
-    padding: 0;
-    background: #fff none;
-    border-left: 2px solid #becdc3;
+
+
+  .legenda {
+    &.sticky {
+      position: fixed;
+    }
   }
-  .tijdbalk li:first-child {
-    border-left: none;
+  
+  @media (max-width: 767px) {
+    .legenda {
+      &.sticky {
+        bottom: 0;
+        left: 0 !important;
+        right: 0;
+      }
+    }
   }
-  .tijdbalk>ul>li {
-    border-left-width: 4px;
+  @media (min-width: 768px) {
+    .legenda {
+
+      position: absolute;
+      right: 10px;
+      margin-top: -80px;
+      
+      max-width: 280px;
+      position: absolute;
+      top: 0;
+      right: 0;
+      margin: 0 !important;
+      &.sticky {
+        top: 0;
+        margin: 0;
+        z-index: 100;
+        width: 280px;
+      }
+    }
   }
-  .tijdbalk ul ul {
-    margin: 0;
-    padding: 0;
-    border-top: 1px solid #becdc3;
-  }
-  .tijdbalk li li {
-    width: 50px;
-    font-size: .75em;
-  }
-  .tijdbalk.sticky {
-    position: fixed;
-    top: 0;
-    margin: 0;
-    box-shadow: 0 0 25px #333;
-    z-index: 100;
-  }
-  .tijdbalk.sticky ul {
-    position: relative;
-  }
+  
   .nu {
     width: 1px;
     text-align: right;

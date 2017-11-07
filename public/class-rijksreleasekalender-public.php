@@ -850,13 +850,15 @@ class rijksreleasekalender_Public {
 
   		$tijdbalk = '<div class="tijdbalk">' . $this->get_tijdbalk( $programmaargs['year_start'], $programmaargs['year_end'] ) . '</div>';
       
-  		$content = '<div id="releasekalenderoutput">'; 
-  		$content .= '<div class="rk-bouwsteen">'; 
-  		$content .= '<p>' . $title . ' ' . __('heeft de volgende producten en releases:', 'rijksreleasekalender' ) . '<br>(<a href="#omschrijving">' . __('naar omschrijving', 'rijksreleasekalender' ) . '</a>) </p>';
-  		$content .= $tijdbalk; 
-  		$content .= $pijlstok; 
-  		$content .= '<div class="programma">' . $programma . '</div>'; 
+      $content = '<div id="releasekalenderoutput">'; 
+      $content .= '<div class="rk-bouwsteen">'; 
+      $content .= '<p>' . $title . ' ' . __('heeft de volgende producten en releases:', 'rijksreleasekalender' ) . '<br>(<a href="#omschrijving">' . __('naar omschrijving', 'rijksreleasekalender' ) . '</a>) </p>';
+      
       $content .= $legenda_kalender;
+      
+      $content .= $tijdbalk; 
+      $content .= $pijlstok; 
+  		$content .= '<div class="programma">' . $programma . '</div>'; 
       $content .= '<div id="kolom12" class="block"><h2 id="omschrijving">' . __('Omschrijving', 'rijksreleasekalender' ) . '</h2>';
       $content .= $omschrijving;
       $content .= '<p>' . __('Datum laatste wijziging', 'rijksreleasekalender' ) . ': ' . date_i18n( get_option( 'date_format' ), $programmaargs['global_last_update'] ) . '</p>';
