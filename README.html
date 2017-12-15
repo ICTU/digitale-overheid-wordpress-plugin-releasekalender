@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
 <head>
 	<meta charset="utf-8"/>
 </head>
 <body>
+
 <h1 id="ictu---digitale-overheid-plugin-releasekalender">ICTU&#8212;Digitale-Overheid-Plugin-Releasekalender</h1>
 
 <p>Plugin voor het importeren en tonen van releasekalenderinformatie op digitaleoverheid.nl.
-Deze plugin wordt gebruikt op <a href="https://digitaleoverheid.nl">digitaleoverheid.nl</a>. Opdrachtgever is ICTU (ICT Uitvoeringsorganisatie). </p>
+Deze plugin wordt gebruikt op <a href="https://digitaleoverheid.nl">digitaleoverheid.nl</a>. Opdrachtgever is ICTU (ICT Uitvoeringsorganisatie).</p>
 
 <p>Ontwikkelaars zijn:</p>
 
@@ -15,6 +16,10 @@ Deze plugin wordt gebruikt op <a href="https://digitaleoverheid.nl">digitaleover
 <li>Paul van Buuren (<a href="https://wbvb.nl">WBVB Rotterdam</a>)</li>
 <li>Marcel Bootsman (<a href="https://nostromo.nl">nostromo.nl</a>)</li>
 </ul>
+
+<h2 id="gitrepo">Git repo</h2>
+
+<p>Code wordt gepubliceerd op de <a href="https://github.com/ICTU/digitale-overheid-wordpress-plugin-releasekalender">ICTU Git repo voor de releasekalender plugin</a>.</p>
 
 <h2 id="rubberducking">Rubber ducking</h2>
 
@@ -27,10 +32,10 @@ Deze gegevens worden via CRON-jobs opgehaald. Er is een knop om deze import hand
 
 <p>Twee verschillende pagina templates zijn nodig:</p>
 
-<h4 id="1.releasekalender-corepaginatemplate">1. Releasekalender-core pagina template</h4>
+<h4 id="1.releasekalender-corepaginatemplate">1.	Releasekalender-core pagina template</h4>
 
-<p><em>rhswp-rk-coretemplate.php</em><br/>
-Core functionaliteit: een pagina-template opzetten; deze pagina template regelt de core van alle functionaliteit.<br/>
+<p><em>rhswp-rk-coretemplate.php</em><br />
+Core functionaliteit: een pagina-template opzetten; deze pagina template regelt de core van alle functionaliteit.<br />
 Het content-veld op deze pagina wordt gebruikt voor de inleiding</p>
 
 <p>Extra benodigde velden bij het invoeren van de content op deze pagina:</p>
@@ -42,36 +47,39 @@ Het content-veld op deze pagina wordt gebruikt voor de inleiding</p>
 
 <p>Deze pagina is verantwoordelijk voor de verdere afhandeling van de releasekalender door rewriterules:</p>
 
-<p><code>&lt;pagina-url&gt;/voorziening/&lt;voorziening-slug&gt;</code> </p>
+<p><code>&lt;pagina-url&gt;/voorziening/&lt;voorziening-slug&gt;</code></p>
 
-<p>zo ongeveer ook als de huidige situatie: </p>
+<p>zo ongeveer ook als de huidige situatie:</p>
 
 <p><code>digitaleoverheid.nl/onderwerpen/voortgang-en-planning/releasekalender/bouwsteen/basisregistratie-grootschalige-topografie-bgt</code></p>
 
-<h4 id="2.dossierreleasekalender-paginatemplate">2. Dossier releasekalender-pagina template</h4>
+<h4 id="2.dossierreleasekalender-paginatemplate">2.	Dossier releasekalender-pagina template</h4>
 
-<p><em>rhswp-rk-dossiertemplate.php</em><br/>
+<p><em>rhswp-rk-dossiertemplate.php</em><br />
 gebruikt door de pagina in een dossier die een onderdeel van de planning kan tonen. Eventuele onderdelen hierin kun je kiezen via de lijst met bouwstenen.</p>
 
 <p>Eventuele links in de kalenderfunctionaliteit zelf verwijzen naar de bovenstaande core-pagina. In de dossier-context blijven lijkt me geen goed idee, want reuze-ingewikkeld</p>
 
 <h2 id="back-end">Back-end</h2>
 
-<p>API instellingen
-- er moet een knop zijn voor het handmatig starten van de import (&#8216;ververs data&#8217;)</p>
-
-<p>Groepering
-- voorzieningen kunnen groeperen. Er kunnen subgroepen worden aangemaakt. De bestaande groepering is:</p>
+<p>API instellingen</p>
 
 <ul>
-<li>gegevens
+<li>er moet een knop zijn voor het handmatig starten van de import (&#8216;ververs data&#8217;)</li>
+</ul>
+
+<p>Groepering</p>
+
+<ul>
+<li><p>voorzieningen kunnen groeperen. Er kunnen subgroepen worden aangemaakt. De bestaande groepering is:</p></li>
+<li><p><p>gegevens</p>
 
 <ul>
 <li>basisregistraties (subgroep van gegevens)</li>
-</ul></li>
-<li>dienstverlening</li>
-<li>identificatie</li>
-<li>interconnectiviteit</li>
+</ul></p></li>
+<li><p>dienstverlening</p></li>
+<li><p>identificatie</p></li>
+<li><p>interconnectiviteit</p></li>
 </ul>
 
 <p>Van deze groepen moet de naam gewijzigd kunnen worden; moet een hoofd-/subgroep zijn</p>
@@ -81,10 +89,10 @@ gebruikt door de pagina in een dossier die een onderdeel van de planning kan ton
 <h2 id="conventiesfoldersfiles">Conventies, folders &amp; files</h2>
 
 <p>bestandsnamen allemaal in onderkast en dashes.
-dus niet zo:<br/>
-<code>Ikben_een_bestandsnaam.php</code><br/>
-maar zo:<br/>
-<code>ik-ben-een-bestandsnaam.php</code> </p>
+dus niet zo:<br />
+<code>Ikben_een_bestandsnaam.php</code><br />
+maar zo:<br />
+<code>ik-ben-een-bestandsnaam.php</code></p>
 
 <p><em>prefix:</em> <code>rijksreleasekalender_</code> (rijkshuisstijl releasekalender)</p>
 
@@ -122,3 +130,4 @@ maar zo:<br/>
 
 </body>
 </html>
+

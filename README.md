@@ -7,6 +7,9 @@ Ontwikkelaars zijn:
 * Paul van Buuren ([WBVB Rotterdam](https://wbvb.nl)) 
 * Marcel Bootsman ([nostromo.nl](https://nostromo.nl)) 
 
+## Git repo
+
+Code wordt gepubliceerd op de [ICTU Git repo voor de releasekalender plugin](https://github.com/ICTU/digitale-overheid-wordpress-plugin-releasekalender).
 
 ## Rubber ducking
 De releasekalender toont gegevens uit de releasekalender database van [invoegen].
