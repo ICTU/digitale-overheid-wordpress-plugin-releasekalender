@@ -554,6 +554,7 @@ class rijksreleasekalender_Admin {
 		$selected       = selected( $cron_frequency, '', false );
 
 		$frequencies = Array(
+			__( 'Geen synchronisatie', 'rijksreleasekalender' )             => 'rk_no_sync',
 			__( 'Dagelijks', 'rijksreleasekalender' )                       => 'daily',
 			__( 'Twee keer per dag', 'rijksreleasekalender' )               => 'twicedaily',
 			__( 'Elk uur', 'rijksreleasekalender' )                         => 'hourly',
@@ -2384,19 +2385,26 @@ class rijksreleasekalender_Admin {
 		// get frequency
 		$frequency = get_option( $this->option_name . '_cron_frequency' );
 
-		// check if it is already scheduled
-		if ( wp_next_scheduled( 'rijksreleasekalender_create_sync_schedule_hook' ) ) {
-			// it is scheduled, so unschedule it so we can reschedule it according to the options
+
+		if ( $frequency == 'rk_no_sync' ) {
+			$this->rijksreleasekalender_writedebug( 'rijksreleasekalender_schedule_cron_job. Unschedule CRON: ' . $frequency . '.'  );
 			$timestamp = wp_next_scheduled( 'rijksreleasekalender_create_sync_schedule_hook' );
 			wp_unschedule_event( $timestamp, 'rijksreleasekalender_create_sync_schedule_hook' );
 		}
-
-		// schedule it
-		if ( ! wp_next_scheduled( 'rijksreleasekalender_create_sync_schedule_hook' ) ) {
-			wp_schedule_event( time(), $frequency, 'rijksreleasekalender_create_sync_schedule_hook' );
-
+		else {
+			// check if it is already scheduled
+			if ( wp_next_scheduled( 'rijksreleasekalender_create_sync_schedule_hook' ) ) {
+				// it is scheduled, so unschedule it so we can reschedule it according to the options
+				$timestamp = wp_next_scheduled( 'rijksreleasekalender_create_sync_schedule_hook' );
+				wp_unschedule_event( $timestamp, 'rijksreleasekalender_create_sync_schedule_hook' );
+			}
+		
+			// schedule it
+			if ( ! wp_next_scheduled( 'rijksreleasekalender_create_sync_schedule_hook' ) ) {
+				wp_schedule_event( time(), $frequency, 'rijksreleasekalender_create_sync_schedule_hook' );
+		
+			}
 		}
-
 	}
 
 
