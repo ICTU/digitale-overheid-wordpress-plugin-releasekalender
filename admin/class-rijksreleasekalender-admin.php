@@ -168,7 +168,7 @@ class rijksreleasekalender_Admin {
 		add_settings_field(
 			$this->option_name . '_rss_beschikbaar',
 			__( 'Via RSS beschikbaar maken?', 'rijksreleasekalender' ),
-			array( $this, $this->option_name . '_rss_beschikbaar_cb' ),
+			array( $this, $this->option_name . '_rss_beschikbaar_radiobuttons' ),
 			$this->plugin_name,
 			$this->option_name . '_general',
 			array( 'label_for' => $this->option_name . '_rss_beschikbaar' )
@@ -228,6 +228,15 @@ class rijksreleasekalender_Admin {
 			array( 'label_for' => $this->option_name . '_inleiding_tabelvorm' )
 		);
 
+		add_settings_field(
+			$this->option_name . '_widget_beschikbaar',
+			__( 'Maak widget beschikbaar?', 'rijksreleasekalender' ),
+			array( $this, $this->option_name . '_widget_beschikbaar_radiobuttons' ),
+			$this->plugin_name,
+			$this->option_name . '_general',
+			array( 'label_for' => $this->option_name . '_widget_beschikbaar' )
+		);
+
 
 		add_settings_field(
 			$this->option_name . '_max_items_in_widget',
@@ -252,6 +261,8 @@ class rijksreleasekalender_Admin {
 		register_setting( $this->plugin_name, $this->option_name . '_inleiding_tabelvorm' );
 		register_setting( $this->plugin_name, $this->option_name . '_author_id' );
 		register_setting( $this->plugin_name, $this->option_name . '_max_items_in_widget' );
+		register_setting( $this->plugin_name, $this->option_name . '_widget_beschikbaar' );
+		
 
 		// Connection options
 
@@ -425,7 +436,13 @@ class rijksreleasekalender_Admin {
 
 		$maxdays = 30;
 
-		$max_items_in_widget = intval( get_option( $this->option_name . '_max_items_in_widget' ) );
+		$max_items_in_widget  = intval( get_option( $this->option_name . '_max_items_in_widget' ) );
+		$widget_beschikbaar   = ( get_option( $this->option_name . '_widget_beschikbaar' ) ? get_option( $this->option_name . '_widget_beschikbaar' ) : 'nee' );
+		
+    if ( $widget_beschikbaar == 'nee' ) {
+      echo 'De widget is buiten gebruik gesteld';
+      return;
+    }
 
 		if ( is_int( $max_items_in_widget ) && $max_items_in_widget > 0 && $max_items_in_widget < $maxdays ) {
 		} else {
@@ -501,12 +518,38 @@ class rijksreleasekalender_Admin {
 
 
 
+
 	/**
-	 * Render the RSS size input for this plugin
+	 * Render the toggle for widget availability
 	 *
 	 * @since  1.0.0
 	 */
-	public function rijksreleasekalender_rss_beschikbaar_cb() {
+	public function rijksreleasekalender_widget_beschikbaar_radiobuttons() {
+		$widget_beschikbaar = ( get_option( $this->option_name . '_widget_beschikbaar' ) ? get_option( $this->option_name . '_widget_beschikbaar' ) : 'ja' );
+		?>
+			<fieldset>
+				<label>
+					<input type="radio" name="<?php echo $this->option_name . '_widget_beschikbaar' ?>" id="<?php echo $this->option_name . '_rss_beschikbaar' ?>" value="ja" <?php checked( $widget_beschikbaar, 'ja' ); ?>>
+			<?php _e( 'Ja', 'rijksreleasekalender' ); ?>
+				</label>
+				<br>
+				<label>
+					<input type="radio" name="<?php echo $this->option_name . '_widget_beschikbaar' ?>" value="nee" <?php checked( $widget_beschikbaar, 'nee' ); ?>>
+			<?php _e( 'Nee', 'rijksreleasekalender' ); ?>
+				</label>
+			</fieldset>
+		<?php
+
+	}
+
+
+
+	/**
+	 * Render the toggle for RSS availability
+	 *
+	 * @since  1.0.0
+	 */
+	public function rijksreleasekalender_rss_beschikbaar_radiobuttons() {
 		$rss_beschikbaar = ( get_option( $this->option_name . '_rss_beschikbaar' ) ? get_option( $this->option_name . '_rss_beschikbaar' ) : 'ja' );
 		?>
 			<fieldset>
@@ -545,8 +588,7 @@ class rijksreleasekalender_Admin {
 		$maxrssitems = 50;
 
 		if ( $rss_beschikbaar == 'nee' ) {
-			echo 'RSS is op dit moment niet beschikbaar.<input type="hidden" name="' . $this->option_name . '_rss_size' . '" id="' . $this->option_name . '_rss_size' . '" value="' . $rss_size . '" />';
-			
+      echo 'RSS is buiten gebruik gesteld';
 			return;
 		}
 

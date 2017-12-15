@@ -1311,7 +1311,14 @@ class rijksreleasekalender_Public {
     
     if ( $this->releasekalender_template_hoofdpagina == $page_template ) {
       
-      $max_items_in_widget           = intval( get_option( $this->option_name . '_max_items_in_widget' ) );
+      $max_items_in_widget    = intval( get_option( $this->option_name . '_max_items_in_widget' ) );
+  		$widget_beschikbaar     = ( get_option( $this->option_name . '_widget_beschikbaar' ) ? get_option( $this->option_name . '_widget_beschikbaar' ) : 'nee' );
+  		$rsshtml = '';
+  		
+  		if ( $widget_beschikbaar == 'nee' ) {
+    		return;
+  		}
+      
       // set the max number of days to look ahead under
       // [admin] > 'Rijksreleasekalender' > 'Instellingen' > 'Widget: toon releases van de komende
       if ( is_int( $max_items_in_widget ) && $max_items_in_widget > 0 ) {
