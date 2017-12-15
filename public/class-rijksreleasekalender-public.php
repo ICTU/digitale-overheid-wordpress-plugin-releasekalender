@@ -1070,8 +1070,17 @@ class rijksreleasekalender_Public {
   public function get_template_hoofdpagina_rss_and_plaintext( $content ) {
 
     $url = get_permalink( get_the_ID() );
+
+		$rss_beschikbaar = ( get_option( $this->option_name . '_rss_beschikbaar' ) ? get_option( $this->option_name . '_rss_beschikbaar' ) : 'nee' );
+		$rsshtml = '';
+		
+		if ( $rss_beschikbaar == 'nee' ) {
+		}
+		else {
+  		$rsshtml = '<a href="/feed/' . $this->feed_name . '/">' . __( 'RSS Recente wijzigingen', 'rijksreleasekalender' ) . '</a></li>';
+		}
     
-    return $content . '<div class="block"><h2>' . __( "Extra's", 'rijksreleasekalender' ) . '</h2><ul class="links"><li class="rss"><a href="/feed/' . $this->feed_name . '/">' . __( 'RSS Recente wijzigingen', 'rijksreleasekalender' ) . '</a></li><li><a href="' . $url . $this->releasekalender_queryvar_plainhtml . '/">' . __( 'Releasekalender als herbruikbare tabel', 'rijksreleasekalender' ) . '</a></li></ul></div>';  
+    return $content . '<div class="block"><h2>' . __( "Extra's", 'rijksreleasekalender' ) . '</h2><ul class="links"><li class="rss">' . $rsshtml . '<li><a href="' . $url . $this->releasekalender_queryvar_plainhtml . '/">' . __( 'Releasekalender als herbruikbare tabel', 'rijksreleasekalender' ) . '</a></li></ul></div>';  
 	}
 
 	//========================================================================================================
@@ -2141,7 +2150,15 @@ class rijksreleasekalender_Public {
 
 		//========================================================================================================
     function customRSS(){
-  		add_feed( $this->feed_name,				array( $this, 'customRSSFunc' ) );
+
+  		$rss_beschikbaar = ( get_option( $this->option_name . '_rss_beschikbaar' ) ? get_option( $this->option_name . '_rss_beschikbaar' ) : 'nee' );
+      
+      if ( $rss_beschikbaar == 'nee' ) {
+        
+      }
+      else {
+    		add_feed( $this->feed_name,				array( $this, 'customRSSFunc' ) );
+      }
     }
 
 

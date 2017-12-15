@@ -166,6 +166,15 @@ class rijksreleasekalender_Admin {
 		);
 
 		add_settings_field(
+			$this->option_name . '_rss_beschikbaar',
+			__( 'Via RSS beschikbaar maken?', 'rijksreleasekalender' ),
+			array( $this, $this->option_name . '_rss_beschikbaar_cb' ),
+			$this->plugin_name,
+			$this->option_name . '_general',
+			array( 'label_for' => $this->option_name . '_rss_beschikbaar' )
+		);
+
+		add_settings_field(
 			$this->option_name . '_rss_size',
 			__( 'Maximum aantal items in RSS', 'rijksreleasekalender' ),
 			array( $this, $this->option_name . '_rss_size_cb' ),
@@ -236,6 +245,7 @@ class rijksreleasekalender_Admin {
 		register_setting( $this->plugin_name, $this->option_name . '_restapi_user' );
 		register_setting( $this->plugin_name, $this->option_name . '_restapi_pwd' );
 		register_setting( $this->plugin_name, $this->option_name . '_rss_size' );
+		register_setting( $this->plugin_name, $this->option_name . '_rss_beschikbaar' );
 		register_setting( $this->plugin_name, $this->option_name . '_hoofdpagina' );
 		register_setting( $this->plugin_name, $this->option_name . '_update_key' );
 		register_setting( $this->plugin_name, $this->option_name . '_legenda_kalender' );
@@ -489,6 +499,33 @@ class rijksreleasekalender_Admin {
 
 	}
 
+
+
+	/**
+	 * Render the RSS size input for this plugin
+	 *
+	 * @since  1.0.0
+	 */
+	public function rijksreleasekalender_rss_beschikbaar_cb() {
+		$rss_beschikbaar = ( get_option( $this->option_name . '_rss_beschikbaar' ) ? get_option( $this->option_name . '_rss_beschikbaar' ) : 'ja' );
+		?>
+			<fieldset>
+				<label>
+					<input type="radio" name="<?php echo $this->option_name . '_rss_beschikbaar' ?>" id="<?php echo $this->option_name . '_rss_beschikbaar' ?>" value="ja" <?php checked( $rss_beschikbaar, 'ja' ); ?>>
+			<?php _e( 'Ja', 'rijksreleasekalender' ); ?>
+				</label>
+				<br>
+				<label>
+					<input type="radio" name="<?php echo $this->option_name . '_rss_beschikbaar' ?>" value="nee" <?php checked( $rss_beschikbaar, 'nee' ); ?>>
+			<?php _e( 'Nee', 'rijksreleasekalender' ); ?>
+				</label>
+			</fieldset>
+		<?php
+
+	}
+
+
+
 	/**
 	 * Render the RSS size input for this plugin
 	 *
@@ -496,7 +533,9 @@ class rijksreleasekalender_Admin {
 	 */
 	public function rijksreleasekalender_rss_size_cb() {
 		$rss_size = intval( get_option( $this->option_name . '_rss_size' ) );
+		$rss_beschikbaar = ( get_option( $this->option_name . '_rss_beschikbaar' ) ? get_option( $this->option_name . '_rss_beschikbaar' ) : 'ja' );
 
+		
 		if ( is_int( $rss_size ) && $rss_size > 0 ) {
 		} else {
 			$rss_size = 20;
@@ -504,6 +543,13 @@ class rijksreleasekalender_Admin {
 
 
 		$maxrssitems = 50;
+
+		if ( $rss_beschikbaar == 'nee' ) {
+			echo 'RSS is op dit moment niet beschikbaar.<input type="hidden" name="' . $this->option_name . '_rss_size' . '" id="' . $this->option_name . '_rss_size' . '" value="' . $rss_size . '" />';
+			
+			return;
+		}
+
 
 		echo '<select name="' . $this->option_name . '_rss_size' . '" id="' . $this->option_name . '_rss_size' . '" class="regular-text">';
 
