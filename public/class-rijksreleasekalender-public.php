@@ -850,13 +850,15 @@ class rijksreleasekalender_Public {
 
   		$tijdbalk = '<div class="tijdbalk">' . $this->get_tijdbalk( $programmaargs['year_start'], $programmaargs['year_end'] ) . '</div>';
       
-  		$content = '<div id="releasekalenderoutput">'; 
-  		$content .= '<div class="rk-bouwsteen">'; 
-  		$content .= '<p>' . $title . ' ' . __('heeft de volgende producten en releases:', 'rijksreleasekalender' ) . '<br>(<a href="#omschrijving">' . __('naar omschrijving', 'rijksreleasekalender' ) . '</a>) </p>';
-  		$content .= $tijdbalk; 
-  		$content .= $pijlstok; 
-  		$content .= '<div class="programma">' . $programma . '</div>'; 
+      $content = '<div id="releasekalenderoutput">'; 
+      $content .= '<div class="rk-bouwsteen">'; 
+      $content .= '<p>' . $title . ' ' . __('heeft de volgende producten en releases:', 'rijksreleasekalender' ) . '<br>(<a href="#omschrijving">' . __('naar omschrijving', 'rijksreleasekalender' ) . '</a>) </p>';
+      
       $content .= $legenda_kalender;
+      
+      $content .= $tijdbalk; 
+      $content .= $pijlstok; 
+  		$content .= '<div class="programma">' . $programma . '</div>'; 
       $content .= '<div id="kolom12" class="block"><h2 id="omschrijving">' . __('Omschrijving', 'rijksreleasekalender' ) . '</h2>';
       $content .= $omschrijving;
       $content .= '<p>' . __('Datum laatste wijziging', 'rijksreleasekalender' ) . ': ' . date_i18n( get_option( 'date_format' ), $programmaargs['global_last_update'] ) . '</p>';
@@ -2174,23 +2176,23 @@ class rijksreleasekalender_Public {
       $countertje = 0;
       
     	$get_voorzieningen_args = array(
-        'post_type'       => 'producten',
+        'post_type'       => 'voorzieningencpt',
         'posts_per_page'  => $postCount,
         'post_status'     => 'publish',
         'order'           => 'DESC',					
         'orderby'         => 'meta_value',					
         'ignore_custom_sort'    => TRUE,
-        'meta_key'        => 'product_updated',
-
+        'meta_key'        => 'voorziening_updated',
     	);
+    	
       $voorzieningquery = new WP_Query( $get_voorzieningen_args );
 
       if ( $voorzieningquery->have_posts() ) {
         while ($voorzieningquery->have_posts()) : 
           $voorzieningquery->the_post();
           $countertje++;
-          $product_updated            = get_post_meta( get_the_ID(), 'product_updated', true );
-          $product_updated2            = strtotime( $product_updated );
+          $product_updated            = get_post_meta( get_the_ID(), 'voorziening_updated', true );
+          $product_updated_datetime   = strtotime( $product_updated );
 
           $key = strtotime( $product_updated );
 
@@ -2235,7 +2237,7 @@ class rijksreleasekalender_Public {
           $productquery->the_post();
           $countertje++;
           $product_updated            = get_post_meta( get_the_ID(), 'product_updated', true );
-          $product_updated2            = strtotime( $product_updated );
+          $product_updated_datetime   = strtotime( $product_updated );
 
           $key = strtotime( $product_updated );
 
@@ -2278,7 +2280,7 @@ class rijksreleasekalender_Public {
           $releasequery->the_post();
           $countertje++;
           $release_updated            = get_post_meta( get_the_ID(), 'release_updated', true );
-          $product_updated2            = strtotime( $product_updated );
+          $product_updated_datetime   = strtotime( $product_updated );
 
           $key = strtotime( $release_updated );
 
