@@ -437,7 +437,7 @@ class rijksreleasekalender_Admin {
 		$maxdays = 30;
 
 		$max_items_in_widget  = intval( get_option( $this->option_name . '_max_items_in_widget' ) );
-		$widget_beschikbaar   = ( get_option( $this->option_name . '_widget_beschikbaar' ) ? get_option( $this->option_name . '_widget_beschikbaar' ) : 'nee' );
+		$widget_beschikbaar   = ( get_option( $this->option_name . '_widget_beschikbaar' ) ? get_option( $this->option_name . '_widget_beschikbaar' ) : 'ja' );
 		
     if ( $widget_beschikbaar == 'nee' ) {
       echo 'De widget is buiten gebruik gesteld';

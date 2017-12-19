@@ -1312,7 +1312,7 @@ class rijksreleasekalender_Public {
     if ( $this->releasekalender_template_hoofdpagina == $page_template ) {
       
       $max_items_in_widget    = intval( get_option( $this->option_name . '_max_items_in_widget' ) );
-  		$widget_beschikbaar     = ( get_option( $this->option_name . '_widget_beschikbaar' ) ? get_option( $this->option_name . '_widget_beschikbaar' ) : 'nee' );
+  		$widget_beschikbaar     = ( get_option( $this->option_name . '_widget_beschikbaar' ) ? get_option( $this->option_name . '_widget_beschikbaar' ) : 'ja' );
   		$rsshtml = '';
   		
   		if ( $widget_beschikbaar == 'nee' ) {
