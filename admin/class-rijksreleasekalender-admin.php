@@ -4,7 +4,7 @@
  * The admin-specific functionality of the plugin.
  *
  * @link       http://nostromo.nl
- * @since      1.0.7
+ * @since      1.0.8
  *
  * @package    rijksreleasekalender
  * @subpackage rijksreleasekalender/admin
@@ -166,24 +166,6 @@ class rijksreleasekalender_Admin {
 		);
 
 		add_settings_field(
-			$this->option_name . '_rss_beschikbaar',
-			__( 'Via RSS beschikbaar maken?', 'rijksreleasekalender' ),
-			array( $this, $this->option_name . '_rss_beschikbaar_radiobuttons' ),
-			$this->plugin_name,
-			$this->option_name . '_general',
-			array( 'label_for' => $this->option_name . '_rss_beschikbaar' )
-		);
-
-		add_settings_field(
-			$this->option_name . '_rss_size',
-			__( 'Maximum aantal items in RSS', 'rijksreleasekalender' ),
-			array( $this, $this->option_name . '_rss_size_cb' ),
-			$this->plugin_name,
-			$this->option_name . '_general',
-			array( 'label_for' => $this->option_name . '_rss_size' )
-		);
-
-		add_settings_field(
 			$this->option_name . '_hoofdpagina',
 			__( 'Hoofdpagina voor releasekalender', 'rijksreleasekalender' ),
 			array( $this, $this->option_name . '_hoofdpagina_cb' ),
@@ -229,23 +211,41 @@ class rijksreleasekalender_Admin {
 		);
 
 		add_settings_field(
-			$this->option_name . '_widget_beschikbaar',
-			__( 'Maak widget beschikbaar?', 'rijksreleasekalender' ),
-			array( $this, $this->option_name . '_widget_beschikbaar_radiobuttons' ),
+			$this->option_name . '_is_sync_gestopt',
+			__( 'Is synchronisatie gestopt?', 'rijksreleasekalender' ),
+			array( $this, $this->option_name . '_is_sync_gestopt_radiobuttons' ),
 			$this->plugin_name,
 			$this->option_name . '_general',
-			array( 'label_for' => $this->option_name . '_widget_beschikbaar' )
+			array( 'label_for' => $this->option_name . '_is_sync_gestopt' )
 		);
 
+		add_settings_field(
+			$this->option_name . '_rss_size',
+			__( 'RSS: aantal items in feed', 'rijksreleasekalender' ),
+			array( $this, $this->option_name . '_rss_size_cb' ),
+			$this->plugin_name,
+			$this->option_name . '_general',
+			array( 'label_for' => $this->option_name . '_rss_size' )
+		);
 
 		add_settings_field(
 			$this->option_name . '_max_items_in_widget',
-			__( 'Widget: toon de eerstvolgend X releases', 'rijksreleasekalender' ),
+			__( 'Widget: aantal items in widget', 'rijksreleasekalender' ),
 			array( $this, $this->option_name . '_max_items_in_widget_cb' ),
 			$this->plugin_name,
 			$this->option_name . '_general',
 			array( 'label_for' => $this->option_name . '_max_items_in_widget' )
 		);
+
+		add_settings_field(
+			$this->option_name . '_einddatum_tekst',
+			__( 'Tekst van einddatum:', 'rijksreleasekalender' ),
+			array( $this, $this->option_name . '_einddatum_tekst_textarea' ),
+			$this->plugin_name,
+			$this->option_name . '_general',
+			array( 'label_for' => $this->option_name . '_einddatum_tekst' )
+		);
+
 
 		// Register the general options
 
@@ -254,14 +254,14 @@ class rijksreleasekalender_Admin {
 		register_setting( $this->plugin_name, $this->option_name . '_restapi_user' );
 		register_setting( $this->plugin_name, $this->option_name . '_restapi_pwd' );
 		register_setting( $this->plugin_name, $this->option_name . '_rss_size' );
-		register_setting( $this->plugin_name, $this->option_name . '_rss_beschikbaar' );
 		register_setting( $this->plugin_name, $this->option_name . '_hoofdpagina' );
 		register_setting( $this->plugin_name, $this->option_name . '_update_key' );
 		register_setting( $this->plugin_name, $this->option_name . '_legenda_kalender' );
 		register_setting( $this->plugin_name, $this->option_name . '_inleiding_tabelvorm' );
 		register_setting( $this->plugin_name, $this->option_name . '_author_id' );
 		register_setting( $this->plugin_name, $this->option_name . '_max_items_in_widget' );
-		register_setting( $this->plugin_name, $this->option_name . '_widget_beschikbaar' );
+		register_setting( $this->plugin_name, $this->option_name . '_is_sync_gestopt' );
+		register_setting( $this->plugin_name, $this->option_name . '_einddatum_tekst' );
 		
 
 		// Connection options
@@ -391,6 +391,28 @@ class rijksreleasekalender_Admin {
 		echo '<textarea class="regular-text code" name="' . $this->option_name . '_inleiding_tabelvorm' . '" id="' . $this->option_name . '_inleiding_tabelvorm' . '">' . $inleiding_tabelvorm . '</textarea>';
 	}
 
+
+	/**
+	 * Render the textarea for the einddatum text
+	 *
+	 * @since  1.0.0
+	 */
+	public function rijksreleasekalender_einddatum_tekst_textarea() {
+		$einddatum_tekst  = get_option( $this->option_name . '_einddatum_tekst' );
+		$is_sync_gestopt  = ( get_option( $this->option_name . '_is_sync_gestopt' ) ? get_option( $this->option_name . '_is_sync_gestopt' ) : 'nee' );
+		
+		if ( ! $einddatum_tekst ) {
+			$einddatum_tekst = 'De releasekalender is voor het laatst gesynchroniseerd op 21 december 2017. Na deze datum zijn de gegevens niet meer bijgewerkt.';
+		}
+		
+    if ( $is_sync_gestopt == 'nee' ) {
+      echo 'N.v.t: er wordt nog steeds gesynchroniseerd. Dus bij voorzieningen wordt gewoon de laatste wijzigingsdatum getoond.<input type="hidden" name="' . $this->option_name . '_einddatum_tekst' . '" id="' . $this->option_name . '_einddatum_tekst' . '" value="" />';
+    }
+    else {
+    	echo __('Datum laatste wijziging', 'rijksreleasekalender' ) . ':<br>' . '<textarea class="regular-text code" name="' . $this->option_name . '_einddatum_tekst' . '" id="' . $this->option_name . '_einddatum_tekst' . '">' . $einddatum_tekst . '</textarea>';
+    }
+	}
+
 	/**
 	 * Render the update key input for this plugin
 	 *
@@ -437,10 +459,11 @@ class rijksreleasekalender_Admin {
 		$maxdays = 30;
 
 		$max_items_in_widget  = intval( get_option( $this->option_name . '_max_items_in_widget' ) );
-		$widget_beschikbaar   = ( get_option( $this->option_name . '_widget_beschikbaar' ) ? get_option( $this->option_name . '_widget_beschikbaar' ) : 'ja' );
+		$is_sync_gestopt      = ( get_option( $this->option_name . '_is_sync_gestopt' ) ? get_option( $this->option_name . '_is_sync_gestopt' ) : 'nee' );
+
 		
-    if ( $widget_beschikbaar == 'nee' ) {
-      echo 'De widget is buiten gebruik gesteld';
+    if ( $is_sync_gestopt == 'ja' ) {
+      echo 'N.v.t: de widget is buiten gebruik gesteld, omdat de synchronisatie gestopt is.';
       return;
     }
 
@@ -519,22 +542,23 @@ class rijksreleasekalender_Admin {
 
 
 
+
 	/**
 	 * Render the toggle for widget availability
 	 *
 	 * @since  1.0.0
 	 */
-	public function rijksreleasekalender_widget_beschikbaar_radiobuttons() {
-		$widget_beschikbaar = ( get_option( $this->option_name . '_widget_beschikbaar' ) ? get_option( $this->option_name . '_widget_beschikbaar' ) : 'ja' );
+	public function rijksreleasekalender_is_sync_gestopt_radiobuttons() {
+		$einddatum_tonen = ( get_option( $this->option_name . '_is_sync_gestopt' ) ? get_option( $this->option_name . '_is_sync_gestopt' ) : 'nee' );
 		?>
 			<fieldset>
 				<label>
-					<input type="radio" name="<?php echo $this->option_name . '_widget_beschikbaar' ?>" id="<?php echo $this->option_name . '_rss_beschikbaar' ?>" value="ja" <?php checked( $widget_beschikbaar, 'ja' ); ?>>
-			<?php _e( 'Ja', 'rijksreleasekalender' ); ?>
+					<input type="radio" name="<?php echo $this->option_name . '_is_sync_gestopt' ?>" id="<?php echo $this->option_name . '_is_sync_gestopt' ?>" value="ja" <?php checked( $einddatum_tonen, 'ja' ); ?>><span style="color: white background: red; padding: .25em .5em; display: inline-block">
+			<?php _e( 'Ja', 'rijksreleasekalender' ); ?></span>
 				</label>
 				<br>
 				<label>
-					<input type="radio" name="<?php echo $this->option_name . '_widget_beschikbaar' ?>" value="nee" <?php checked( $widget_beschikbaar, 'nee' ); ?>>
+					<input type="radio" name="<?php echo $this->option_name . '_is_sync_gestopt' ?>" value="nee" <?php checked( $einddatum_tonen, 'nee' ); ?>>
 			<?php _e( 'Nee', 'rijksreleasekalender' ); ?>
 				</label>
 			</fieldset>
@@ -543,29 +567,6 @@ class rijksreleasekalender_Admin {
 	}
 
 
-
-	/**
-	 * Render the toggle for RSS availability
-	 *
-	 * @since  1.0.0
-	 */
-	public function rijksreleasekalender_rss_beschikbaar_radiobuttons() {
-		$rss_beschikbaar = ( get_option( $this->option_name . '_rss_beschikbaar' ) ? get_option( $this->option_name . '_rss_beschikbaar' ) : 'ja' );
-		?>
-			<fieldset>
-				<label>
-					<input type="radio" name="<?php echo $this->option_name . '_rss_beschikbaar' ?>" id="<?php echo $this->option_name . '_rss_beschikbaar' ?>" value="ja" <?php checked( $rss_beschikbaar, 'ja' ); ?>>
-			<?php _e( 'Ja', 'rijksreleasekalender' ); ?>
-				</label>
-				<br>
-				<label>
-					<input type="radio" name="<?php echo $this->option_name . '_rss_beschikbaar' ?>" value="nee" <?php checked( $rss_beschikbaar, 'nee' ); ?>>
-			<?php _e( 'Nee', 'rijksreleasekalender' ); ?>
-				</label>
-			</fieldset>
-		<?php
-
-	}
 
 
 
@@ -576,7 +577,7 @@ class rijksreleasekalender_Admin {
 	 */
 	public function rijksreleasekalender_rss_size_cb() {
 		$rss_size = intval( get_option( $this->option_name . '_rss_size' ) );
-		$rss_beschikbaar = ( get_option( $this->option_name . '_rss_beschikbaar' ) ? get_option( $this->option_name . '_rss_beschikbaar' ) : 'ja' );
+		$is_sync_gestopt = ( get_option( $this->option_name . '_is_sync_gestopt' ) ? get_option( $this->option_name . '_is_sync_gestopt' ) : 'nee' );
 
 		
 		if ( is_int( $rss_size ) && $rss_size > 0 ) {
@@ -587,8 +588,8 @@ class rijksreleasekalender_Admin {
 
 		$maxrssitems = 50;
 
-		if ( $rss_beschikbaar == 'nee' ) {
-      echo 'RSS is buiten gebruik gesteld';
+		if ( $is_sync_gestopt == 'ja' ) {
+      echo 'N.v.t: de RSS-feed is buiten gebruik gesteld, omdat de synchronisatie is gestopt.';
 			return;
 		}
 
@@ -638,8 +639,13 @@ class rijksreleasekalender_Admin {
 	 * @since  1.0.0
 	 */
 	public function rijksreleasekalender_cron_frequency_cb() {
-		$cron_frequency = get_option( $this->option_name . '_cron_frequency' );
-		$selected       = selected( $cron_frequency, '', false );
+		$cron_frequency   = get_option( $this->option_name . '_cron_frequency' );
+		$selected         = selected( $cron_frequency, '', false );
+		$is_sync_gestopt  = ( get_option( $this->option_name . '_is_sync_gestopt' ) ? get_option( $this->option_name . '_is_sync_gestopt' ) : 'nee' );
+		
+		if ( $is_sync_gestopt == 'ja' ) {
+  		$cron_frequency = 'rk_no_sync';
+		}
 
 		$frequencies = Array(
 			__( 'Geen synchronisatie', 'rijksreleasekalender' )             => 'rk_no_sync',
@@ -650,7 +656,8 @@ class rijksreleasekalender_Admin {
 			__( 'Elke minuut - ALLEEN VOOR TESTS', 'rijksreleasekalender' ) => 'perminute'
 
 		);
-
+    
+    echo '<p>' . $cron_frequency . ' / ' . $is_sync_gestopt . '</p>';
 		echo '<select name="' . $this->option_name . '_cron_frequency' . '">';
 		echo '<option value="" ' . $selected . '></option>';
 
@@ -2510,7 +2517,7 @@ class rijksreleasekalender_Admin {
 	/**
 	 * Check if we need to start the flow again
 	 *
-	 * @since    1.0.7
+	 * @since    1.0.8
 	 */
 	public
 	function rijksreleasekalender_loopcounter( $_result = 0, $_step = 0, $currentnum = 0, $startrec = 0, $maxrecordsinbatch = 0 ) {

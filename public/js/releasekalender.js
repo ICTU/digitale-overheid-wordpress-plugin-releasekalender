@@ -110,10 +110,6 @@
                     $('.tijdbalk').css('width', $('#releasekalenderoutput').width());
                     $('.nu').height(getStandlijnHeight());
                     $('.nu p').css('position', 'fixed').css('top', '42px');
-
-                    $('.legenda').addClass('sticky');
-//                    $('.legenda').css('left', ( $('#releasekalenderoutput').width() + $('#releasekalenderoutput').offset().left ) );
-                    
                 }
                 else {
                     // als tijdsbalk in beeld wordt gescrolld is 'ie niet meer sticky
@@ -123,11 +119,6 @@
                     $('.tijdbalk>ul').css('margin-left', parseFloat(tijdbalkMarginLeft));
                     $('.nu').height(getStandlijnHeight());
                     $('.nu p').css('position', 'absolute').css('top', getStandlijnLabelTop());
-
-                    $('.legenda').removeClass('sticky');
-//                    $('.legenda').css('left', 'auto' );
-//                    $('.legenda').css('right', 0 );
-                    
                 }
             });
 

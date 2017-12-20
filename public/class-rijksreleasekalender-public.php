@@ -10,7 +10,7 @@ if ( ! defined( 'WPINC' ) ) {
  * The public-facing functionality of the plugin.
  *
  * @link       https://wbvb.nl/
- * @since      1.0.5
+ * @since      1.0.8
  *
  * @package    rijksreleasekalender
  * @subpackage rijksreleasekalender/public
@@ -216,9 +216,13 @@ class rijksreleasekalender_Public {
     // set the alternative page names
     $this->set_names();
 
+		$is_sync_gestopt = ( get_option( $this->option_name . '_is_sync_gestopt' ) ? get_option( $this->option_name . '_is_sync_gestopt' ) : 'nee' );
+
   	//=================================================
     if ( get_query_var( $this->releasekalender_queryvar_plainhtml ) == $this->releasekalender_queryvar_plainhtml ) {
-      die($this->write_plainhtmloutput());
+      if ( $is_sync_gestopt == 'nee' ) {
+        die($this->write_plainhtmloutput());
+      }
     }
 
   	//=================================================
@@ -294,18 +298,38 @@ class rijksreleasekalender_Public {
   	//=================================================
     if ( $this->releasekalender_template_hoofdpagina == $page_template ) {
 
-
       remove_filter( 'wp_title', 'genesis_default_title', 10, 3 );
       add_filter( 'wp_title', array( $this, 'filter_the_page_title' ), 10, 3 );
 
       if ( get_query_var( $this->releasekalender_queryvar_kalender ) == $this->releasekalender_queryvar_kalender ) {
 
-        //* Force full-width-content layout
-        add_filter( 'genesis_pre_get_option_site_layout', '__genesis_return_full_width_content' );
-  
-        // filter the main template page
-        add_filter( 'the_content', array( $this, 'get_template_hoofdpagina_kalender' ) );
+        $is_sync_gestopt = ( get_option( $this->option_name . '_is_sync_gestopt' ) ? get_option( $this->option_name . '_is_sync_gestopt' ) : 'nee' );
 
+    		if ( $is_sync_gestopt == 'nee' ) {
+      		
+          //* Force full-width-content layout
+          add_filter( 'genesis_pre_get_option_site_layout', '__genesis_return_full_width_content' );
+    
+          // filter the main template page
+          add_filter( 'the_content', array( $this, 'get_template_hoofdpagina_kalender' ) );
+          
+          return;
+
+    		}
+    		else {
+
+          // action for writing extra info in the alt-sidebar
+          add_action( 'genesis_before_sidebar_widget_area',    array( $this, 'write_sidebar_context_widget' )  );
+    
+          // filter the main template page
+          add_filter( 'the_content', array( $this, 'get_template_hoofdpagina_groepen' ) );
+  
+          // filter the main template page
+          add_filter( 'the_content', array( $this, 'get_template_hoofdpagina_rss_and_plaintext' ) );
+
+          return;
+
+    		}
 
       }
       elseif ( $this->requestedproduct &&  $this->requestedvoorziening ) {
@@ -854,14 +878,27 @@ class rijksreleasekalender_Public {
       $content .= '<div class="rk-bouwsteen">'; 
       $content .= '<p>' . $title . ' ' . __('heeft de volgende producten en releases:', 'rijksreleasekalender' ) . '<br>(<a href="#omschrijving">' . __('naar omschrijving', 'rijksreleasekalender' ) . '</a>) </p>';
       
-      $content .= $legenda_kalender;
-      
       $content .= $tijdbalk; 
       $content .= $pijlstok; 
   		$content .= '<div class="programma">' . $programma . '</div>'; 
+      $content .= $legenda_kalender;
       $content .= '<div id="kolom12" class="block"><h2 id="omschrijving">' . __('Omschrijving', 'rijksreleasekalender' ) . '</h2>';
       $content .= $omschrijving;
-      $content .= '<p>' . __('Datum laatste wijziging', 'rijksreleasekalender' ) . ': ' . date_i18n( get_option( 'date_format' ), $programmaargs['global_last_update'] ) . '</p>';
+
+
+  		$is_sync_gestopt  = ( get_option( $this->option_name . '_is_sync_gestopt' ) ? get_option( $this->option_name . '_is_sync_gestopt' ) : 'nee' );
+  		$einddatum_tekst  = ( get_option( $this->option_name . '_einddatum_tekst' ) ? get_option( $this->option_name . '_einddatum_tekst' ) : 'De releasekalender is voor het laatst gesynchroniseerd op 21 december 2017. Na deze datum zijn de gegevens niet meer bijgewerkt.' );
+
+      $content .= '<p>' . __('Datum laatste wijziging', 'rijksreleasekalender' ) . ': ';
+
+      if ( $is_sync_gestopt == 'nee' ) {
+        $content .= date_i18n( get_option( 'date_format' ), $programmaargs['global_last_update'] );
+      }
+      else {
+        $content .= $einddatum_tekst;
+      }
+      $content .= '</p>';
+
   		$content .= '</div>'; 
   		$content .= '</div>'; 
   		$content .= '</div>'; 
@@ -882,6 +919,13 @@ class rijksreleasekalender_Public {
 	 */
 	public function get_template_hoofdpagina_kalender(  ) {
 
+    $is_sync_gestopt  = ( get_option( $this->option_name . '_is_sync_gestopt' ) ? get_option( $this->option_name . '_is_sync_gestopt' ) : 'nee' );
+
+		if ( $is_sync_gestopt == 'ja' ) {
+  		return;
+		}
+
+
     $url = get_permalink( get_the_ID() );
 
 		$releases_args = array(
@@ -889,7 +933,7 @@ class rijksreleasekalender_Public {
       'posts_per_page'  => '-1',
       'order'           => 'ASC',					
       'orderby'         => 'meta_value',					
-      'post_status' => 'publish',					
+      'post_status'     => 'publish',					
       'ignore_custom_sort'    => TRUE,
       'meta_key'        => 'release_releasedatum_translated',
 		);
@@ -1071,16 +1115,15 @@ class rijksreleasekalender_Public {
 
     $url = get_permalink( get_the_ID() );
 
-		$rss_beschikbaar = ( get_option( $this->option_name . '_rss_beschikbaar' ) ? get_option( $this->option_name . '_rss_beschikbaar' ) : 'nee' );
-		$rsshtml = '';
-		
-		if ( $rss_beschikbaar == 'nee' ) {
+		$is_sync_gestopt = ( get_option( $this->option_name . '_is_sync_gestopt' ) ? get_option( $this->option_name . '_is_sync_gestopt' ) : 'nee' );
+
+		if ( $is_sync_gestopt == 'ja' ) {
+      return $content;
 		}
 		else {
-  		$rsshtml = '<a href="/feed/' . $this->feed_name . '/">' . __( 'RSS Recente wijzigingen', 'rijksreleasekalender' ) . '</a></li>';
-		}
     
-    return $content . '<div class="block"><h2>' . __( "Extra's", 'rijksreleasekalender' ) . '</h2><ul class="links"><li class="rss">' . $rsshtml . '<li><a href="' . $url . $this->releasekalender_queryvar_plainhtml . '/">' . __( 'Releasekalender als herbruikbare tabel', 'rijksreleasekalender' ) . '</a></li></ul></div>';  
+      return $content . '<div class="block"><h2>' . __( "Extra's", 'rijksreleasekalender' ) . '</h2><ul class="links"><li class="rss"><a href="' . get_site_url() . '/feed/' . $this->feed_name . '/">' . __( 'RSS Recente wijzigingen', 'rijksreleasekalender' ) . '</a></li><li><a href="' . $url . $this->releasekalender_queryvar_plainhtml . '/">' . __( 'Releasekalender als herbruikbare tabel', 'rijksreleasekalender' ) . '</a></li></ul></div>';  
+		}
 	}
 
 	//========================================================================================================
@@ -1312,10 +1355,11 @@ class rijksreleasekalender_Public {
     if ( $this->releasekalender_template_hoofdpagina == $page_template ) {
       
       $max_items_in_widget    = intval( get_option( $this->option_name . '_max_items_in_widget' ) );
-  		$widget_beschikbaar     = ( get_option( $this->option_name . '_widget_beschikbaar' ) ? get_option( $this->option_name . '_widget_beschikbaar' ) : 'ja' );
+      $is_sync_gestopt        = ( get_option( $this->option_name . '_is_sync_gestopt' ) ? get_option( $this->option_name . '_is_sync_gestopt' ) : 'nee' );
+  		
   		$rsshtml = '';
   		
-  		if ( $widget_beschikbaar == 'nee' ) {
+  		if ( $is_sync_gestopt == 'ja' ) {
     		return;
   		}
       
@@ -2158,13 +2202,12 @@ class rijksreleasekalender_Public {
 		//========================================================================================================
     function customRSS(){
 
-  		$rss_beschikbaar = ( get_option( $this->option_name . '_rss_beschikbaar' ) ? get_option( $this->option_name . '_rss_beschikbaar' ) : 'nee' );
+  		$is_sync_gestopt = ( get_option( $this->option_name . '_is_sync_gestopt' ) ? get_option( $this->option_name . '_is_sync_gestopt' ) : 'nee' );
       
-      if ( $rss_beschikbaar == 'nee' ) {
-        
+      if ( $is_sync_gestopt == 'nee' ) {
+    		add_feed( $this->feed_name,				array( $this, 'customRSSFunc' ) );
       }
       else {
-    		add_feed( $this->feed_name,				array( $this, 'customRSSFunc' ) );
       }
     }
 
