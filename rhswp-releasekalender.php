@@ -8,7 +8,7 @@
  * @wordpress-plugin
  * Plugin Name:       ICTU / WP Rijksreleasekalender plugin
  * Plugin URI:        https://github.com/ICTU/digitale-overheid-wordpress-plugin-releasekalender
- * Description:       Synchroniseert met Rijksrelease REST API en zorgt voor weergave. Cron. Verstuurt bevestigingsmail.
+ * Description:       Synchroniseert met Rijksrelease REST API en zorgt voor weergave. Mogelijkheid om CRON stop te zeggen en functionaliteit uit te schakelen.
  * Version:           1.0.8
  * Author:            Marcel Bootsman / Paul van Buuren
  * Author URI:        http://nostromo.nl/
